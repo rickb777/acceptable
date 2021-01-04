@@ -26,7 +26,7 @@ The other important content-negotiation headers, `Accept-Language` and `Accept-C
     acceptLanguages := acceptable.Parse("en-GB,fr;q=0.5,en;q=0.8")
 ```
 
-This will contain `{"en-GB", "en", "fr"}` in a `header.PrecedenceValues` slice, sorted according to precedence rules.
+This will contain `{"en-GB", "en", "fr"}` in a `header.PrecedenceValues` slice, sorted according to precedence rules with the most preferred first.
 
 The `acceptable.Parse` function can be used for `Accept-Encoding` as well as `Accept-Language` and `Accept-Charset`. However, the Go standard library deals with `Accept-Encoding`, so you won't need to.
 
