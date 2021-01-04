@@ -1,5 +1,9 @@
 package acceptable
 
+import (
+	"fmt"
+)
+
 // Offer holds information about one particular resource representation that can potentially
 // provide an acceptable response.
 type Offer struct {
@@ -28,6 +32,17 @@ func OfferOf(contentType string, language ...string) Offer {
 	}
 }
 
+// With attaches a processor function to an offer and returns the modified offer.
+// The original offer is unchanged.
+func (o Offer) With(processor func() error) Offer {
+	o.Processor = processor
+	return o
+}
+
+func (o Offer) String() string {
+	return fmt.Sprintf("Accept: %s. Accept-Language: %s", o.ContentType, o.Language)
+}
+
 //-------------------------------------------------------------------------------------------------
 
 // Offers holds a slice of Offer.
@@ -37,14 +52,6 @@ type Offers []Offer
 func (offers Offers) Filter(typ, subtype string) Offers {
 	if len(offers) == 0 {
 		return nil
-	}
-
-	if typ == "" {
-		typ = "*"
-	}
-
-	if subtype == "" {
-		subtype = "*"
 	}
 
 	allowed := make(Offers, 0, len(offers))

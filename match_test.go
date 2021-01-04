@@ -61,6 +61,29 @@ func Test_should_return_406_if_no_matching_accept_header(t *testing.T) {
 	}
 }
 
+func Test_should_return_406_if_there_are_no_offers(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	req, _ := http.NewRequest("GET", "/", nil)
+	req.Header.Add("Accept", "image/png")
+
+	best := BestRequestMatch(req)
+
+	g.Expect(best).To(gomega.BeNil())
+}
+
+func Test_should_return_406_if_there_are_no_offers_for_ajax(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	req, _ := http.NewRequest("GET", "/", nil)
+	req.Header.Add("Accept", "image/png")
+	req.Header.Add(XRequestedWith, XMLHttpRequest)
+
+	best := BestRequestMatch(req)
+
+	g.Expect(best).To(gomega.BeNil())
+}
+
 // RFC7231 suggests that 406 is sent when no media range matches are possible.
 func Test_should_return_406_when_media_range_is_explicitly_excluded(t *testing.T) {
 	g := gomega.NewWithT(t)

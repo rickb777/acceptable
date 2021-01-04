@@ -43,6 +43,16 @@ func TestParseAcceptHeader_should_parse_quality(t *testing.T) {
 	g.Expect(mr[0].Quality).To(BeNumerically("~", 0.9, 1e-4))
 }
 
+func TestParseAcceptHeader_extension_can_omit_value(t *testing.T) {
+	g := NewGomegaWithT(t)
+	mr := ParseMediaRanges("application/json; q=0.9; label")
+
+	g.Expect(len(mr)).To(Equal(1))
+	g.Expect(mr[0].Type).To(Equal("application"))
+	g.Expect(mr[0].Subtype).To(Equal("json"))
+	g.Expect(mr[0].Extensions).To(ConsistOf(KV{Key: "label"}))
+}
+
 func TestParseAcceptHeader_sorts_by_decending_quality(t *testing.T) {
 	g := NewGomegaWithT(t)
 	mr := ParseMediaRanges("application/json;q=0.8, application/xml, application/*;q=0.1")
@@ -78,26 +88,33 @@ func TestMediaRanges_should_ignore_invalid_quality(t *testing.T) {
 func TestMediaRanges_should_handle_precedence(t *testing.T) {
 	g := NewGomegaWithT(t)
 	// from https://tools.ietf.org/html/rfc7231#section-5.3.2
-	c := "text/*, text/plain, text/plain;format=flowed, */*"
-	mr := ParseMediaRanges(c)
+	cases := []string{
+		"text/*, text/plain, text/plain;format=flowed, */*",
+		"*/*, text/*, text/plain, text/plain;format=flowed",
+		"text/plain;format=flowed, */*, text/*, text/plain",
+		"text/plain, text/plain;format=flowed, */*, text/*",
+	}
+	for _, c := range cases {
+		mr := ParseMediaRanges(c)
 
-	g.Expect(len(mr)).To(Equal(4))
-	g.Expect(mr[0]).To(Equal(MediaRange{
-		ContentType: ContentTypeOf("text", "plain", "format=flowed"),
-		Quality:     DefaultQuality,
-	}), c)
-	g.Expect(mr[1]).To(Equal(MediaRange{
-		ContentType: ContentTypeOf("text", "plain"),
-		Quality:     DefaultQuality,
-	}), c)
-	g.Expect(mr[2]).To(Equal(MediaRange{
-		ContentType: ContentTypeOf("text", "*"),
-		Quality:     DefaultQuality,
-	}), c)
-	g.Expect(mr[3]).To(Equal(MediaRange{
-		ContentType: ContentTypeOf("*", "*"),
-		Quality:     DefaultQuality,
-	}), c)
+		g.Expect(len(mr)).To(Equal(4))
+		g.Expect(mr[0]).To(Equal(MediaRange{
+			ContentType: ContentTypeOf("text", "plain", "format=flowed"),
+			Quality:     DefaultQuality,
+		}), c)
+		g.Expect(mr[1]).To(Equal(MediaRange{
+			ContentType: ContentTypeOf("text", "plain"),
+			Quality:     DefaultQuality,
+		}), c)
+		g.Expect(mr[2]).To(Equal(MediaRange{
+			ContentType: ContentTypeOf("text", "*"),
+			Quality:     DefaultQuality,
+		}), c)
+		g.Expect(mr[3]).To(Equal(MediaRange{
+			ContentType: ContentTypeOf("*", "*"),
+			Quality:     DefaultQuality,
+		}), c)
+	}
 }
 
 func TestMediaRanges_should_not_remove_accept_extension(t *testing.T) {

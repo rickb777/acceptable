@@ -40,3 +40,8 @@ Finding the best match depends on you listing your available response representa
     best := acceptable.BestRequestMatch(request, offer1, offer2)
 ```
 
+The `best` result will be the one that best matches the request headers. If none match, it will be nil and the response should be 406-Not Acceptable. If you need to have a catch-all case, include `acceptable.OfferOf("*/*")` last in the list.
+
+The offers can also be restricted by language matching using their `Language` field. This matches `Accept-Language` using the basic prefix algorithm, which means for example that if you specify "en" it will match "en", "en-GB" and everything else beginning with "en-".
+
+The offers can hold a suitable rendering function in their `Processor` field if required. If the best offer matched is not nil, you can easily call its `Processor` function in order to render the response.

@@ -42,3 +42,13 @@ func TestPrecedenceValues_String(t *testing.T) {
 
 	g.Expect(vv.String()).To(gomega.Equal("iso-8859-5, unicode-1-1;q=0.8"))
 }
+
+func TestOffer_String(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	o := OfferOf("text/html", "en").With(func() error {
+		return nil
+	})
+
+	g.Expect(o.String()).To(gomega.Equal("Accept: text/html. Accept-Language: en"))
+}

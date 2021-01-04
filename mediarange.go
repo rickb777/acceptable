@@ -24,7 +24,6 @@ func (ct ContentType) String() string {
 		fmt.Fprintf(buf, ";%s=%s", p.Key, p.Value)
 	}
 	return buf.String()
-
 }
 
 // ContentTypeOf builds a content type value with optional parameters.

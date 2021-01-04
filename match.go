@@ -26,6 +26,7 @@ func IsAjax(req *http.Request) bool {
 // ranges and languages contained in request headers.
 // The result contains the best match, based on the rules of RFC-7231.
 // Whenever the result is nil, the response should be 406-Not Acceptable.
+// If there are no available offers, the response will always be nil.
 func BestRequestMatch(req *http.Request, available ...Offer) *Offer {
 	mrs := ParseMediaRanges(req.Header.Get(Accept)).WithDefault()
 	languages := Parse(req.Header.Get(AcceptLanguage)).WithDefault()
@@ -41,6 +42,7 @@ func BestRequestMatch(req *http.Request, available ...Offer) *Offer {
 // ranges and languages.
 // The result contains the best match, based on the rules of RFC-7231.
 // Whenever the result is nil, the response should be 406-Not Acceptable.
+// If there are no available offers, the response will always be nil.
 func BestMatch(mrs MediaRanges, languages PrecedenceValues, available ...Offer) *Offer {
 	// first pass - remove offers that match exclusions
 	// (this doesn't apply to language exclusions because we always allow at least one language match)
