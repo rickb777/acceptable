@@ -8,10 +8,13 @@ import (
 // ContentType is a media type as defined in RFC-2045, RFC-2046, RFC-2231
 // (https://tools.ietf.org/html/rfc2045, https://tools.ietf.org/html/rfc2046,
 // https://tools.ietf.org/html/rfc2231)
+// There may also be parameters (e.g. "charset=utf-8") and extension values.
 type ContentType struct {
+	// Type and Subtype carry the media type, e.g. "text" and "html"
 	Type, Subtype string
-	Params        []KV
-	Extensions    []KV
+	// Params and Extensions hold optional parameter information
+	Params     []KV
+	Extensions []KV
 }
 
 func (ct ContentType) String() string {
@@ -55,8 +58,7 @@ func ContentTypeOf(typ, subtype string, paramKV ...string) ContentType {
 
 //-------------------------------------------------------------------------------------------------
 
-// MediaRange is a media range value and associated quality between 0.0 and 1.0.
-// There may also be parameters (e.g. "charset") and extension values.
+// MediaRange is a content type and associated quality between 0.0 and 1.0.
 type MediaRange struct {
 	ContentType
 	Quality float64
@@ -76,7 +78,7 @@ func (a mrByPrecedence) Less(i, j int) bool {
 	return a[i].StrongerThan(a[j])
 }
 
-// StrongerThan compares a media range with another value, using the precedence rules.
+// StrongerThan compares a media range with another value using the precedence rules.
 func (mr MediaRange) StrongerThan(other MediaRange) bool {
 	// qualities are floats so we don't use == directly
 	if mr.Quality > other.Quality {
@@ -102,7 +104,8 @@ func (mr MediaRange) StrongerThan(other MediaRange) bool {
 	return false
 }
 
-// Value gets the conjoined type and subtype string, plus any parameters (but not extensions).
+// Value gets the conjoined type and subtype string, plus any parameters.
+// It does not include the quality value nor any of the extensions.
 func (mr MediaRange) Value() string {
 	buf := &strings.Builder{}
 	fmt.Fprintf(buf, "%s/%s", mr.Type, mr.Subtype)
@@ -129,6 +132,8 @@ func (mr MediaRange) String() string {
 
 //-------------------------------------------------------------------------------------------------
 
+// WithDefault returns a list of media ranges that is always non-empty. If the input
+// list is empty, the result holds a wildcard entry ("*/*").
 func (mrs MediaRanges) WithDefault() MediaRanges {
 	if len(mrs) == 0 {
 		return []MediaRange{{ContentType: ContentType{Type: "*", Subtype: "*"}, Quality: DefaultQuality}}

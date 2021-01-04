@@ -7,14 +7,27 @@ import (
 // Offer holds information about one particular resource representation that can potentially
 // provide an acceptable response.
 type Offer struct {
+	// ContentType is the content type that is to be matched.
+	// Wildcard values may be used.
 	ContentType
-	Language  string
-	Processor func() error
+
+	// Language defines which language will be provided if this offer is matched.
+	// Can also be blank or "*" - both indicate that this is not used.
+	Language string
+
+	// Charset returns the preferred character set for the response, if any.
+	// This is set on return from the BestRequestMatch function.
+	Charset string
+
+	// Processor is an optional function you can use to apply the offer if it is selected.
+	// How this is used is entirely at the discretion of the call site.
+	Processor func(Offer) error
 }
 
 // OfferOf constructs an Offer easily.
 // If the language is absent, it is assumed to be the wildcard "*".
 // If the content type is blank, it is assumed to be the full wildcard "*/*".
+// If the content subtype is blank, it is assumed to be the partial wildcard "type/*".
 func OfferOf(contentType string, language ...string) Offer {
 	t, s, l := "*", "*", "*"
 	if contentType != "" {
@@ -34,7 +47,7 @@ func OfferOf(contentType string, language ...string) Offer {
 
 // With attaches a processor function to an offer and returns the modified offer.
 // The original offer is unchanged.
-func (o Offer) With(processor func() error) Offer {
+func (o Offer) With(processor func(Offer) error) Offer {
 	o.Processor = processor
 	return o
 }

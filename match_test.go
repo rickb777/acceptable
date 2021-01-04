@@ -1,7 +1,10 @@
 package acceptable
 
 import (
+	"flag"
+	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/onsi/gomega"
@@ -109,7 +112,7 @@ func Test_should_return_200_even_when_language_is_explicitly_excluded(t *testing
 	req, _ := http.NewRequest("GET", "/", nil)
 	// this header means "anything but text/test"
 	req.Header.Add("Accept", "text/test, */*")
-	req.Header.Add("Accept-Language", "en;q=0 *") // anything but "en"
+	req.Header.Add("Accept-Language", "en;q=0, *") // anything but "en"
 
 	best := BestRequestMatch(req, a)
 
@@ -135,13 +138,26 @@ func Test_should_negotiate_using_media_and_language(t *testing.T) {
 	g.Expect(best).To(gomega.Equal(&c))
 }
 
-func Test_should_match_subtype_wildcard(t *testing.T) {
+func Test_should_match_subtype_wildcard1(t *testing.T) {
 	g := gomega.NewWithT(t)
 
 	a := OfferOf("text/test")
 
 	req, _ := http.NewRequest("GET", "/", nil)
-	req.Header.Add("Accept", "text/*")
+	req.Header.Add("Accept", "text/*") // <-- wildcard
+
+	best := BestRequestMatch(req, a)
+
+	g.Expect(best).To(gomega.Equal(&a))
+}
+
+func Test_should_match_subtype_wildcard2(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	a := OfferOf("text/*") // <-- wildcard
+
+	req, _ := http.NewRequest("GET", "/", nil)
+	req.Header.Add("Accept", "text/test")
 
 	best := BestRequestMatch(req, a)
 
@@ -154,23 +170,29 @@ func Test_should_match_language_when_offer_language_is_not_specified(t *testing.
 	a := OfferOf("text/html")
 
 	req, _ := http.NewRequest("GET", "/", nil)
-	req.Header.Add("Accept", "text/html")
+	req.Header.Add("Accept", "application/json, text/html")
 	req.Header.Add("Accept-Language", "en, fr")
+	req.Header.Add("Accept-Charset", "utf-8, iso-8859-1")
 
 	best := BestRequestMatch(req, a)
 
-	g.Expect(best).To(gomega.Equal(&a))
+	g.Expect(best).To(gomega.Equal(&Offer{
+		ContentType: a.ContentType,
+		Language:    "en",
+		Charset:     "utf-8",
+	}))
 }
 
-func Test_should_match_language_wildcard_and_send_content_language_header(t *testing.T) {
+func Test_should_match_language_wildcard_and_return_selected_language(t *testing.T) {
 	g := gomega.NewWithT(t)
 
-	var a = OfferOf("", "en")
+	a := OfferOf("", "en")
+	b := OfferOf("", "de")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept-Language", "*")
 
-	best := BestRequestMatch(req, OfferOf("", "en"))
+	best := BestRequestMatch(req, a, b)
 
 	g.Expect(best).To(gomega.Equal(&a))
 }
@@ -209,4 +231,12 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 	best = BestRequestMatch(req, b)
 
 	g.Expect(best).To(gomega.Equal(&b))
+}
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	if testing.Verbose() {
+		Debug = func(m string, a ...interface{}) { fmt.Printf(m, a...) }
+	}
+	os.Exit(m.Run())
 }

@@ -46,7 +46,7 @@ func TestPrecedenceValues_String(t *testing.T) {
 func TestOffer_String(t *testing.T) {
 	g := gomega.NewWithT(t)
 
-	o := OfferOf("text/html", "en").With(func() error {
+	o := OfferOf("text/html", "en").With(func(Offer) error {
 		return nil
 	})
 
