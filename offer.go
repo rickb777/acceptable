@@ -35,17 +35,24 @@ type Offers []Offer
 
 // Filter returns only the offers that match specified type and subtype.
 func (offers Offers) Filter(typ, subtype string) Offers {
+	if len(offers) == 0 {
+		return nil
+	}
+
 	if typ == "" {
 		typ = "*"
 	}
+
 	if subtype == "" {
 		subtype = "*"
 	}
+
 	allowed := make(Offers, 0, len(offers))
 	for _, mr := range offers {
 		if equalOrWildcard(mr.Type, typ) && equalOrWildcard(mr.Subtype, subtype) {
 			allowed = append(allowed, mr)
 		}
 	}
+
 	return allowed
 }

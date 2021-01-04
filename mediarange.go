@@ -5,12 +5,53 @@ import (
 	"strings"
 )
 
+// ContentType is a media type as defined in RFC-2045, RFC-2046, RFC-2231
+// (https://tools.ietf.org/html/rfc2045, https://tools.ietf.org/html/rfc2046,
+// https://tools.ietf.org/html/rfc2231)
 type ContentType struct {
 	Type, Subtype string
+	Params        []KV
+	Extensions    []KV
 }
 
 func (ct ContentType) String() string {
-	return fmt.Sprintf("%s/%s", ct.Type, ct.Subtype)
+	buf := &strings.Builder{}
+	fmt.Fprintf(buf, "%s/%s", ct.Type, ct.Subtype)
+	for _, p := range ct.Params {
+		fmt.Fprintf(buf, ";%s=%s", p.Key, p.Value)
+	}
+	for _, p := range ct.Extensions {
+		fmt.Fprintf(buf, ";%s=%s", p.Key, p.Value)
+	}
+	return buf.String()
+
+}
+
+// ContentTypeOf builds a content type value with optional parameters.
+// The parameters are passed in as literal strings, e.g. "charset=utf-8".
+func ContentTypeOf(typ, subtype string, paramKV ...string) ContentType {
+	if typ == "" {
+		typ = "*"
+	}
+
+	if subtype == "" {
+		subtype = "*"
+	}
+
+	var params []KV
+	if len(paramKV) > 0 {
+		params = make([]KV, 0, len(paramKV))
+		for _, p := range paramKV {
+			k, v := split(p, '=')
+			params = append(params, KV{Key: k, Value: v})
+		}
+	}
+
+	return ContentType{
+		Type:    typ,
+		Subtype: subtype,
+		Params:  params,
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -19,9 +60,7 @@ func (ct ContentType) String() string {
 // There may also be parameters (e.g. "charset") and extension values.
 type MediaRange struct {
 	ContentType
-	Quality    float64
-	Params     []KV
-	Extensions []KV
+	Quality float64
 }
 
 // MediaRanges holds a slice of media ranges.

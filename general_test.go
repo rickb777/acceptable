@@ -102,6 +102,14 @@ func TestParseAcceptXyzHeader_special_cases(t *testing.T) {
 			actual:   "en-gb, en-us, en;q=0.7",
 			expected: []PrecedenceValue{{Value: "en-gb", Quality: DefaultQuality}, {Value: "en-us", Quality: DefaultQuality}, {Value: "en", Quality: 0.7}},
 		},
+		{
+			actual:   "en;q=-1",
+			expected: []PrecedenceValue{{Value: "en", Quality: 0}},
+		},
+		{
+			actual:   "en;q=13",
+			expected: []PrecedenceValue{{Value: "en", Quality: 1}},
+		},
 	}
 
 	for _, c := range cases {

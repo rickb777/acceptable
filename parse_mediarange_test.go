@@ -83,33 +83,20 @@ func TestMediaRanges_should_handle_precedence(t *testing.T) {
 
 	g.Expect(len(mr)).To(Equal(4))
 	g.Expect(mr[0]).To(Equal(MediaRange{
-		ContentType: ContentType{
-			Type:    "text",
-			Subtype: "plain",
-		},
-		Quality: DefaultQuality,
-		Params:  []KV{{"format", "flowed"}},
+		ContentType: ContentTypeOf("text", "plain", "format=flowed"),
+		Quality:     DefaultQuality,
 	}), c)
 	g.Expect(mr[1]).To(Equal(MediaRange{
-		ContentType: ContentType{
-			Type:    "text",
-			Subtype: "plain",
-		},
-		Quality: DefaultQuality,
+		ContentType: ContentTypeOf("text", "plain"),
+		Quality:     DefaultQuality,
 	}), c)
 	g.Expect(mr[2]).To(Equal(MediaRange{
-		ContentType: ContentType{
-			Type:    "text",
-			Subtype: "*",
-		},
-		Quality: DefaultQuality,
+		ContentType: ContentTypeOf("text", "*"),
+		Quality:     DefaultQuality,
 	}), c)
 	g.Expect(mr[3]).To(Equal(MediaRange{
-		ContentType: ContentType{
-			Type:    "*",
-			Subtype: "*",
-		},
-		Quality: DefaultQuality,
+		ContentType: ContentTypeOf("*", "*"),
+		Quality:     DefaultQuality,
 	}), c)
 }
 
@@ -147,45 +134,28 @@ func TestMediaRanges_should_handle_quality_precedence(t *testing.T) {
 		g.Expect(5, len(mr))
 
 		g.Expect(mr[0]).To(Equal(MediaRange{
-			ContentType: ContentType{
-				Type:    "text",
-				Subtype: "html",
-			},
-			Quality: DefaultQuality,
-			Params:  []KV{{"level", "1"}},
+			ContentType: ContentTypeOf("text", "html", "level=1"),
+			Quality:     DefaultQuality,
 		}), c)
 
 		g.Expect(mr[1]).To(Equal(MediaRange{
-			ContentType: ContentType{
-				Type:    "text",
-				Subtype: "html",
-			},
-			Quality: 0.7,
+			ContentType: ContentTypeOf("text", "html"),
+			Quality:     0.7,
 		}), c)
 
 		g.Expect(mr[2]).To(Equal(MediaRange{
-			ContentType: ContentType{
-				Type:    "*",
-				Subtype: "*",
-			},
-			Quality: 0.5,
+			ContentType: ContentTypeOf("*", "*"),
+			Quality:     0.5,
 		}), c)
 
 		g.Expect(mr[3]).To(Equal(MediaRange{
-			ContentType: ContentType{
-				Type:    "text",
-				Subtype: "html",
-			},
-			Quality: 0.4,
-			Params:  []KV{{"level", "2"}},
+			ContentType: ContentTypeOf("text", "html", "level=2"),
+			Quality:     0.4,
 		}), c)
 
 		g.Expect(mr[4]).To(Equal(MediaRange{
-			ContentType: ContentType{
-				Type:    "text",
-				Subtype: "*",
-			},
-			Quality: 0.3,
+			ContentType: ContentTypeOf("text", "*"),
+			Quality:     0.3,
 		}), c)
 	}
 }
