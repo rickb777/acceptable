@@ -8,6 +8,15 @@ import (
 	"github.com/rickb777/acceptable"
 )
 
+// DefaultXMLOffer is an Offer for application/xml content using the XML() processor without indentation.
+var DefaultXMLOffer = acceptable.Offer{
+	ContentType: acceptable.ContentType{
+		Type:    "application",
+		Subtype: "xml",
+	},
+	Processor: XML(),
+}
+
 // XML creates a new processor for XML with optional indentation.
 func XML(indent ...string) acceptable.Processor {
 	in := ""
@@ -22,6 +31,7 @@ func XML(indent ...string) acceptable.Processor {
 
 		enc := xml.NewEncoder(p)
 		enc.Indent("", in)
+
 		err := enc.Encode(dataModel)
 		if err != nil {
 			return err

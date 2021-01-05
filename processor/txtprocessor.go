@@ -9,9 +9,16 @@ import (
 	"github.com/rickb777/acceptable"
 )
 
-const defaultTxtContentType = "text/plain; charset=utf-8"
+// DefaultTXTOffer is an Offer for text/plain content using the TXT() processor.
+var DefaultTXTOffer = acceptable.Offer{
+	ContentType: acceptable.ContentType{
+		Type:    "text",
+		Subtype: "plain",
+	},
+	Processor: TXT(),
+}
 
-// TXT creates an output processor that serialises strings in text/plain form.
+// TXT creates an output processor that serialises strings in a form suitable for text/plain responses.
 // Model values should be one of the following:
 //
 // * string
