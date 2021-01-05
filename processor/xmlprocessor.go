@@ -10,23 +10,24 @@ import (
 
 // XML creates a new processor for XML with optional indentation.
 func XML(indent ...string) acceptable.Processor {
-	if len(indent) == 0 || len(indent[0]) == 0 {
-		return func(w http.ResponseWriter, match acceptable.Match, template string, dataModel interface{}) error {
-			match.ApplyHeaders(w)
-
-			return xml.NewEncoder(w).Encode(dataModel)
-		}
+	in := ""
+	if len(indent) > 0 {
+		in = indent[0]
 	}
 
 	return func(w http.ResponseWriter, match acceptable.Match, template string, dataModel interface{}) error {
 		match.ApplyHeaders(w)
 
-		x, err := xml.MarshalIndent(dataModel, "", indent[0])
+		p := &writerProxy{w: w}
+
+		enc := xml.NewEncoder(p)
+		enc.Indent("", in)
+		err := enc.Encode(dataModel)
 		if err != nil {
 			return err
 		}
 
-		return WriteWithNewline(w, x)
+		return p.FinalNewline()
 	}
 }
 
@@ -38,17 +39,23 @@ func XML(indent ...string) acceptable.Processor {
 //		strings.HasPrefix(mediaRange, "text/xml-")
 //}
 
-// WriteWithNewline is a helper function that writes some bytes to a Writer. If the
-// byte slice is empty or if the last byte is *not* newline, an extra newline is
-// also written, as required for HTTP responses.
-func WriteWithNewline(w io.Writer, x []byte) error {
-	_, err := w.Write(x)
-	if err != nil {
-		return err
-	}
+//-------------------------------------------------------------------------------------------------
 
-	if len(x) == 0 || x[len(x)-1] != '\n' {
-		_, err = w.Write([]byte{'\n'})
+type writerProxy struct {
+	w          io.Writer
+	hasNewline bool
+}
+
+func (d *writerProxy) Write(p []byte) (n int, err error) {
+	n, err = d.w.Write(p)
+	d.hasNewline = len(p) > 0 && p[len(p)-1] == '\n'
+	return n, err
+}
+
+func (d *writerProxy) FinalNewline() error {
+	if d.hasNewline {
+		return nil
 	}
+	_, err := d.w.Write([]byte{'\n'})
 	return err
 }

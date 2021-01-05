@@ -3,6 +3,7 @@ package processor
 import (
 	"encoding"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/rickb777/acceptable"
@@ -24,12 +25,12 @@ func TXT() acceptable.Processor {
 
 		s, ok := dataModel.(string)
 		if ok {
-			return WriteWithNewline(w, []byte(s))
+			return writeWithNewline(w, []byte(s))
 		}
 
 		st, ok := dataModel.(fmt.Stringer)
 		if ok {
-			return WriteWithNewline(w, []byte(st.String()))
+			return writeWithNewline(w, []byte(st.String()))
 		}
 
 		tm, ok := dataModel.(encoding.TextMarshaler)
@@ -38,9 +39,24 @@ func TXT() acceptable.Processor {
 			if err != nil {
 				return err
 			}
-			return WriteWithNewline(w, b)
+			return writeWithNewline(w, b)
 		}
 
 		return fmt.Errorf("Unsupported type for TXT: %T", dataModel)
 	}
+}
+
+// writeWithNewline is a helper function that writes some bytes to a Writer. If the
+// byte slice is empty or if the last byte is *not* newline, an extra newline is
+// also written, as required for HTTP responses.
+func writeWithNewline(w io.Writer, x []byte) error {
+	_, err := w.Write(x)
+	if err != nil {
+		return err
+	}
+
+	if len(x) == 0 || x[len(x)-1] != '\n' {
+		_, err = w.Write([]byte{'\n'})
+	}
+	return err
 }

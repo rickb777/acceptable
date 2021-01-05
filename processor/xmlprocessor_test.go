@@ -3,81 +3,73 @@ package processor_test
 import (
 	"encoding/xml"
 	"errors"
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/processor"
+
 	. "github.com/onsi/gomega"
-	"github.com/rickb777/negotiator/processor"
 )
 
-func TestXMLShouldProcessAcceptHeader(t *testing.T) {
+func TestXMLShouldWriteResponseBody(t *testing.T) {
 	g := NewGomegaWithT(t)
-	var acceptTests = []struct {
-		acceptheader string
-		expected     bool
-	}{
-		{"application/xml", true},
-		{"application/xml-dtd", true},
-		{"application/CEA", false},
-		{"image/svg+xml", true},
-	}
-
-	p := processor.XML()
-
-	for _, tt := range acceptTests {
-		result := p.CanProcess(tt.acceptheader, "")
-		g.Expect(result).To(Equal(tt.expected), "Should process "+tt.acceptheader)
-	}
-}
-
-func TestXMLShouldSetContentTypeHeader(t *testing.T) {
-	g := NewGomegaWithT(t)
-
-	p := processor.XML().(processor.ContentTypeSettable).WithContentType("application/my+xml")
-
-	g.Expect(p.ContentType()).To(Equal("application/my+xml"))
-}
-
-func TestXMLShouldSetResponseBody(t *testing.T) {
-	g := NewGomegaWithT(t)
-	recorder := httptest.NewRecorder()
+	w := httptest.NewRecorder()
 
 	model := &ValidXMLUser{
 		"Joe Bloggs",
 	}
 
+	match := acceptable.Match{
+		Type:     "application",
+		Subtype:  "json",
+		Language: "en",
+		Charset:  "utf-8",
+	}
+
 	p := processor.XML()
 
-	p.Process(recorder, "", model)
+	p(w, match, "template", model)
 
-	g.Expect(recorder.Body.String()).To(Equal("<ValidXMLUser><Name>Joe Bloggs</Name></ValidXMLUser>"))
+	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
+	g.Expect(w.Header().Get("Content-Language")).To(Equal("en"))
+	g.Expect(w.Body.String()).To(Equal("<ValidXMLUser><Name>Joe Bloggs</Name></ValidXMLUser>\n"))
 }
 
-func TestXMlShouldSetResponseBodyWithIndentation(t *testing.T) {
+func TestXMlShouldWriteResponseBodyWithIndentation(t *testing.T) {
 	g := NewGomegaWithT(t)
-	recorder := httptest.NewRecorder()
+	w := httptest.NewRecorder()
 
 	model := &ValidXMLUser{Name: "Joe Bloggs"}
+	match := acceptable.Match{
+		Type:     "application",
+		Subtype:  "json",
+		Language: "cn",
+		Charset:  "utf-16",
+	}
 
-	p := processor.IndentedXML("  ")
+	p := processor.XML("  ")
 
-	p.Process(recorder, "", model)
+	p(w, match, "template", model)
 
-	g.Expect(recorder.Body.String()).To(Equal("<ValidXMLUser>\n  <Name>Joe Bloggs</Name>\n</ValidXMLUser>\n"))
+	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16"))
+	g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"))
+	g.Expect(w.Body.String()).To(Equal("<ValidXMLUser>\n  <Name>Joe Bloggs</Name>\n</ValidXMLUser>\n"))
 }
 
 func TestXMLShouldRPanicOnError(t *testing.T) {
 	g := NewGomegaWithT(t)
-	recorder := httptest.NewRecorder()
+	w := httptest.NewRecorder()
 
 	model := &XMLUser{Name: "Joe Bloggs"}
+	match := acceptable.Match{}
 
-	p := processor.IndentedXML("  ")
+	p := processor.XML("  ")
 
-	err := p.Process(recorder, "", model)
+	err := p(w, match, "template", model)
 
 	g.Expect(err).To(HaveOccurred())
+	g.Expect(err.Error()).To(ContainSubstring("oops"))
 }
 
 type ValidXMLUser struct {
@@ -92,7 +84,7 @@ func (u *XMLUser) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	return errors.New("oops")
 }
 
-func xmltestErrorHandler(w http.ResponseWriter, err error) {
-	w.WriteHeader(500)
-	w.Write([]byte(err.Error()))
-}
+//func xmltestErrorHandler(w http.ResponseWriter, err error) {
+//	w.WriteHeader(500)
+//	w.Write([]byte(err.Error()))
+//}

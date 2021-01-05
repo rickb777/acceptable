@@ -5,38 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rickb777/acceptable"
+
 	. "github.com/onsi/gomega"
-	"github.com/rickb777/negotiator/processor"
+	"github.com/rickb777/acceptable/processor"
 )
 
-func TestTXTShouldProcessAcceptHeader(t *testing.T) {
-	g := NewGomegaWithT(t)
-	var acceptTests = []struct {
-		acceptheader string
-		expected     bool
-	}{
-		{"text/plain", true},
-		{"text/*", true},
-		{"text/csv", false},
-	}
-
-	p := processor.TXT()
-
-	for _, tt := range acceptTests {
-		result := p.CanProcess(tt.acceptheader, "")
-		g.Expect(result).To(Equal(tt.expected), "Should process "+tt.acceptheader)
-	}
-}
-
-func TestTXTShouldSetContentTypeHeader(t *testing.T) {
-	g := NewGomegaWithT(t)
-
-	p := processor.TXT().(processor.ContentTypeSettable).WithContentType("text/foo")
-
-	g.Expect(p.ContentType()).To(Equal("text/foo"))
-}
-
-func TestTXTShouldSetResponseBody(t *testing.T) {
+func TestTXTShouldWriteResponseBody(t *testing.T) {
 	g := NewGomegaWithT(t)
 	models := []struct {
 		stuff    interface{}
@@ -50,19 +25,19 @@ func TestTXTShouldSetResponseBody(t *testing.T) {
 	p := processor.TXT()
 
 	for _, m := range models {
-		recorder := httptest.NewRecorder()
-		p.Process(recorder, "", m.stuff)
-		g.Expect(recorder.Body.String()).To(Equal(m.expected))
+		w := httptest.NewRecorder()
+		p(w, acceptable.Match{}, "", m.stuff)
+		g.Expect(w.Body.String()).To(Equal(m.expected))
 	}
 }
 
 func TestTXTShouldReturnError(t *testing.T) {
 	g := NewGomegaWithT(t)
-	recorder := httptest.NewRecorder()
+	w := httptest.NewRecorder()
 
 	p := processor.TXT()
 
-	err := p.Process(recorder, "", make(chan int, 0))
+	err := p(w, acceptable.Match{}, "", make(chan int, 0))
 
 	g.Expect(err).To(HaveOccurred())
 }
