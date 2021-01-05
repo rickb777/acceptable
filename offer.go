@@ -2,7 +2,11 @@ package acceptable
 
 import (
 	"fmt"
+	"net/http"
 )
+
+// Processor is a function that renders content according to the matched result.
+type Processor func(w http.ResponseWriter, match Match, template string, dataModel interface{}) error
 
 // Offer holds information about one particular resource representation that can potentially
 // provide an acceptable response.
@@ -21,7 +25,7 @@ type Offer struct {
 
 	// Processor is an optional function you can use to apply the offer if it is selected.
 	// How this is used is entirely at the discretion of the call site.
-	Processor func(Offer) error
+	Processor Processor
 }
 
 // OfferOf constructs an Offer easily.
@@ -47,7 +51,7 @@ func OfferOf(contentType string, language ...string) Offer {
 
 // With attaches a processor function to an offer and returns the modified offer.
 // The original offer is unchanged.
-func (o Offer) With(processor func(Offer) error) Offer {
+func (o Offer) With(processor Processor) Offer {
 	o.Processor = processor
 	return o
 }

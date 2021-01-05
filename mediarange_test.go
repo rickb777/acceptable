@@ -1,6 +1,7 @@
 package acceptable
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/onsi/gomega"
@@ -46,7 +47,7 @@ func TestPrecedenceValues_String(t *testing.T) {
 func TestOffer_String(t *testing.T) {
 	g := gomega.NewWithT(t)
 
-	o := OfferOf("text/html", "en").With(func(Offer) error {
+	o := OfferOf("text/html", "en").With(func(w http.ResponseWriter, match Match, template string, dataModel interface{}) error {
 		return nil
 	})
 

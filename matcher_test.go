@@ -20,7 +20,12 @@ func Test_should_use_default_processor_if_no_accept_header(t *testing.T) {
 
 	best := BestRequestMatch(req, a, b)
 
-	g.Expect(best).To(gomega.Equal(&a))
+	g.Expect(best).To(gomega.Equal(&Match{
+		Type:     "text",
+		Subtype:  "test",
+		Language: "*",
+		Charset:  "",
+	}))
 }
 
 func Test_should_give_JSON_response_for_ajax_requests(t *testing.T) {
@@ -33,7 +38,12 @@ func Test_should_give_JSON_response_for_ajax_requests(t *testing.T) {
 
 	best := BestRequestMatch(req, a)
 
-	g.Expect(best).To(gomega.Equal(&a))
+	g.Expect(best).To(gomega.Equal(&Match{
+		Type:     "*",
+		Subtype:  "*",
+		Language: "*",
+		Charset:  "",
+	}))
 }
 
 func Test_should_give_406_for_unmatched_ajax_requests(t *testing.T) {
@@ -116,7 +126,12 @@ func Test_should_return_200_even_when_language_is_explicitly_excluded(t *testing
 
 	best := BestRequestMatch(req, a)
 
-	g.Expect(best).To(gomega.Equal(&a))
+	g.Expect(best).To(gomega.Equal(&Match{
+		Type:     "text",
+		Subtype:  "test",
+		Language: "en",
+		Charset:  "",
+	}))
 }
 
 func Test_should_negotiate_using_media_and_language(t *testing.T) {
@@ -135,7 +150,12 @@ func Test_should_negotiate_using_media_and_language(t *testing.T) {
 
 	best := BestRequestMatch(req, a, b, c)
 
-	g.Expect(best).To(gomega.Equal(&c))
+	g.Expect(best).To(gomega.Equal(&Match{
+		Type:     "text",
+		Subtype:  "test",
+		Language: "en",
+		Charset:  "",
+	}))
 }
 
 func Test_should_match_subtype_wildcard1(t *testing.T) {
@@ -148,7 +168,12 @@ func Test_should_match_subtype_wildcard1(t *testing.T) {
 
 	best := BestRequestMatch(req, a)
 
-	g.Expect(best).To(gomega.Equal(&a))
+	g.Expect(best).To(gomega.Equal(&Match{
+		Type:     "text",
+		Subtype:  "test",
+		Language: "*",
+		Charset:  "",
+	}))
 }
 
 func Test_should_match_subtype_wildcard2(t *testing.T) {
@@ -161,7 +186,12 @@ func Test_should_match_subtype_wildcard2(t *testing.T) {
 
 	best := BestRequestMatch(req, a)
 
-	g.Expect(best).To(gomega.Equal(&a))
+	g.Expect(best).To(gomega.Equal(&Match{
+		Type:     "text",
+		Subtype:  "test",
+		Language: "*",
+		Charset:  "",
+	}))
 }
 
 func Test_should_match_language_when_offer_language_is_not_specified(t *testing.T) {
@@ -176,10 +206,11 @@ func Test_should_match_language_when_offer_language_is_not_specified(t *testing.
 
 	best := BestRequestMatch(req, a)
 
-	g.Expect(best).To(gomega.Equal(&Offer{
-		ContentType: a.ContentType,
-		Language:    "en",
-		Charset:     "utf-8",
+	g.Expect(best).To(gomega.Equal(&Match{
+		Type:     "text",
+		Subtype:  "html",
+		Language: "en",
+		Charset:  "utf-8",
 	}))
 }
 
@@ -194,7 +225,12 @@ func Test_should_match_language_wildcard_and_return_selected_language(t *testing
 
 	best := BestRequestMatch(req, a, b)
 
-	g.Expect(best).To(gomega.Equal(&a))
+	g.Expect(best).To(gomega.Equal(&Match{
+		Type:     "*",
+		Subtype:  "*",
+		Language: "en",
+		Charset:  "",
+	}))
 }
 
 func Test_should_negotiate_a_default_processor(t *testing.T) {
@@ -208,11 +244,21 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 
 	best := BestRequestMatch(req, wildcard)
 
-	g.Expect(best).To(gomega.Equal(&wildcard))
+	g.Expect(best).To(gomega.Equal(&Match{
+		Type:     "text",
+		Subtype:  "test",
+		Language: "*",
+		Charset:  "",
+	}))
 
 	best = BestRequestMatch(req, a)
 
-	g.Expect(best).To(gomega.Equal(&a))
+	g.Expect(best).To(gomega.Equal(&Match{
+		Type:     "text",
+		Subtype:  "test",
+		Language: "*",
+		Charset:  "",
+	}))
 }
 
 func Test_should_negotiate_one_of_the_processors(t *testing.T) {
@@ -226,11 +272,21 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 
 	best := BestRequestMatch(req, a)
 
-	g.Expect(best).To(gomega.Equal(&a))
+	g.Expect(best).To(gomega.Equal(&Match{
+		Type:     "text",
+		Subtype:  "a",
+		Language: "*",
+		Charset:  "",
+	}))
 
 	best = BestRequestMatch(req, b)
 
-	g.Expect(best).To(gomega.Equal(&b))
+	g.Expect(best).To(gomega.Equal(&Match{
+		Type:     "text",
+		Subtype:  "b",
+		Language: "*",
+		Charset:  "",
+	}))
 }
 
 func TestMain(m *testing.M) {
