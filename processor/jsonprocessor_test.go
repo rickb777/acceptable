@@ -21,7 +21,7 @@ func TestJSONShouldWriteResponseBody(t *testing.T) {
 		"Joe Bloggs",
 	}
 
-	match := acceptable.Match{
+	match := &acceptable.Match{
 		Type:     "application",
 		Subtype:  "json",
 		Language: "en",
@@ -46,7 +46,7 @@ func TestJSONShouldWriteResponseBodyIndented(t *testing.T) {
 	}{
 		"名称",
 	}
-	match := acceptable.Match{
+	match := &acceptable.Match{
 		Type:     "application",
 		Subtype:  "json",
 		Language: "cn",
@@ -69,7 +69,7 @@ func TestJSONShouldReturnError(t *testing.T) {
 	model := &User{
 		"Joe Bloggs",
 	}
-	match := acceptable.Match{}
+	match := &acceptable.Match{}
 
 	p := processor.JSON()
 

@@ -24,7 +24,7 @@ func XML(indent ...string) acceptable.Processor {
 		in = indent[0]
 	}
 
-	return func(w http.ResponseWriter, match acceptable.Match, template string, dataModel interface{}) error {
+	return func(w http.ResponseWriter, match *acceptable.Match, template string, data interface{}) (err error) {
 		match.ApplyHeaders(w)
 
 		p := &writerProxy{w: w}
@@ -32,7 +32,14 @@ func XML(indent ...string) acceptable.Processor {
 		enc := xml.NewEncoder(p)
 		enc.Indent("", in)
 
-		err := enc.Encode(dataModel)
+		if fn, isFunc := data.(acceptable.Supplier); isFunc {
+			data, err = fn()
+			if err != nil {
+				return err
+			}
+		}
+
+		err = enc.Encode(data)
 		if err != nil {
 			return err
 		}

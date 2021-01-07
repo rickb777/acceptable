@@ -27,29 +27,37 @@ var DefaultTXTOffer = acceptable.Offer{
 //
 // * encoding.TextMarshaler
 func TXT() acceptable.Processor {
-	return func(w http.ResponseWriter, match acceptable.Match, template string, dataModel interface{}) error {
+	return func(w http.ResponseWriter, match *acceptable.Match, template string, data interface{}) (err error) {
 		match.ApplyHeaders(w)
 
-		s, ok := dataModel.(string)
+		if fn, isFunc := data.(acceptable.Supplier); isFunc {
+			data, err = fn()
+			if err != nil {
+				return err
+			}
+		}
+
+		s, ok := data.(string)
 		if ok {
 			return writeWithNewline(w, []byte(s))
 		}
 
-		st, ok := dataModel.(fmt.Stringer)
+		st, ok := data.(fmt.Stringer)
 		if ok {
 			return writeWithNewline(w, []byte(st.String()))
 		}
 
-		tm, ok := dataModel.(encoding.TextMarshaler)
+		tm, ok := data.(encoding.TextMarshaler)
 		if ok {
-			b, err := tm.MarshalText()
-			if err != nil {
-				return err
+			b, e2 := tm.MarshalText()
+			if e2 != nil {
+				return e2
 			}
 			return writeWithNewline(w, b)
 		}
 
-		return fmt.Errorf("Unsupported type for TXT: %T", dataModel)
+		_, err = fmt.Fprintf(w, "%v\n", data)
+		return err
 	}
 }
 

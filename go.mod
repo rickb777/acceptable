@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/labstack/echo/v4 v4.1.17
 	github.com/onsi/gomega v1.10.4
 	github.com/rickb777/negotiator v0.12.0
 	golang.org/x/net v0.0.0-20201216054612-986b41b23924 // indirect

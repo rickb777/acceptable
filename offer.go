@@ -5,8 +5,13 @@ import (
 	"net/http"
 )
 
+// Supplier supplies data in the form of a struct, a slice, etc.
+// This allows for evaluation on demand ('lazy'), e.g. fetching from a database.
+type Supplier func() (interface{}, error)
+
 // Processor is a function that renders content according to the matched result.
-type Processor func(w http.ResponseWriter, match Match, template string, dataModel interface{}) error
+// The data can be a struct, slice etc or a Supplier.
+type Processor func(w http.ResponseWriter, match *Match, template string, data interface{}) error
 
 // Offer holds information about one particular resource representation that can potentially
 // provide an acceptable response.
@@ -26,12 +31,16 @@ type Offer struct {
 	// Processor is an optional function you can use to apply the offer if it is selected.
 	// How this is used is entirely at the discretion of the call site.
 	Processor Processor
+
+	// Data is an optional response to be rendered if this offer is selected.
+	// If Data is a Supplier function, the data can be sourced lazily.
+	Data interface{}
 }
 
 // OfferOf constructs an Offer easily.
 // If the language is absent, it is assumed to be the wildcard "*".
 // If the content type is blank, it is assumed to be the full wildcard "*/*".
-// If the content subtype is blank, it is assumed to be the partial wildcard "type/*".
+// Also, contentType can be a partial wildcard "type/*".
 func OfferOf(contentType string, language ...string) Offer {
 	t, s, l := "*", "*", "*"
 	if contentType != "" {
@@ -49,10 +58,17 @@ func OfferOf(contentType string, language ...string) Offer {
 	}
 }
 
-// With attaches a processor function to an offer and returns the modified offer.
+// Using attaches a processor function to an offer and returns the modified offer.
 // The original offer is unchanged.
-func (o Offer) With(processor Processor) Offer {
+func (o Offer) Using(processor Processor) Offer {
 	o.Processor = processor
+	return o
+}
+
+// With attaches response data to an offer.
+// The original offer is unchanged.
+func (o Offer) With(data interface{}) Offer {
+	o.Data = data
 	return o
 }
 

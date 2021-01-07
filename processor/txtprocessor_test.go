@@ -26,20 +26,20 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		p(w, acceptable.Match{}, "", m.stuff)
+		p(w, &acceptable.Match{}, "", m.stuff)
 		g.Expect(w.Body.String()).To(Equal(m.expected))
 	}
 }
 
-func TestTXTShouldReturnError(t *testing.T) {
+func TestTXTShouldNotReturnError(t *testing.T) {
 	g := NewGomegaWithT(t)
 	w := httptest.NewRecorder()
 
 	p := processor.TXT()
 
-	err := p(w, acceptable.Match{}, "", make(chan int, 0))
+	err := p(w, &acceptable.Match{}, "", make(chan int, 0))
 
-	g.Expect(err).To(HaveOccurred())
+	g.Expect(err).NotTo(HaveOccurred())
 }
 
 func tt(y, m, d int) time.Time {

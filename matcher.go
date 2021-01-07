@@ -130,10 +130,10 @@ func (c context) findBestMatch(mrs MediaRanges, languages PrecedenceValues, offe
 					Debug("%s successfully matched %s, lang=%s to %s, lang=%s\n", c, accepted, lang, offer.ContentType, offer.Language)
 
 					m := &Match{
-						Type:      offer.Type,
-						Subtype:   offer.Subtype,
-						Language:  offer.Language,
-						Processor: offer.Processor,
+						Type:     offer.Type,
+						Subtype:  offer.Subtype,
+						Language: offer.Language,
+						Render:   offer.Processor,
 					}
 					if offer.Type == "*" && accepted.Type != "*" {
 						m.Type = accepted.Type

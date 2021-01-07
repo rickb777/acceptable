@@ -20,7 +20,7 @@ func TestXMLShouldWriteResponseBody(t *testing.T) {
 		"Joe Bloggs",
 	}
 
-	match := acceptable.Match{
+	match := &acceptable.Match{
 		Type:     "application",
 		Subtype:  "json",
 		Language: "en",
@@ -41,7 +41,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	model := &ValidXMLUser{Name: "Joe Bloggs"}
-	match := acceptable.Match{
+	match := &acceptable.Match{
 		Type:     "application",
 		Subtype:  "json",
 		Language: "cn",
@@ -62,7 +62,7 @@ func TestXMLShouldRPanicOnError(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	model := &XMLUser{Name: "Joe Bloggs"}
-	match := acceptable.Match{}
+	match := &acceptable.Match{}
 
 	p := processor.XML("  ")
 
