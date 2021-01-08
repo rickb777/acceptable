@@ -77,7 +77,7 @@ func (c context) bestMatch(mrs MediaRanges, languages PrecedenceValues, availabl
 
 	// second pass - find the first exact-match media-range and language combination
 	for _, offer := range remaining {
-		best := c.findBestMatch(mrs, languages, offer, exactMatch, "exact")
+		best := c.findBestMatch(mrs, languages, offer, exactMatch, equalOrPrefix, "exact")
 		if best != nil {
 			return best
 		}
@@ -85,7 +85,7 @@ func (c context) bestMatch(mrs MediaRanges, languages PrecedenceValues, availabl
 
 	// third pass - find the first near-match media-range and language combination
 	for _, offer := range remaining {
-		best := c.findBestMatch(mrs, languages, offer, nearMatch, "near")
+		best := c.findBestMatch(mrs, languages, offer, nearMatch, equalOrWildcard, "near")
 		if best != nil {
 			return best
 		}
@@ -113,59 +113,65 @@ func (c context) removeExcludedOffers(mrs MediaRanges, available []Offer) []Offe
 		if !excluded[i] {
 			remaining = append(remaining, offer)
 		} else {
-			Debug("%s excluding offer %s, lang=%s\n", c, offer.ContentType, offer.Language)
+			Debug("%s excluding offer %s, langs=%v\n", c, offer.ContentType, offer.langs)
 		}
 	}
 
 	return remaining
 }
 
-func (c context) findBestMatch(mrs MediaRanges, languages PrecedenceValues, offer Offer, match func(MediaRange, PrecedenceValue, Offer) bool, kind string) *Match {
-	for _, accepted := range mrs {
-		for _, lang := range languages {
-			Debug("%s try matching %s, lang=%s to %s, lang=%s\n", c, accepted, lang, offer.ContentType, offer.Language)
+func (c context) findBestMatch(mrs MediaRanges, languages PrecedenceValues, offer Offer,
+	ctMatch func(MediaRange, Offer) bool,
+	langMatch func(acceptedLang, offeredLang string) bool,
+	kind string) *Match {
 
-			if match(accepted, lang, offer) {
-				if lang.Quality > 0 {
-					Debug("%s successfully matched %s, lang=%s to %s, lang=%s\n", c, accepted, lang, offer.ContentType, offer.Language)
+	for _, acceptedCT := range mrs {
+		if ctMatch(acceptedCT, offer) {
+			for _, prefLang := range languages {
+				for _, offeredLang := range offer.langs {
+					if langMatch(prefLang.Value, offeredLang) {
+						Debug("%s try matching %s, lang=%s to %s, lang=%s\n", c, acceptedCT, prefLang, offer.ContentType, offeredLang)
 
-					m := &Match{
-						Type:     offer.Type,
-						Subtype:  offer.Subtype,
-						Language: offer.Language,
-						Render:   offer.Processor,
+						if prefLang.Quality > 0 {
+							Debug("%s successfully matched %s, lang=%s to %s, langs=%v\n", c, acceptedCT, prefLang, offer.ContentType, offer.langs)
+
+							m := &Match{
+								Type:     offer.Type,
+								Subtype:  offer.Subtype,
+								Language: offeredLang,
+								Render:   offer.processor,
+							}
+							if offer.Type == "*" && acceptedCT.Type != "*" {
+								m.Type = acceptedCT.Type
+							}
+							if offer.Subtype == "*" && acceptedCT.Subtype != "*" {
+								m.Subtype = acceptedCT.Subtype
+							}
+							if offeredLang == "*" && prefLang.Value != "*" {
+								m.Language = prefLang.Value
+							}
+							return m
+						}
 					}
-					if offer.Type == "*" && accepted.Type != "*" {
-						m.Type = accepted.Type
-					}
-					if offer.Subtype == "*" && accepted.Subtype != "*" {
-						m.Subtype = accepted.Subtype
-					}
-					if offer.Language == "*" && lang.Value != "*" {
-						m.Language = lang.Value
-					}
-					return m
 				}
 			}
 		}
 	}
 
-	Debug("%s no %s match for offer %s, lang=%s\n", c, kind, offer.ContentType, offer.Language)
+	Debug("%s no %s match for offer %s, langs=%v\n", c, kind, offer.ContentType, offer.langs)
 	return nil
 }
 
 //-------------------------------------------------------------------------------------------------
 
-func exactMatch(accepted MediaRange, lang PrecedenceValue, offer Offer) bool {
+func exactMatch(accepted MediaRange, offer Offer) bool {
 	return accepted.Type == offer.Type &&
-		accepted.Subtype == offer.Subtype &&
-		equalOrPrefix(lang.Value, offer.Language)
+		accepted.Subtype == offer.Subtype
 }
 
-func nearMatch(accepted MediaRange, lang PrecedenceValue, offer Offer) bool {
+func nearMatch(accepted MediaRange, offer Offer) bool {
 	return equalOrWildcard(accepted.Type, offer.Type) &&
-		equalOrWildcard(accepted.Subtype, offer.Subtype) &&
-		equalOrPrefix(lang.Value, offer.Language)
+		equalOrWildcard(accepted.Subtype, offer.Subtype)
 }
 
 func equalOrPrefix(acceptedLang, offeredLang string) bool {

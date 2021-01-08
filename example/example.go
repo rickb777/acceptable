@@ -32,12 +32,12 @@ func main() {
 // Handler
 func hello(c echo.Context) error {
 	best := acceptable.BestRequestMatch(c.Request(),
-		acceptable.OfferOf("application/json", "en").Using(processor.JSON("  ")).With(en),
-		acceptable.OfferOf("application/xml").Using(processor.XML("  ")).With(en),
-		acceptable.OfferOf("text/plain").Using(processor.TXT()).With(en),
-		acceptable.OfferOf("application/json", "en").Using(processor.JSON("  ")).With(fr),
-		acceptable.OfferOf("application/xml").Using(processor.XML("  ")).With(fr),
-		acceptable.OfferOf("text/plain").Using(processor.TXT()).With(fr))
+		acceptable.OfferOf("application/json", "en").Using(processor.JSON("  ")).With("en", en),
+		acceptable.OfferOf("application/xml").Using(processor.XML("  ")).With("en", en),
+		acceptable.OfferOf("text/plain").Using(processor.TXT()).With("en", en),
+		acceptable.OfferOf("application/json", "en").Using(processor.JSON("  ")).With("fr", fr),
+		acceptable.OfferOf("application/xml").Using(processor.XML("  ")).With("fr", fr),
+		acceptable.OfferOf("text/plain").Using(processor.TXT()).With("fr", fr))
 
 	if best == nil {
 		return c.String(http.StatusNotAcceptable, http.StatusText(http.StatusNotAcceptable))

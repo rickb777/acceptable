@@ -1,8 +1,8 @@
 package acceptable
 
 import (
-	"fmt"
 	"net/http"
+	"strings"
 )
 
 // Supplier supplies data in the form of a struct, a slice, etc.
@@ -20,21 +20,15 @@ type Offer struct {
 	// Wildcard values may be used.
 	ContentType
 
-	// Language defines which language will be provided if this offer is matched.
-	// Can also be blank or "*" - both indicate that this is not used.
-	Language string
-
-	// Charset returns the preferred character set for the response, if any.
-	// This is set on return from the BestRequestMatch function.
-	Charset string
-
-	// Processor is an optional function you can use to apply the offer if it is selected.
+	// processor is an optional function you can use to apply the offer if it is selected.
 	// How this is used is entirely at the discretion of the call site.
-	Processor Processor
+	processor Processor
 
-	// Data is an optional response to be rendered if this offer is selected.
+	langs []string
+
+	// data is an optional response to be rendered if this offer is selected.
 	// If Data is a Supplier function, the data can be sourced lazily.
-	Data interface{}
+	data map[string]interface{}
 }
 
 // OfferOf constructs an Offer easily.
@@ -42,39 +36,69 @@ type Offer struct {
 // If the content type is blank, it is assumed to be the full wildcard "*/*".
 // Also, contentType can be a partial wildcard "type/*".
 func OfferOf(contentType string, language ...string) Offer {
-	t, s, l := "*", "*", "*"
+	t, s := "*", "*"
 	if contentType != "" {
 		t, s = split(contentType, '/')
 	}
+	ct := ContentType{
+		Type:    t,
+		Subtype: s,
+	}
 	if len(language) > 0 {
-		l = language[0]
+		return Offer{
+			ContentType: ct,
+			langs:       language[:1],
+			data: map[string]interface{}{
+				language[0]: emptyValue,
+			},
+		}
 	}
 	return Offer{
-		ContentType: ContentType{
-			Type:    t,
-			Subtype: s,
-		},
-		Language: l,
+		ContentType: ct,
+		langs:       []string{"*"},
+		data:        make(map[string]interface{}),
 	}
 }
 
 // Using attaches a processor function to an offer and returns the modified offer.
 // The original offer is unchanged.
 func (o Offer) Using(processor Processor) Offer {
-	o.Processor = processor
+	o.processor = processor
 	return o
 }
 
 // With attaches response data to an offer.
 // The original offer is unchanged.
-func (o Offer) With(data interface{}) Offer {
-	o.Data = data
+func (o Offer) With(language string, data interface{}) Offer {
+	if data == nil {
+		data = emptyValue
+	}
+	o.langs = append(o.langs, language)
+	o.data[language] = data
 	return o
 }
 
 func (o Offer) String() string {
-	return fmt.Sprintf("Accept: %s. Accept-Language: %s", o.ContentType, o.Language)
+	buf := &strings.Builder{}
+	buf.WriteString("Accept: ")
+	buf.WriteString(o.ContentType.String())
+	if len(o.data) > 0 {
+		buf.WriteString(". Accept-Language: ")
+		comma := ""
+		for k := range o.data {
+			buf.WriteString(comma)
+			buf.WriteString(k)
+			comma = ", "
+		}
+	}
+	return buf.String()
 }
+
+//-------------------------------------------------------------------------------------------------
+
+type empty struct{}
+
+var emptyValue = empty{}
 
 //-------------------------------------------------------------------------------------------------
 

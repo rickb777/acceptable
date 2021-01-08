@@ -9,13 +9,7 @@ import (
 )
 
 // DefaultXMLOffer is an Offer for application/xml content using the XML() processor without indentation.
-var DefaultXMLOffer = acceptable.Offer{
-	ContentType: acceptable.ContentType{
-		Type:    "application",
-		Subtype: "xml",
-	},
-	Processor: XML(),
-}
+var DefaultXMLOffer = acceptable.OfferOf("application/xml").Using(XML())
 
 // XML creates a new processor for XML with optional indentation.
 func XML(indent ...string) acceptable.Processor {
@@ -25,7 +19,9 @@ func XML(indent ...string) acceptable.Processor {
 	}
 
 	return func(w http.ResponseWriter, match *acceptable.Match, template string, data interface{}) (err error) {
-		match.ApplyHeaders(w)
+		if match != nil {
+			match.ApplyHeaders(w)
+		}
 
 		p := &writerProxy{w: w}
 

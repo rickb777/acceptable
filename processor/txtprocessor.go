@@ -10,13 +10,7 @@ import (
 )
 
 // DefaultTXTOffer is an Offer for text/plain content using the TXT() processor.
-var DefaultTXTOffer = acceptable.Offer{
-	ContentType: acceptable.ContentType{
-		Type:    "text",
-		Subtype: "plain",
-	},
-	Processor: TXT(),
-}
+var DefaultTXTOffer = acceptable.OfferOf("text/plain").Using(TXT())
 
 // TXT creates an output processor that serialises strings in a form suitable for text/plain responses.
 // Model values should be one of the following:
@@ -28,7 +22,9 @@ var DefaultTXTOffer = acceptable.Offer{
 // * encoding.TextMarshaler
 func TXT() acceptable.Processor {
 	return func(w http.ResponseWriter, match *acceptable.Match, template string, data interface{}) (err error) {
-		match.ApplyHeaders(w)
+		if match != nil {
+			match.ApplyHeaders(w)
+		}
 
 		if fn, isFunc := data.(acceptable.Supplier); isFunc {
 			data, err = fn()
