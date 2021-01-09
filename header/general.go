@@ -5,15 +5,15 @@
 //
 // For "Accept" use the ParseMediaRanges function. This has more complex attributes
 // and rules.
-package acceptable
+package header
 
 import (
 	"sort"
 	"strconv"
 	"strings"
-)
 
-const qualityParam = "q"
+	"github.com/rickb777/acceptable/internal"
+)
 
 // Parse splits a prioritised "Accept-Language", "Accept-Encoding" or "Accept-Charset"
 // header value and sorts the parts. These are returned in order with the most
@@ -51,7 +51,7 @@ func handlePartWithParams(value string, acceptParams []string) PrecedenceValue {
 
 	for _, ap := range acceptParams {
 		ap = strings.TrimSpace(ap)
-		k, v := split(ap, '=')
+		k, v := internal.Split(ap, '=')
 		if strings.TrimSpace(k) == qualityParam {
 			wv.Quality = parseQuality(v)
 		}

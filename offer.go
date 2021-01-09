@@ -3,6 +3,9 @@ package acceptable
 import (
 	"net/http"
 	"strings"
+
+	"github.com/rickb777/acceptable/header"
+	"github.com/rickb777/acceptable/internal"
 )
 
 // Supplier supplies data in the form of a struct, a slice, etc.
@@ -18,7 +21,7 @@ type Processor func(w http.ResponseWriter, match Match, template string) error
 type Offer struct {
 	// ContentType is the content type that is to be matched.
 	// Wildcard values may be used.
-	ContentType
+	header.ContentType
 
 	// processor is an optional function you can use to apply the offer if it is selected.
 	// How this is used is entirely at the discretion of the call site.
@@ -38,9 +41,9 @@ type Offer struct {
 func OfferOf(contentType string, language ...string) Offer {
 	t, s := "*", "*"
 	if contentType != "" {
-		t, s = split(contentType, '/')
+		t, s = internal.Split(contentType, '/')
 	}
-	ct := ContentType{
+	ct := header.ContentType{
 		Type:    t,
 		Subtype: s,
 	}

@@ -1,4 +1,4 @@
-package acceptable
+package header
 
 import (
 	"fmt"

@@ -9,6 +9,7 @@ import (
 	"golang.org/x/text/encoding/htmlindex"
 )
 
+// Match holds the best-matched offer after content negotiation and is used for response rendering.
 type Match struct {
 	Type     string
 	Subtype  string
@@ -52,11 +53,4 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) (w io.Writer) {
 	rw.Header().Set("Vary", strings.Join(vary, ", "))
 
 	return w
-}
-
-func orDefault(s, d string) string {
-	if s == "" {
-		return d
-	}
-	return s
 }

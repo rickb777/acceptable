@@ -1,8 +1,22 @@
-package acceptable
+package header
 
 import (
 	"fmt"
 	"strings"
+
+	"github.com/rickb777/acceptable/internal"
+)
+
+const qualityParam = "q"
+
+const (
+	// DefaultQuality is the default quality of a media range without explicit "q"
+	// https://tools.ietf.org/html/rfc7231#section-5.3.1
+	DefaultQuality float64 = 1.0 //e.g text/html;q=1
+
+	// NotAcceptable is the value indicating that its item is not acceptable
+	// https://tools.ietf.org/html/rfc7231#section-5.3.1
+	NotAcceptable float64 = 0.0 //e.g text/foo;q=0
 )
 
 // ContentType is a media type as defined in RFC-2045, RFC-2046, RFC-2231
@@ -44,7 +58,7 @@ func ContentTypeOf(typ, subtype string, paramKV ...string) ContentType {
 	if len(paramKV) > 0 {
 		params = make([]KV, 0, len(paramKV))
 		for _, p := range paramKV {
-			k, v := split(p, '=')
+			k, v := internal.Split(p, '=')
 			params = append(params, KV{Key: k, Value: v})
 		}
 	}

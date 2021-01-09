@@ -1,18 +1,10 @@
-package acceptable
+package header
 
 import (
 	sort "sort"
 	"strings"
-)
 
-const (
-	// DefaultQuality is the default quality of a media range without explicit "q"
-	// https://tools.ietf.org/html/rfc7231#section-5.3.1
-	DefaultQuality float64 = 1.0 //e.g text/html;q=1
-
-	// NotAcceptable is the value indicating that its item is not acceptable
-	// https://tools.ietf.org/html/rfc7231#section-5.3.1
-	NotAcceptable float64 = 0.0 //e.g text/foo;q=0
+	"github.com/rickb777/acceptable/internal"
 )
 
 // ParseMediaRanges splits a prioritised "Accept" header value and sorts the
@@ -43,7 +35,7 @@ func parseMediaRangeHeader(acceptHeader string) MediaRanges {
 	for _, part := range parts {
 		valueAndParams := strings.Split(part, ";")
 		if len(valueAndParams) == 1 {
-			t, s := split(strings.TrimSpace(valueAndParams[0]), '/')
+			t, s := internal.Split(strings.TrimSpace(valueAndParams[0]), '/')
 			wvs = append(wvs, MediaRange{ContentType: ContentType{Type: t, Subtype: s}, Quality: DefaultQuality})
 		} else {
 			wvs = append(wvs, handleMediaRangeWithParams(valueAndParams[0], valueAndParams[1:]))
@@ -55,13 +47,13 @@ func parseMediaRangeHeader(acceptHeader string) MediaRanges {
 
 func handleMediaRangeWithParams(value string, acceptParams []string) MediaRange {
 	wv := new(MediaRange)
-	wv.Type, wv.Subtype = split(strings.TrimSpace(value), '/')
+	wv.Type, wv.Subtype = internal.Split(strings.TrimSpace(value), '/')
 	wv.Quality = DefaultQuality
 
 	hasQ := false
 	for _, ap := range acceptParams {
 		ap = strings.TrimSpace(ap)
-		k, v := split(ap, '=')
+		k, v := internal.Split(ap, '=')
 		if strings.TrimSpace(k) == qualityParam {
 			wv.Quality = parseQuality(v)
 			hasQ = true
@@ -72,12 +64,4 @@ func handleMediaRangeWithParams(value string, acceptParams []string) MediaRange 
 		}
 	}
 	return *wv
-}
-
-func split(value string, b byte) (string, string) {
-	i := strings.IndexByte(value, b)
-	if i < 0 {
-		return value, ""
-	}
-	return value[:i], value[i+1:]
 }

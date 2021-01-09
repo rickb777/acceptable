@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/rickb777/acceptable/header"
 )
 
 const (
@@ -39,8 +41,8 @@ func IsAjax(req *http.Request) bool {
 // Ajax requests will result in nil being returned if no offer is capable of handling
 // them, even if other offers are provided.
 func BestRequestMatch(req *http.Request, available ...Offer) *Match {
-	mrs := ParseMediaRanges(req.Header.Get(Accept)).WithDefault()
-	languages := Parse(req.Header.Get(AcceptLanguage)).WithDefault()
+	mrs := header.ParseMediaRanges(req.Header.Get(Accept)).WithDefault()
+	languages := header.Parse(req.Header.Get(AcceptLanguage)).WithDefault()
 
 	if IsAjax(req) {
 		available = Offers(available).Filter("application", "json")
@@ -50,7 +52,7 @@ func BestRequestMatch(req *http.Request, available ...Offer) *Match {
 	best := c.bestMatch(mrs, languages, available...)
 
 	if best != nil {
-		charsets := Parse(req.Header.Get(AcceptCharset))
+		charsets := header.Parse(req.Header.Get(AcceptCharset))
 		best.Charset = "utf-8"
 		if len(charsets) > 0 {
 			best.Charset = charsets[0].Value
@@ -71,7 +73,7 @@ type context string
 //
 // Whenever the result is nil, the response should be 406-Not Acceptable.
 // If no available offers are provided, the response will always be nil.
-func (c context) bestMatch(mrs MediaRanges, languages PrecedenceValues, available ...Offer) *Match {
+func (c context) bestMatch(mrs header.MediaRanges, languages header.PrecedenceValues, available ...Offer) *Match {
 	// first pass - remove offers that match exclusions
 	// (this doesn't apply to language exclusions because we always allow at least one language match)
 	remaining := c.removeExcludedOffers(mrs, available)
@@ -96,7 +98,7 @@ func (c context) bestMatch(mrs MediaRanges, languages PrecedenceValues, availabl
 	return nil // 406 - Not Acceptable
 }
 
-func (c context) removeExcludedOffers(mrs MediaRanges, available []Offer) []Offer {
+func (c context) removeExcludedOffers(mrs header.MediaRanges, available []Offer) []Offer {
 	excluded := make([]bool, len(available))
 	for i, offer := range available {
 		for _, accepted := range mrs {
@@ -121,8 +123,8 @@ func (c context) removeExcludedOffers(mrs MediaRanges, available []Offer) []Offe
 	return remaining
 }
 
-func (c context) findBestMatch(mrs MediaRanges, languages PrecedenceValues, offer Offer,
-	ctMatch func(MediaRange, Offer) bool,
+func (c context) findBestMatch(mrs header.MediaRanges, languages header.PrecedenceValues, offer Offer,
+	ctMatch func(header.MediaRange, Offer) bool,
 	langMatch func(acceptedLang, offeredLang string) bool,
 	kind string) *Match {
 
@@ -170,12 +172,12 @@ func (c context) findBestMatch(mrs MediaRanges, languages PrecedenceValues, offe
 
 //-------------------------------------------------------------------------------------------------
 
-func exactMatch(accepted MediaRange, offer Offer) bool {
+func exactMatch(accepted header.MediaRange, offer Offer) bool {
 	return accepted.Type == offer.Type &&
 		accepted.Subtype == offer.Subtype
 }
 
-func nearMatch(accepted MediaRange, offer Offer) bool {
+func nearMatch(accepted header.MediaRange, offer Offer) bool {
 	return equalOrWildcard(accepted.Type, offer.Type) &&
 		equalOrWildcard(accepted.Subtype, offer.Subtype)
 }

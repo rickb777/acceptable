@@ -12,7 +12,7 @@ The `Accept` header is parsed using `ParseMediaRanges(hdr)`, which returns the s
 
 ```go
     // handle Accept-Language
-    mediaRanges := acceptable.ParseMediaRanges("application/json;q=0.8, application/xml, application/*;q=0.1")
+    mediaRanges := header.ParseMediaRanges("application/json;q=0.8, application/xml, application/*;q=0.1")
 ```
 
 The resulting slice is sorted according to precedence and quality rules, so in this example the order is `{"application/xml", "application/json", "application/*"}` because the middle item has an implied quality of 1, whereas the first item has a lower quality.
@@ -23,7 +23,7 @@ The other important content-negotiation headers, `Accept-Language` and `Accept-C
 
 ```go
     // handle Accept-Language
-    acceptLanguages := acceptable.Parse("en-GB,fr;q=0.5,en;q=0.8")
+    acceptLanguages := header.Parse("en-GB,fr;q=0.5,en;q=0.8")
 ```
 
 This will contain `{"en-GB", "en", "fr"}` in a `header.PrecedenceValues` slice, sorted according to precedence rules with the most preferred first.

@@ -1,9 +1,10 @@
-package acceptable
+package header_test
 
 import (
 	"testing"
 
 	. "github.com/onsi/gomega"
+	. "github.com/rickb777/acceptable/header"
 )
 
 func TestParseAcceptHeader_parses_single(t *testing.T) {
