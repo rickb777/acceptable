@@ -26,7 +26,7 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		p(w, &acceptable.Match{}, "", m.stuff)
+		p(w, acceptable.Match{Data: m.stuff}, "")
 		g.Expect(w.Body.String()).To(Equal(m.expected))
 	}
 }
@@ -37,7 +37,7 @@ func TestTXTShouldNotReturnError(t *testing.T) {
 
 	p := processor.TXT()
 
-	err := p(w, &acceptable.Match{}, "", make(chan int, 0))
+	err := p(w, acceptable.Match{}, "")
 
 	g.Expect(err).NotTo(HaveOccurred())
 }

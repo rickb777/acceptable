@@ -20,24 +20,22 @@ func JSON(indent ...string) acceptable.Processor {
 		in = indent[0]
 	}
 
-	return func(w http.ResponseWriter, match *acceptable.Match, template string, data interface{}) (err error) {
-		if match != nil {
-			match.ApplyHeaders(w)
-		}
+	return func(rw http.ResponseWriter, match acceptable.Match, template string) (err error) {
+		w := match.ApplyHeaders(rw)
 
 		p := &writerProxy{w: w}
 
 		enc := json.NewEncoder(p)
 		enc.SetIndent("", in)
 
-		if fn, isFunc := data.(acceptable.Supplier); isFunc {
-			data, err = fn()
+		if fn, isFunc := match.Data.(acceptable.Supplier); isFunc {
+			match.Data, err = fn()
 			if err != nil {
 				return err
 			}
 		}
 
-		err = enc.Encode(data)
+		err = enc.Encode(match.Data)
 		if err != nil {
 			return err
 		}

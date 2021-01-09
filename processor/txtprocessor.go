@@ -21,29 +21,27 @@ var DefaultTXTOffer = acceptable.OfferOf("text/plain").Using(TXT())
 //
 // * encoding.TextMarshaler
 func TXT() acceptable.Processor {
-	return func(w http.ResponseWriter, match *acceptable.Match, template string, data interface{}) (err error) {
-		if match != nil {
-			match.ApplyHeaders(w)
-		}
+	return func(rw http.ResponseWriter, match acceptable.Match, template string) (err error) {
+		w := match.ApplyHeaders(rw)
 
-		if fn, isFunc := data.(acceptable.Supplier); isFunc {
-			data, err = fn()
+		if fn, isFunc := match.Data.(acceptable.Supplier); isFunc {
+			match.Data, err = fn()
 			if err != nil {
 				return err
 			}
 		}
 
-		s, ok := data.(string)
+		s, ok := match.Data.(string)
 		if ok {
 			return writeWithNewline(w, []byte(s))
 		}
 
-		st, ok := data.(fmt.Stringer)
+		st, ok := match.Data.(fmt.Stringer)
 		if ok {
 			return writeWithNewline(w, []byte(st.String()))
 		}
 
-		tm, ok := data.(encoding.TextMarshaler)
+		tm, ok := match.Data.(encoding.TextMarshaler)
 		if ok {
 			b, e2 := tm.MarshalText()
 			if e2 != nil {
@@ -52,7 +50,7 @@ func TXT() acceptable.Processor {
 			return writeWithNewline(w, b)
 		}
 
-		_, err = fmt.Fprintf(w, "%v\n", data)
+		_, err = fmt.Fprintf(w, "%v\n", match.Data)
 		return err
 	}
 }

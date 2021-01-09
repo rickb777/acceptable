@@ -51,6 +51,7 @@ func BestRequestMatch(req *http.Request, available ...Offer) *Match {
 
 	if best != nil {
 		charsets := Parse(req.Header.Get(AcceptCharset))
+		best.Charset = "utf-8"
 		if len(charsets) > 0 {
 			best.Charset = charsets[0].Value
 		}
@@ -139,16 +140,21 @@ func (c context) findBestMatch(mrs MediaRanges, languages PrecedenceValues, offe
 								Type:     offer.Type,
 								Subtype:  offer.Subtype,
 								Language: offeredLang,
+								Data:     offer.data[offeredLang],
 								Render:   offer.processor,
-							}
-							if offer.Type == "*" && acceptedCT.Type != "*" {
-								m.Type = acceptedCT.Type
 							}
 							if offer.Subtype == "*" && acceptedCT.Subtype != "*" {
 								m.Subtype = acceptedCT.Subtype
+								if offer.Type == "*" && acceptedCT.Type != "*" {
+									m.Type = acceptedCT.Type
+								}
 							}
 							if offeredLang == "*" && prefLang.Value != "*" {
 								m.Language = prefLang.Value
+								m.Data = offer.data[prefLang.Value]
+							}
+							if m.Data == emptyValue {
+								m.Data = nil
 							}
 							return m
 						}

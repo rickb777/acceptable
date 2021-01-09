@@ -11,7 +11,7 @@ type Supplier func() (interface{}, error)
 
 // Processor is a function that renders content according to the matched result.
 // The data can be a struct, slice etc or a Supplier.
-type Processor func(w http.ResponseWriter, match *Match, template string, data interface{}) error
+type Processor func(w http.ResponseWriter, match Match, template string) error
 
 // Offer holds information about one particular resource representation that can potentially
 // provide an acceptable response.

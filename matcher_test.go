@@ -24,7 +24,7 @@ func Test_should_use_default_processor_if_no_accept_header(t *testing.T) {
 		Type:     "text",
 		Subtype:  "test",
 		Language: "*",
-		Charset:  "",
+		Charset:  "utf-8",
 	}))
 }
 
@@ -42,7 +42,7 @@ func Test_should_give_JSON_response_for_ajax_requests(t *testing.T) {
 		Type:     "*",
 		Subtype:  "*",
 		Language: "*",
-		Charset:  "",
+		Charset:  "utf-8",
 	}))
 }
 
@@ -130,7 +130,7 @@ func Test_should_return_200_even_when_language_is_explicitly_excluded(t *testing
 		Type:     "text",
 		Subtype:  "test",
 		Language: "en",
-		Charset:  "",
+		Charset:  "utf-8",
 	}))
 }
 
@@ -154,7 +154,7 @@ func Test_should_negotiate_using_media_and_language(t *testing.T) {
 		Type:     "text",
 		Subtype:  "test",
 		Language: "en",
-		Charset:  "",
+		Charset:  "utf-8",
 	}))
 }
 
@@ -172,7 +172,7 @@ func Test_should_match_subtype_wildcard1(t *testing.T) {
 		Type:     "text",
 		Subtype:  "test",
 		Language: "*",
-		Charset:  "",
+		Charset:  "utf-8",
 	}))
 }
 
@@ -190,7 +190,7 @@ func Test_should_match_subtype_wildcard2(t *testing.T) {
 		Type:     "text",
 		Subtype:  "test",
 		Language: "*",
-		Charset:  "",
+		Charset:  "utf-8",
 	}))
 }
 
@@ -229,7 +229,7 @@ func Test_should_match_language_wildcard_and_return_selected_language(t *testing
 		Type:     "*",
 		Subtype:  "*",
 		Language: "en",
-		Charset:  "",
+		Charset:  "utf-8",
 	}))
 }
 
@@ -248,7 +248,7 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 		Type:     "text",
 		Subtype:  "test",
 		Language: "*",
-		Charset:  "",
+		Charset:  "utf-8",
 	}))
 
 	best = BestRequestMatch(req, a)
@@ -257,7 +257,7 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 		Type:     "text",
 		Subtype:  "test",
 		Language: "*",
-		Charset:  "",
+		Charset:  "utf-8",
 	}))
 }
 
@@ -276,7 +276,7 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 		Type:     "text",
 		Subtype:  "a",
 		Language: "*",
-		Charset:  "",
+		Charset:  "utf-8",
 	}))
 
 	best = BestRequestMatch(req, b)
@@ -285,7 +285,7 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 		Type:     "text",
 		Subtype:  "b",
 		Language: "*",
-		Charset:  "",
+		Charset:  "utf-8",
 	}))
 }
 

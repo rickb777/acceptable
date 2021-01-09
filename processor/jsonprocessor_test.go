@@ -21,16 +21,17 @@ func TestJSONShouldWriteResponseBody(t *testing.T) {
 		"Joe Bloggs",
 	}
 
-	match := &acceptable.Match{
+	match := acceptable.Match{
 		Type:     "application",
 		Subtype:  "json",
 		Language: "en",
 		Charset:  "utf-8",
+		Data:     model,
 	}
 
 	p := processor.JSON()
 
-	p(w, match, "template", model)
+	p(w, match, "template")
 
 	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
 	g.Expect(w.Header().Get("Content-Language")).To(Equal("en"))
@@ -46,34 +47,35 @@ func TestJSONShouldWriteResponseBodyIndented(t *testing.T) {
 	}{
 		"名称",
 	}
-	match := &acceptable.Match{
+	match := acceptable.Match{
 		Type:     "application",
 		Subtype:  "json",
 		Language: "cn",
 		Charset:  "utf-16",
+		Data:     model,
 	}
 
-	p := processor.JSON("  ")
+	p := processor.JSON("")
 
-	p(w, match, "template", model)
+	p(w, match, "template")
 
 	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16"))
 	g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"))
-	g.Expect(w.Body.String()).To(Equal("{\n  \"Name\": \"名称\"\n}\n"))
+	g.Expect(w.Body.Bytes()).To(Equal([]byte{
+		'{', 0, '"', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '"', 0,
+		':', 0, '"', 0, 13, 84, 240, 121, '"', 0, '}', 0, '\n', 0}))
 }
 
 func TestJSONShouldReturnError(t *testing.T) {
 	g := NewGomegaWithT(t)
 	w := httptest.NewRecorder()
 
-	model := &User{
-		"Joe Bloggs",
-	}
-	match := &acceptable.Match{}
+	model := &User{"Joe Bloggs"}
+	match := acceptable.Match{Data: model}
 
 	p := processor.JSON()
 
-	err := p(w, match, "template", model)
+	err := p(w, match, "template")
 
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("error calling MarshalJSON for type"))
