@@ -323,7 +323,7 @@ func ExampleBestRequestMatch() {
 	req := &http.Request{}                               // some incoming request
 	var res http.ResponseWriter = httptest.NewRecorder() // replace with the server's response writer
 
-	// Now do the content negotiation. This example has three supported content types, all of them
+	// Now do the content negotiation. This example has four supported content types, all of them
 	// able to serve any of the three example languages.
 	//
 	// The first offer is for JSON - this is often the most widely used because it also supports
@@ -334,6 +334,9 @@ func ExampleBestRequestMatch() {
 			With("en", en).With("fr", fr).With("es", es),
 
 		acceptable.OfferOf("application/xml").Using(processor.XML("  ")).
+			With("en", en).With("fr", fr).With("es", es),
+
+		acceptable.OfferOf("text/csv").Using(processor.CSV()).
 			With("en", en).With("fr", fr).With("es", es),
 
 		acceptable.OfferOf("text/plain").Using(processor.TXT()).
