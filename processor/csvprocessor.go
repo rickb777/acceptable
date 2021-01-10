@@ -9,8 +9,10 @@ import (
 	"github.com/rickb777/acceptable"
 )
 
+const TextCsv = "text/csv"
+
 // DefaultCSVOffer is an Offer for text/plain content using the CSV() processor.
-var DefaultCSVOffer = acceptable.OfferOf("text/csv").Using(CSV())
+var DefaultCSVOffer = acceptable.OfferOf(TextCsv).Using(CSV())
 
 // CSV creates an output processor that serialises a dataModel in CSV form. With no arguments, the default
 // format is comma-separated; you can supply any rune to be used as an alternative separator.

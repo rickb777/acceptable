@@ -5,12 +5,13 @@ import (
 	"net/http"
 
 	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/internal"
 )
 
-const defaultJSONContentType = "application/json; charset=utf-8"
+const JSONContentType = "application/json"
 
 // DefaultJSONOffer is an Offer for application/json content using the JSON() processor without indentation.
-var DefaultJSONOffer = acceptable.OfferOf("application/json").Using(JSON())
+var DefaultJSONOffer = acceptable.OfferOf(JSONContentType).Using(JSON())
 
 // JSON creates a new processor for JSON with a specified indentation.
 // It handles all requests except Ajax requests.
@@ -23,7 +24,7 @@ func JSON(indent ...string) acceptable.Processor {
 	return func(rw http.ResponseWriter, match acceptable.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
-		p := &writerProxy{w: w}
+		p := &internal.WriterProxy{W: w}
 
 		enc := json.NewEncoder(p)
 		enc.SetIndent("", in)

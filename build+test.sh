@@ -29,10 +29,12 @@ go test -v -covermode=count -coverprofile=test.out .
 go tool cover -func=test.out
 [ -z "$COVERALLS_TOKEN" ] || goveralls -coverprofile=test.out -service=travis-ci -repotoken $COVERALLS_TOKEN
 
-echo processor...
-go test -v -covermode=count -coverprofile=processor/test.out ./processor
-go tool cover -func=processor/test.out
-[ -z "$COVERALLS_TOKEN" ] || goveralls -coverprofile=processor/test.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+for d in header processor templates; do
+  echo $d...
+  go test -v -covermode=count -coverprofile=$d/test.out ./$d
+  go tool cover -func=$d/test.out
+  [ -z "$COVERALLS_TOKEN" ] || goveralls -coverprofile=$d/test.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+done
 
 v goreturns -l -w *.go */*.go
 

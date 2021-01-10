@@ -9,8 +9,10 @@ import (
 	"github.com/rickb777/acceptable"
 )
 
+const TextPlain = "text/plain"
+
 // DefaultTXTOffer is an Offer for text/plain content using the TXT() processor.
-var DefaultTXTOffer = acceptable.OfferOf("text/plain").Using(TXT())
+var DefaultTXTOffer = acceptable.OfferOf(TextPlain).Using(TXT())
 
 // TXT creates an output processor that serialises strings in a form suitable for text/plain responses.
 // Model values should be one of the following:
