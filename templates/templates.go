@@ -32,9 +32,9 @@ func Templates(dir, suffix string, funcMap template.FuncMap, reloadOnTheFly bool
 
 	root := parseTemplates(rootDir, files, funcMap)
 
-	//if reloadOnTheFly {
-	//	return debugProcessor(root, rootDir, suffix, files, funcMap)
-	//}
+	if reloadOnTheFly {
+		return debugProcessor(root, rootDir, suffix, files, funcMap)
+	}
 
 	return productionProcessor(root)
 }

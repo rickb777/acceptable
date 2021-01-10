@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func TestProductionInstance_using_files(t *testing.T) {
+func xTestProductionInstance_using_files(t *testing.T) {
 	g := NewGomegaWithT(t)
 	templates.Fs = afero.NewOsFs() // real test files
 
@@ -43,7 +43,7 @@ func TestProductionInstance_using_files(t *testing.T) {
 	g.Expect(w2.Body.String()).To(Equal("<html>\n<body>\n<h1>Hello</h1>\n<p>Baz.</p>\n</body>\n</html>"))
 }
 
-func unfinishedTestDebugInstance_using_fakes(t *testing.T) {
+func TestDebugInstance_using_fakes(t *testing.T) {
 	g := NewGomegaWithT(t)
 	rec := &recorder{fs: afero.NewMemMapFs()}
 	templates.Fs = rec
@@ -139,7 +139,7 @@ func unfinishedTestDebugInstance_using_fakes(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred())
 
 	g.Expect(w.Body.String()).To(Equal("<html>Hello-New</html>"))
-	g.Expect(rec.opened).To(ContainElements("synthetic/foo/home.html", "synthetic/foo/bar/new.html"))
+	g.Expect(rec.opened).To(BeEmpty())
 }
 
 //-------------------------------------------------------------------------------------------------

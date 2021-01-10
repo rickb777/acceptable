@@ -3,7 +3,6 @@ package templates
 import (
 	"html/template"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/rickb777/acceptable"
@@ -52,11 +51,11 @@ func debugProcessor(root *template.Template, rootDir, suffix string, files map[s
 			}
 		}
 
-		r := getCurrentTemplateTree(root, rootDir, suffix, files, funcMap)
+		root = getCurrentTemplateTree(root, rootDir, suffix, files, funcMap)
 		if template == "" {
-			return r.Execute(p, match.Data)
+			return root.Execute(p, match.Data)
 		}
-		return r.ExecuteTemplate(p, template, match.Data)
+		return root.ExecuteTemplate(p, template, match.Data)
 	}
 }
 
@@ -78,7 +77,7 @@ func checkForChanges(files map[string]time.Time) bool {
 				files[path] = fi.ModTime()
 				changed = true
 			}
-		} else if !os.IsNotExist(err) {
+		} else {
 			delete(files, path)
 		}
 	}
