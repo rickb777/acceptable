@@ -88,7 +88,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 
 		p(w, match, "template")
 
-		g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset="+enc), enc)
+		g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16le"), enc)
 		g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"), enc)
 		g.Expect(w.Body.Bytes()).To(Equal([]byte{
 			'<', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n', 0,

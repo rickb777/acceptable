@@ -38,32 +38,37 @@ func TestJSONShouldWriteResponseBody(t *testing.T) {
 	g.Expect(w.Body.String()).To(Equal("{\"Name\":\"Joe Bloggs\"}\n"))
 }
 
-func TestJSONShouldWriteResponseBodyIndented(t *testing.T) {
+func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 	g := NewGomegaWithT(t)
-	w := httptest.NewRecorder()
 
 	model := struct {
 		Name string
 	}{
 		"名称",
 	}
-	match := acceptable.Match{
-		Type:     "application",
-		Subtype:  "json",
-		Language: "cn",
-		Charset:  "utf-16",
-		Data:     model,
+
+	cases := []string{"utf-16le", "utf-16"} // unsupported "unicode"
+
+	for _, enc := range cases {
+		match := acceptable.Match{
+			Type:     "application",
+			Subtype:  "json",
+			Language: "cn",
+			Charset:  enc,
+			Data:     model,
+		}
+
+		p := processor.JSON("")
+		w := httptest.NewRecorder()
+
+		p(w, match, "template")
+
+		g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16le"))
+		g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"))
+		g.Expect(w.Body.Bytes()).To(Equal([]byte{
+			'{', 0, '"', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '"', 0,
+			':', 0, '"', 0, 13, 84, 240, 121, '"', 0, '}', 0, '\n', 0}))
 	}
-
-	p := processor.JSON("")
-
-	p(w, match, "template")
-
-	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16"))
-	g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"))
-	g.Expect(w.Body.Bytes()).To(Equal([]byte{
-		'{', 0, '"', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '"', 0,
-		':', 0, '"', 0, 13, 84, 240, 121, '"', 0, '}', 0, '\n', 0}))
 }
 
 func TestJSONShouldReturnError(t *testing.T) {

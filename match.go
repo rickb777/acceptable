@@ -35,10 +35,13 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) (w io.Writer) {
 	if m.Charset != "" {
 		enc, err := htmlindex.Get(m.Charset)
 		if err == nil {
-			cs = m.Charset
+			// get the canonical name of the encoding
+			cs, _ = htmlindex.Name(enc)
 			rw.Header().Set("Content-Encoding", cs)
 			vary = append(vary, "accept-charset")
 			w = enc.NewEncoder().Writer(w)
+		} else {
+			Debug("%v\n", err)
 		}
 	}
 

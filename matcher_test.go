@@ -237,6 +237,35 @@ func Test_should_match_language_wildcard_and_return_selected_language(t *testing
 	}))
 }
 
+func Test_should_match_utf8_charset_wen_acceptable(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	a := acceptable.OfferOf("text/html")
+
+	cases := []string{
+		"utf-8, iso-8859-1",
+		"utf8, iso-8859-1",
+		"iso-8859-1, utf-8",
+		"iso-8859-1, utf8",
+	}
+
+	for _, cs := range cases {
+		req, _ := http.NewRequest("GET", "/", nil)
+		req.Header.Add("Accept", "text/html")
+		req.Header.Add("Accept-Language", "en")
+		req.Header.Add("Accept-Charset", cs)
+
+		best := acceptable.BestRequestMatch(req, a)
+
+		g.Expect(best).To(gomega.Equal(&acceptable.Match{
+			Type:     "text",
+			Subtype:  "html",
+			Language: "en",
+			Charset:  "utf-8",
+		}))
+	}
+}
+
 func Test_should_negotiate_a_default_processor(t *testing.T) {
 	g := gomega.NewWithT(t)
 

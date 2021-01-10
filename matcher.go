@@ -54,7 +54,10 @@ func BestRequestMatch(req *http.Request, available ...Offer) *Match {
 	if best != nil {
 		charsets := header.Parse(req.Header.Get(AcceptCharset))
 		best.Charset = "utf-8"
-		if len(charsets) > 0 {
+		// If at all possible, stick with utf-8 because (a) it is recommended; (b) no trancoding is necessary.
+		// If other charsets are listed, choose one only if utf-8 is not included.
+		if len(charsets) > 0 && !(charsets.Contains("utf-8") || charsets.Contains("utf8")) {
+			// something other than utf-8 is legacy and deprecated, but supported anyway
 			best.Charset = charsets[0].Value
 		}
 	}

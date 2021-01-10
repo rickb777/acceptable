@@ -43,6 +43,15 @@ func (pvs PrecedenceValues) WithDefault() PrecedenceValues {
 	return pvs
 }
 
+func (pvs PrecedenceValues) Contains(value string) bool {
+	for _, pv := range pvs {
+		if pv.Value == value {
+			return true
+		}
+	}
+	return false
+}
+
 func (pvs PrecedenceValues) String() string {
 	buf := &strings.Builder{}
 	comma := ""
