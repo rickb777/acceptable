@@ -37,31 +37,66 @@ func TestXMLShouldWriteResponseBody(t *testing.T) {
 	g.Expect(w.Body.String()).To(Equal("<ValidXMLUser><Name>Joe Bloggs</Name></ValidXMLUser>\n"))
 }
 
-func TestXMlShouldWriteResponseBodyWithIndentation(t *testing.T) {
+func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 	g := NewGomegaWithT(t)
-	w := httptest.NewRecorder()
 
 	model := &ValidXMLUser{Name: "名称"}
-	match := acceptable.Match{
-		Type:     "application",
-		Subtype:  "json",
-		Language: "cn",
-		Charset:  "utf-16be",
-		Data:     model,
+	cases := []string{"utf-16be"} // unsupported: "unicodefffe"
+
+	for _, enc := range cases {
+		match := acceptable.Match{
+			Type:     "application",
+			Subtype:  "json",
+			Language: "cn",
+			Charset:  enc,
+			Data:     model,
+		}
+
+		p := processor.XML("  ")
+		w := httptest.NewRecorder()
+
+		p(w, match, "template")
+
+		g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16be"), enc)
+		g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"), enc)
+		g.Expect(w.Body.Bytes()).To(Equal([]byte{
+			0, '<', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n',
+			0, ' ', 0, ' ', 0, '<', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '>', 84, 13, 121, 240,
+			0, '<', 0, '/', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '>', 0, '\n', 0,
+			'<', 0, '/', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n',
+		}), w.Body.String(), enc)
 	}
+}
 
-	p := processor.XML("  ")
+func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
+	g := NewGomegaWithT(t)
 
-	p(w, match, "template")
+	model := &ValidXMLUser{Name: "名称"}
+	cases := []string{"utf-16le", "utf-16"} // unsupported "unicode"
 
-	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16be"))
-	g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"))
-	g.Expect(w.Body.Bytes()).To(Equal([]byte{
-		0, '<', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n',
-		0, ' ', 0, ' ', 0, '<', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '>', 84, 13, 121, 240,
-		0, '<', 0, '/', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '>', 0, '\n', 0,
-		'<', 0, '/', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n',
-	}), w.Body.String())
+	for _, enc := range cases {
+		match := acceptable.Match{
+			Type:     "application",
+			Subtype:  "json",
+			Language: "cn",
+			Charset:  enc,
+			Data:     model,
+		}
+
+		p := processor.XML("  ")
+		w := httptest.NewRecorder()
+
+		p(w, match, "template")
+
+		g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset="+enc), enc)
+		g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"), enc)
+		g.Expect(w.Body.Bytes()).To(Equal([]byte{
+			'<', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n', 0,
+			' ', 0, ' ', 0, '<', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '>', 0, 13, 84, 240, 121,
+			'<', 0, '/', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '>', 0, '\n', 0,
+			'<', 0, '/', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n', 0,
+		}), w.Body.String(), enc)
+	}
 }
 
 func TestXMLShouldRPanicOnError(t *testing.T) {
