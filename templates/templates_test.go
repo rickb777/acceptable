@@ -16,7 +16,7 @@ func xTestProductionInstance_using_files(t *testing.T) {
 	g := NewGomegaWithT(t)
 	templates.Fs = afero.NewOsFs() // real test files
 
-	render := templates.Templates("test-data", ".html", nil, false)
+	render := templates.Templates("../example/templates", ".html", nil, false)
 
 	match := acceptable.Match{
 		Type:     "text",

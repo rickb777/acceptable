@@ -84,16 +84,3 @@ func parseTemplates(rootDir string, files map[string]time.Time, funcMap template
 
 	return root
 }
-
-//-------------------------------------------------------------------------------------------------
-
-// TextHtmlOffer is an Offer for text/html content using the Template() processor.
-//var TextHtmlOffer = acceptable.OfferOf(TextHtml).Using(CSV())
-
-// ApplicationXhtmlOffer is an Offer for application/xhtml+xml content using the Template() processor.
-//var ApplicationXhtmlOffer = acceptable.OfferOf(ApplicationXhtml).Using(CSV())
-
-const (
-	TextHtml         = "text/html"
-	ApplicationXhtml = "application/xhtml+xml"
-)

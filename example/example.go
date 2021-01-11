@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/rickb777/acceptable/templates"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rickb777/acceptable"
@@ -39,7 +41,10 @@ func hello(c echo.Context) error {
 			With("en", en).With("fr", fr).With("es", es).With("ru", ru),
 
 		acceptable.OfferOf("text/plain").Using(processor.TXT()).
-			With("en", en).With("fr", fr).With("es", es).With("ru", ru))
+			With("en", en).With("fr", fr).With("es", es).With("ru", ru),
+
+		templates.TextHtmlOffer("en", "templates/en", ".html", nil),
+		templates.ApplicationXhtmlOffer("en", "templates/en", ".html", nil))
 
 	if best == nil {
 		return c.String(http.StatusNotAcceptable, http.StatusText(http.StatusNotAcceptable))

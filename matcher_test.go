@@ -8,10 +8,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/rickb777/acceptable/processor"
-
 	"github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/processor"
+	"github.com/rickb777/acceptable/templates"
 )
 
 func Test_should_use_default_processor_if_no_accept_header(t *testing.T) {
@@ -352,7 +352,7 @@ func ExampleBestRequestMatch() {
 	req := &http.Request{}                               // some incoming request
 	var res http.ResponseWriter = httptest.NewRecorder() // replace with the server's response writer
 
-	// Now do the content negotiation. This example has four supported content types, all of them
+	// Now do the content negotiation. This example has six supported content types, all of them
 	// able to serve any of the three example languages.
 	//
 	// The first offer is for JSON - this is often the most widely used because it also supports
@@ -369,7 +369,10 @@ func ExampleBestRequestMatch() {
 			With("en", en).With("fr", fr).With("es", es),
 
 		acceptable.OfferOf("text/plain").Using(processor.TXT()).
-			With("en", en).With("fr", fr).With("es", es))
+			With("en", en).With("fr", fr).With("es", es),
+
+		templates.TextHtmlOffer("en", "templates/en", ".html", nil),
+		templates.ApplicationXhtmlOffer("en", "templates/en", ".html", nil))
 
 	if best == nil {
 		// The user agent asked for some content type that isn't available.
