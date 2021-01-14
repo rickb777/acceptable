@@ -31,7 +31,6 @@ type Match struct {
 func (m Match) ApplyHeaders(rw http.ResponseWriter) (w io.Writer) {
 	w = rw
 	cs := "utf-8"
-	vary := m.Vary
 
 	if m.Charset != "" {
 		enc, err := htmlindex.Get(m.Charset)
@@ -39,7 +38,6 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) (w io.Writer) {
 			// get the canonical name of the encoding
 			cs, _ = htmlindex.Name(enc)
 			rw.Header().Set("Content-Encoding", cs)
-			vary = append(vary, "accept-charset")
 			w = enc.NewEncoder().Writer(w)
 		} else {
 			Debug("%v\n", err)
@@ -53,7 +51,9 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) (w io.Writer) {
 		rw.Header().Set("Content-Language", m.Language)
 	}
 
-	rw.Header().Set("Vary", strings.Join(vary, ", "))
+	if len(m.Vary) > 0 {
+		rw.Header().Set("Vary", strings.Join(m.Vary, ", "))
+	}
 
 	return w
 }

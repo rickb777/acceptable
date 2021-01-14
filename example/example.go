@@ -14,7 +14,7 @@ import (
 
 // Some requests to try:
 //
-// curl -i http://localhost:8080/
+// curl -i -H 'Accept:' http://localhost:8080/
 //     * gets the default, which is English as JSON
 //
 // curl -i -H 'Accept: application/json' -H 'Accept-Language: fr' http://localhost:8080/

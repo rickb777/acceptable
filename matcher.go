@@ -37,6 +37,10 @@ func IsAjax(req *http.Request) bool {
 // of providing an Ajax response are considered by the content negotiation algorithm.
 // The other offers are discarded.
 //
+// The order of offers is important. It determines the order they are compared against
+// the request headers, and it determines what defaults will be used when exact matching
+// is not possible.
+//
 // If no available offers are provided, the response will always be nil. Note too that
 // Ajax requests will result in nil being returned if no offer is capable of handling
 // them, even if other offers are provided.
@@ -61,6 +65,7 @@ func BestRequestMatch(req *http.Request, available ...Offer) *Match {
 		if len(charsets) > 0 && !(charsets.Contains("utf-8") || charsets.Contains("utf8")) {
 			// something other than utf-8 is legacy and deprecated, but supported anyway
 			best.Charset = charsets[0].Value
+			best.Vary = append(best.Vary, AcceptCharset)
 		}
 	}
 
