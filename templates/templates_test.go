@@ -12,35 +12,40 @@ import (
 	"github.com/spf13/afero"
 )
 
-func xTestProductionInstance_using_files(t *testing.T) {
+func TestProductionInstance_using_files(t *testing.T) {
 	g := NewGomegaWithT(t)
 	templates.Fs = afero.NewOsFs() // real test files
 
-	render := templates.Templates("../example/templates", ".html", nil, false)
+	templates.ReloadOnTheFly = false
+
+	render := templates.Templates("../example/templates/en", ".html", nil)
 
 	match := acceptable.Match{
 		Type:     "text",
 		Subtype:  "html",
 		Language: "en",
 		Charset:  "utf-8",
-		Data:     map[string]string{"Title": "Hello"},
+		Data: Declaration{
+			Proclamation: "A Title",
+			Articles:     []Article{{N: 1, Text: "Text 1."}},
+		},
 	}
 
 	// request 1
 	w1 := httptest.NewRecorder()
 
-	err := render(w1, match, "foo/home.html")
+	err := render(w1, match, "home.html")
 	g.Expect(err).NotTo(HaveOccurred())
 
-	g.Expect(w1.Body.String()).To(Equal("<html>\n<body>\n<h1>Hello</h1>\n<p>Home.</p>\n</body>\n</html>"))
+	g.Expect(w1.Body.String()).To(Equal("<html>\n<body>\n<h1>Home.</h1>\n<h4>A Title</h4>\n\n<h3>1</h3>\n<p>Text 1.</p>\n\n</body>\n</html>\n"))
 
 	// request 2
 	w2 := httptest.NewRecorder()
 
-	err = render(w2, match, "foo/bar/baz.html")
+	err = render(w2, match, "foo/bar.html")
 	g.Expect(err).NotTo(HaveOccurred())
 
-	g.Expect(w2.Body.String()).To(Equal("<html>\n<body>\n<h1>Hello</h1>\n<p>Baz.</p>\n</body>\n</html>"))
+	g.Expect(w2.Body.String()).To(Equal("<html>\n<body>\n<h1>Bar.</h1>\n<h4>A Title</h4>\n\n<h3>1</h3>\n<p>Text 1.</p>\n\n</body>\n</html>\n"))
 }
 
 func TestDebugInstance_using_fakes(t *testing.T) {
@@ -51,7 +56,9 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	afero.WriteFile(rec.fs, "synthetic/foo/home.html", []byte("<html>{{.Title}}-Home</html>"), 0644)
 	afero.WriteFile(rec.fs, "synthetic/foo/bar/baz.html", []byte("<html>{{.Title}}-Baz</html>"), 0644)
 
-	render := templates.Templates("synthetic", ".html", nil, true)
+	templates.ReloadOnTheFly = true
+
+	render := templates.Templates("synthetic", ".html", nil)
 
 	match := acceptable.Match{
 		Type:     "text",
@@ -201,4 +208,14 @@ func (r *recorder) Chown(name string, uid, gid int) error {
 
 func (r *recorder) Chtimes(name string, atime time.Time, mtime time.Time) error {
 	return r.fs.Chtimes(name, atime, mtime)
+}
+
+type Declaration struct {
+	Proclamation string
+	Articles     []Article
+}
+
+type Article struct {
+	N    int
+	Text string
 }

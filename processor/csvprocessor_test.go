@@ -16,6 +16,7 @@ func TestCSVShouldWriteResponseBody(t *testing.T) {
 		expected string
 	}{
 		{"Joe Bloggs", "Joe Bloggs\n"},
+		{func() (interface{}, error) { return "Joe Bloggs", nil }, "Joe Bloggs\n"},
 		{[]string{"Red", "Green", "Blue"}, "Red,Green,Blue\n"},
 		{[][]string{{"Red", "Green", "Blue"}, {"Cyan", "Magenta", "Yellow"}}, "Red,Green,Blue\nCyan,Magenta,Yellow\n"},
 		{[]int{101, -5, 42}, "101,-5,42\n"},

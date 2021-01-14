@@ -12,12 +12,18 @@ import (
 	"github.com/spf13/afero"
 )
 
+// Fs is used to obtain file information and content. It can be stubbed for testing.
 var Fs = afero.NewOsFs()
+
+// ReloadOnTheFly enables a development mode that reloads template files whenever they
+// change, without restarting the server. This reduces performance and should be off
+// (false) for production.
+var ReloadOnTheFly = false
 
 // Templates finds all the templates in the directory dir and its subdirectories
 // that have names ending with the given suffix. The function map can be nil if not
 // required. It returns a processor that handles requests using the templates available.
-func Templates(dir, suffix string, funcMap template.FuncMap, reloadOnTheFly bool) acceptable.Processor {
+func Templates(dir, suffix string, funcMap template.FuncMap) acceptable.Processor {
 	if funcMap == nil {
 		funcMap = template.FuncMap{}
 	}
@@ -32,7 +38,7 @@ func Templates(dir, suffix string, funcMap template.FuncMap, reloadOnTheFly bool
 
 	root := parseTemplates(rootDir, files, funcMap)
 
-	if reloadOnTheFly {
+	if ReloadOnTheFly {
 		return debugProcessor(root, rootDir, suffix, files, funcMap)
 	}
 

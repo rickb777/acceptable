@@ -14,7 +14,7 @@ const JSONContentType = "application/json"
 var DefaultJSONOffer = acceptable.OfferOf(JSONContentType).Using(JSON())
 
 // JSON creates a new processor for JSON with a specified indentation.
-// It handles all requests except Ajax requests.
+// If match.Data is an acceptable.Supplier function, it is used to provide the model data.
 func JSON(indent ...string) acceptable.Processor {
 	in := ""
 	if len(indent) > 0 {

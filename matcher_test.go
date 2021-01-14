@@ -135,6 +135,7 @@ func Test_should_return_200_even_when_language_is_explicitly_excluded(t *testing
 		Subtype:  "test",
 		Language: "en",
 		Charset:  "utf-8",
+		Vary:     []string{"Accept", "Accept-Language"},
 	}))
 }
 
@@ -159,6 +160,7 @@ func Test_should_negotiate_using_media_and_language(t *testing.T) {
 		Subtype:  "test",
 		Language: "en",
 		Charset:  "utf-8",
+		Vary:     []string{"Accept", "Accept-Language"},
 	}))
 }
 
@@ -177,6 +179,7 @@ func Test_should_match_subtype_wildcard1(t *testing.T) {
 		Subtype:  "test",
 		Language: "*",
 		Charset:  "utf-8",
+		Vary:     []string{"Accept"},
 	}))
 }
 
@@ -195,6 +198,7 @@ func Test_should_match_subtype_wildcard2(t *testing.T) {
 		Subtype:  "test",
 		Language: "*",
 		Charset:  "utf-8",
+		Vary:     []string{"Accept"},
 	}))
 }
 
@@ -215,6 +219,7 @@ func Test_should_match_language_when_offer_language_is_not_specified(t *testing.
 		Subtype:  "html",
 		Language: "en",
 		Charset:  "utf-8",
+		Vary:     []string{"Accept", "Accept-Language"},
 	}))
 }
 
@@ -234,10 +239,33 @@ func Test_should_match_language_wildcard_and_return_selected_language(t *testing
 		Subtype:  "*",
 		Language: "en",
 		Charset:  "utf-8",
+		Vary:     []string{"Accept-Language"},
 	}))
 }
 
-func Test_should_match_utf8_charset_wen_acceptable(t *testing.T) {
+func Test_should_select_language_of_first_matched_offer_when_no_language_matches(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	a := acceptable.OfferOf("text/csv", "es")
+	b := acceptable.OfferOf("text/html", "en")
+	c := acceptable.OfferOf("text/html", "de")
+
+	req, _ := http.NewRequest("GET", "/", nil)
+	req.Header.Add("Accept", "text/html")
+	req.Header.Add("Accept-Language", "fr")
+
+	best := acceptable.BestRequestMatch(req, a, b, c)
+
+	g.Expect(best).To(gomega.Equal(&acceptable.Match{
+		Type:     "text",
+		Subtype:  "html",
+		Language: "en",
+		Charset:  "utf-8",
+		Vary:     []string{"Accept", "Accept-Language"},
+	}))
+}
+
+func Test_should_match_utf8_charset_when_acceptable(t *testing.T) {
 	g := gomega.NewWithT(t)
 
 	a := acceptable.OfferOf("text/html")
@@ -262,6 +290,7 @@ func Test_should_match_utf8_charset_wen_acceptable(t *testing.T) {
 			Subtype:  "html",
 			Language: "en",
 			Charset:  "utf-8",
+			Vary:     []string{"Accept", "Accept-Language"},
 		}))
 	}
 }
@@ -282,6 +311,7 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 		Subtype:  "test",
 		Language: "*",
 		Charset:  "utf-8",
+		Vary:     []string{"Accept"},
 	}))
 
 	best = acceptable.BestRequestMatch(req, a)
@@ -291,6 +321,7 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 		Subtype:  "test",
 		Language: "*",
 		Charset:  "utf-8",
+		Vary:     []string{"Accept"},
 	}))
 }
 
@@ -310,6 +341,7 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 		Subtype:  "a",
 		Language: "*",
 		Charset:  "utf-8",
+		Vary:     []string{"Accept"},
 	}))
 
 	best = acceptable.BestRequestMatch(req, b)
@@ -319,6 +351,7 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 		Subtype:  "b",
 		Language: "*",
 		Charset:  "utf-8",
+		Vary:     []string{"Accept"},
 	}))
 }
 

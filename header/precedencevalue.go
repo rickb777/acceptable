@@ -38,9 +38,10 @@ func (a wvByPrecedence) Less(i, j int) bool {
 
 func (pvs PrecedenceValues) WithDefault() PrecedenceValues {
 	if len(pvs) == 0 {
-		return []PrecedenceValue{{Value: "*", Quality: DefaultQuality}}
+		return WildcardPrecedenceValue
 	}
 	return pvs
+	//	return append(pvs, PrecedenceValue{Value: "*", Quality: DefaultQuality})
 }
 
 func (pvs PrecedenceValues) Contains(value string) bool {
@@ -71,3 +72,5 @@ func (pv PrecedenceValue) String() string {
 	}
 	return buf.String()
 }
+
+var WildcardPrecedenceValue = []PrecedenceValue{{Value: "*", Quality: DefaultQuality}}

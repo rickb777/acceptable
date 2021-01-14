@@ -30,6 +30,8 @@ var DefaultCSVOffer = acceptable.OfferOf(TextCsv).Using(CSV())
 // * struct for some struct in which all the fields are exported and of simple types (as above).
 //
 // * []struct for some struct in which all the fields are exported and of simple types (as above).
+//
+// * acceptable.Supplier function returning one of the above
 func CSV(comma ...rune) acceptable.Processor {
 
 	in := ','
@@ -44,7 +46,7 @@ func CSV(comma ...rune) acceptable.Processor {
 		writer.Comma = in
 		//return p.flush(writer, p.process(writer, dataModel))
 
-		if fn, isFunc := match.Data.(acceptable.Supplier); isFunc {
+		if fn, isFunc := match.Data.(func() (interface{}, error)); isFunc {
 			match.Data, err = fn()
 			if err != nil {
 				return err

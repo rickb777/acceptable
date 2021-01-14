@@ -34,7 +34,7 @@ type Offer struct {
 	data map[string]interface{}
 }
 
-// OfferOf constructs an Offer easily.
+// OfferOf constructs an Offer easily. Zero or more languages can be specified.
 // If the language is absent, it is assumed to be the wildcard "*".
 // If the content type is blank, it is assumed to be the full wildcard "*/*".
 // Also, contentType can be a partial wildcard "type/*".
@@ -43,24 +43,29 @@ func OfferOf(contentType string, language ...string) Offer {
 	if contentType != "" {
 		t, s = internal.Split(contentType, '/')
 	}
+
 	ct := header.ContentType{
 		Type:    t,
 		Subtype: s,
 	}
-	if len(language) > 0 {
-		return Offer{
-			ContentType: ct,
-			langs:       language[:1],
-			data: map[string]interface{}{
-				language[0]: emptyValue,
-			},
-		}
-	}
-	return Offer{
+
+	offer := Offer{
 		ContentType: ct,
-		langs:       []string{"*"},
 		data:        make(map[string]interface{}),
 	}
+
+	if len(language) == 0 {
+		offer.langs = []string{"*"}
+		return offer
+	}
+
+	offer.langs = language
+
+	for _, l := range language {
+		offer.data[l] = emptyValue
+	}
+
+	return offer
 }
 
 // Using attaches a processor function to an offer and returns the modified offer.
@@ -75,6 +80,9 @@ func (o Offer) Using(processor Processor) Offer {
 func (o Offer) With(language string, data interface{}) Offer {
 	if data == nil {
 		data = emptyValue
+	}
+	if len(o.data) == 0 && len(o.langs) == 1 && o.langs[0] == "*" {
+		o.langs = nil
 	}
 	o.langs = append(o.langs, language)
 	o.data[language] = data

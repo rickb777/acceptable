@@ -15,6 +15,7 @@ type Match struct {
 	Subtype  string
 	Language string
 	Charset  string
+	Vary     []string
 	Data     interface{}
 	Render   Processor
 }
@@ -30,7 +31,7 @@ type Match struct {
 func (m Match) ApplyHeaders(rw http.ResponseWriter) (w io.Writer) {
 	w = rw
 	cs := "utf-8"
-	vary := []string{"accept"}
+	vary := m.Vary
 
 	if m.Charset != "" {
 		enc, err := htmlindex.Get(m.Charset)
@@ -50,7 +51,6 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) (w io.Writer) {
 
 	if m.Language != "" && m.Language != "*" {
 		rw.Header().Set("Content-Language", m.Language)
-		vary = append(vary, "accept-language")
 	}
 
 	rw.Header().Set("Vary", strings.Join(vary, ", "))

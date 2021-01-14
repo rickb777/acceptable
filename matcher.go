@@ -41,15 +41,17 @@ func IsAjax(req *http.Request) bool {
 // Ajax requests will result in nil being returned if no offer is capable of handling
 // them, even if other offers are provided.
 func BestRequestMatch(req *http.Request, available ...Offer) *Match {
-	mrs := header.ParseMediaRanges(req.Header.Get(Accept)).WithDefault()
-	languages := header.Parse(req.Header.Get(AcceptLanguage)).WithDefault()
+	accept, accLang, vary := readHeaders(req)
+
+	mrs := header.ParseMediaRanges(accept).WithDefault()
+	languages := header.Parse(accLang).WithDefault()
 
 	if IsAjax(req) {
 		available = Offers(available).Filter("application", "json")
 	}
 
 	c := context(fmt.Sprintf("%s %s", req.Method, req.URL))
-	best := c.bestMatch(mrs, languages, available...)
+	best := c.bestMatch(mrs, languages, available, vary)
 
 	if best != nil {
 		charsets := header.Parse(req.Header.Get(AcceptCharset))
@@ -65,6 +67,18 @@ func BestRequestMatch(req *http.Request, available ...Offer) *Match {
 	return best
 }
 
+func readHeaders(req *http.Request) (accept, accLang string, vary []string) {
+	accept = req.Header.Get(Accept)
+	accLang = req.Header.Get(AcceptLanguage)
+	if accept != "" {
+		vary = []string{Accept}
+	}
+	if accLang != "" {
+		vary = append(vary, AcceptLanguage)
+	}
+	return accept, accLang, vary
+}
+
 // used for diagnostics
 type context string
 
@@ -76,24 +90,38 @@ type context string
 //
 // Whenever the result is nil, the response should be 406-Not Acceptable.
 // If no available offers are provided, the response will always be nil.
-func (c context) bestMatch(mrs header.MediaRanges, languages header.PrecedenceValues, available ...Offer) *Match {
+func (c context) bestMatch(mrs header.MediaRanges, languages header.PrecedenceValues, available Offers, vary []string) (best *Match) {
 	// first pass - remove offers that match exclusions
 	// (this doesn't apply to language exclusions because we always allow at least one language match)
 	remaining := c.removeExcludedOffers(mrs, available)
 
-	// second pass - find the first exact-match media-range and language combination
-	for _, offer := range remaining {
-		best := c.findBestMatch(mrs, languages, offer, exactMatch, equalOrPrefix, "exact")
-		if best != nil {
-			return best
-		}
-	}
+	foundCtMatch := false
 
-	// third pass - find the first near-match media-range and language combination
-	for _, offer := range remaining {
-		best := c.findBestMatch(mrs, languages, offer, nearMatch, equalOrWildcard, "near")
-		if best != nil {
-			return best
+	for i := 1; i <= 2; i++ {
+		// second pass - find the first exact-match media-range and language combination
+		for _, offer := range remaining {
+			best, foundCtMatch = c.findBestMatch(mrs, languages, offer, vary, exactMatch, equalOrPrefix, "exact")
+			if best != nil {
+				return best
+			}
+		}
+
+		// third pass - find the first near-match media-range and language combination
+		for _, offer := range remaining {
+			best, foundCtMatch = c.findBestMatch(mrs, languages, offer, vary, nearMatch, equalOrWildcard, "near")
+			if best != nil {
+				return best
+			}
+		}
+
+		if foundCtMatch {
+			// RFC-7231 recommends that it is better to return the default language
+			// than nothing at all in the case when there is no matched language.
+			// So go round another loop trying to match just the content type.
+			// Use a wildcard in place of the accepted language.
+			languages = header.WildcardPrecedenceValue
+		} else {
+			break
 		}
 	}
 
@@ -126,13 +154,17 @@ func (c context) removeExcludedOffers(mrs header.MediaRanges, available []Offer)
 	return remaining
 }
 
-func (c context) findBestMatch(mrs header.MediaRanges, languages header.PrecedenceValues, offer Offer,
+func (c context) findBestMatch(mrs header.MediaRanges, languages header.PrecedenceValues, offer Offer, vary []string,
 	ctMatch func(header.MediaRange, Offer) bool,
 	langMatch func(acceptedLang, offeredLang string) bool,
-	kind string) *Match {
+	kind string) (*Match, bool) {
+
+	foundCtMatch := false
 
 	for _, acceptedCT := range mrs {
 		if ctMatch(acceptedCT, offer) {
+			foundCtMatch = true
+
 			for _, prefLang := range languages {
 				for _, offeredLang := range offer.langs {
 					if langMatch(prefLang.Value, offeredLang) {
@@ -140,28 +172,7 @@ func (c context) findBestMatch(mrs header.MediaRanges, languages header.Preceden
 
 						if prefLang.Quality > 0 {
 							Debug("%s successfully matched %s, lang=%s to %s, langs=%v\n", c, acceptedCT, prefLang, offer.ContentType, offer.langs)
-
-							m := &Match{
-								Type:     offer.Type,
-								Subtype:  offer.Subtype,
-								Language: offeredLang,
-								Data:     offer.data[offeredLang],
-								Render:   offer.processor,
-							}
-							if offer.Subtype == "*" && acceptedCT.Subtype != "*" {
-								m.Subtype = acceptedCT.Subtype
-								if offer.Type == "*" && acceptedCT.Type != "*" {
-									m.Type = acceptedCT.Type
-								}
-							}
-							if offeredLang == "*" && prefLang.Value != "*" {
-								m.Language = prefLang.Value
-								m.Data = offer.data[prefLang.Value]
-							}
-							if m.Data == emptyValue {
-								m.Data = nil
-							}
-							return m
+							return buildMatch(offer, offeredLang, acceptedCT, prefLang, vary), true
 						}
 					}
 				}
@@ -170,7 +181,32 @@ func (c context) findBestMatch(mrs header.MediaRanges, languages header.Preceden
 	}
 
 	Debug("%s no %s match for offer %s, langs=%v\n", c, kind, offer.ContentType, offer.langs)
-	return nil
+	return nil, foundCtMatch
+}
+
+func buildMatch(offer Offer, offeredLang string, acceptedCT header.MediaRange, prefLang header.PrecedenceValue, vary []string) *Match {
+	m := &Match{
+		Type:     offer.Type,
+		Subtype:  offer.Subtype,
+		Language: offeredLang,
+		Vary:     vary,
+		Data:     offer.data[offeredLang],
+		Render:   offer.processor,
+	}
+	if offer.Subtype == "*" && acceptedCT.Subtype != "*" {
+		m.Subtype = acceptedCT.Subtype
+		if offer.Type == "*" && acceptedCT.Type != "*" {
+			m.Type = acceptedCT.Type
+		}
+	}
+	if offeredLang == "*" && prefLang.Value != "*" {
+		m.Language = prefLang.Value
+		m.Data = offer.data[prefLang.Value]
+	}
+	if m.Data == emptyValue {
+		m.Data = nil
+	}
+	return m
 }
 
 //-------------------------------------------------------------------------------------------------

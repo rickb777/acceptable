@@ -14,6 +14,7 @@ const XMLContentType = "application/xml"
 var DefaultXMLOffer = acceptable.OfferOf(XMLContentType).Using(XML())
 
 // XML creates a new processor for XML with optional indentation.
+// If match.Data is an acceptable.Supplier function, it is used to provide the model data.
 func XML(indent ...string) acceptable.Processor {
 	in := ""
 	if len(indent) > 0 {
@@ -28,7 +29,7 @@ func XML(indent ...string) acceptable.Processor {
 		enc := xml.NewEncoder(p)
 		enc.Indent("", in)
 
-		if fn, isFunc := match.Data.(acceptable.Supplier); isFunc {
+		if fn, isFunc := match.Data.(func() (interface{}, error)); isFunc {
 			match.Data, err = fn()
 			if err != nil {
 				return err

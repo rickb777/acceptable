@@ -25,7 +25,7 @@ func TestXMLShouldWriteResponseBody(t *testing.T) {
 		Subtype:  "json",
 		Language: "en",
 		Charset:  "utf-8",
-		Data:     model,
+		Data:     func() (interface{}, error) { return model, nil },
 	}
 
 	p := processor.XML()

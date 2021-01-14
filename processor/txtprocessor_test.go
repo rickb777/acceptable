@@ -18,6 +18,8 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 		expected string
 	}{
 		{"Joe Bloggs", "Joe Bloggs\n"},
+		{"Joe Bloggs\n", "Joe Bloggs\n"},
+		{func() (interface{}, error) { return "Joe Bloggs", nil }, "Joe Bloggs\n"},
 		{hidden{tt(2001, 10, 31)}, "(2001-10-31)\n"},
 		{tm{"Joe Bloggs"}, "Joe Bloggs\n"},
 	}

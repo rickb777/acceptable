@@ -22,11 +22,13 @@ var DefaultTXTOffer = acceptable.OfferOf(TextPlain).Using(TXT())
 // * fmt.Stringer
 //
 // * encoding.TextMarshaler
+//
+// * acceptable.Supplier function returning one of the above
 func TXT() acceptable.Processor {
 	return func(rw http.ResponseWriter, match acceptable.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
-		if fn, isFunc := match.Data.(acceptable.Supplier); isFunc {
+		if fn, isFunc := match.Data.(func() (interface{}, error)); isFunc {
 			match.Data, err = fn()
 			if err != nil {
 				return err
