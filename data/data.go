@@ -13,12 +13,12 @@ type Data interface {
 }
 
 // Of wraps a data value.
-func Of(v interface{}) Data {
+func Of(v interface{}) Value {
 	return Value{v: v}
 }
 
 // Lazy wraps a function that supplies a data value, but only when it is needed.
-func Lazy(fn func(template, language string) (interface{}, error)) Data {
+func Lazy(fn func(template, language string) (interface{}, error)) Value {
 	return Value{v: fn}
 }
 
