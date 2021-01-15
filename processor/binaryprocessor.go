@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/rickb777/acceptable"
-	"github.com/rickb777/acceptable/internal"
 )
 
 // DefaultImageOffer is an Offer for image/* content using the Binary() processor.
@@ -19,13 +18,16 @@ var DefaultImageOffer = acceptable.OfferOf("image/*").Using(Binary())
 //
 // * []byte
 // * io.Reader
-// * acceptable.Supplier function returning one of the above
 // * nil
 func Binary() acceptable.Processor {
 	return func(rw http.ResponseWriter, match acceptable.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
-		data, err := internal.CallDataSuppliers(match.Data, template, match.Language)
+		if match.Data == nil {
+			return nil
+		}
+
+		data, err := match.Data.Content(template, match.Language)
 		if err != nil {
 			return err
 		}
@@ -39,7 +41,7 @@ func Binary() acceptable.Processor {
 		case nil:
 			// no-op
 		default:
-			info := fmt.Sprintf("%T: unsupported binary data", match.Data)
+			info := fmt.Sprintf("%T: unsupported binary data", data)
 			panic(info)
 		}
 

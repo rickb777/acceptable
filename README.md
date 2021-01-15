@@ -56,29 +56,21 @@ The best result will be the one that best matches the request headers. If none m
 
 The offers will usually hold a suitable rendering function. This is attached with the `Using` method. Sub-packages `processor` and `templates` provide useful renderers but you can also provide your own.
 
-The offers can also be restricted by language matching. This is done either using `OfferOf` or with the `With` method, This matches `Accept-Language` using the basic prefix algorithm. This means for example that if you specify "en" it will match "en", "en-GB" and everything else beginning with "en-", but if you specify "en-GB", it only matches "en-GB" and "en-GB-*" but won't match "en-US".
+The offers can also be restricted by language matching. This is done either using `OfferOf` varags parameters, or via the `With` method. The language(s) is matched against `Accept-Language` using the basic prefix algorithm. This means for example that if you specify "en" it will match "en", "en-GB" and everything else beginning with "en-", but if you specify "en-GB", it only matches "en-GB" and "en-GB-*", but won't match "en-US" or even "en".
 
-The `With` method might not care about language, so simply use the wildcard instead, e.g `offer.With("*", data)` attaches `data` to the offer and doesn't restrict the offer to any particular language. This could also be used as a catch-all case if it comes after one or more `With` with a specified language. However, the standard (RFC-7231) advises that a response should be returned even when language matching has failed; this implementation will do this by picking the first language listed, so the catch-all case is only necessary if its data is different to that of the first case.
+Sometimes, the `With` method might not care about language, so simply use the wildcard instead. For example, `offer.With("*", data)` attaches `data` to the offer and doesn't restrict the offer to any particular language. This could also be used as a catch-all case if it comes after one or more `With` with a specified language. However, the standard (RFC-7231) advises that a response should be returned even when language matching has failed; this implementation will do this by picking the first language listed, so the catch-all case is only necessary if its data is different to that of the first case.
 
 ### Providing response data
 
-The response data (`en` and `fr` above) can be structs, slices, maps, or other values. Alternatively they can be functions that return values. These functions are either
+The response data (`en` and `fr` above) can be structs, slices, maps, or other values. Alternatively they can be `data.Data` values. These allow for lazy evaluation of the content
 
 ```go
-    en := func() (interface{}, error) {
+    en := data.Lazy(func(template, language string) (interface{}, error) {
         return ...
-    }
+    })
 ```
 
-or for template/web content data
-
-```go
-    en := func(template, language string) (interface{}, error) {
-        return ...
-    }
-```
-
-and they can even be nested, returning another such function.
+and they can even be nested, returning another such function which will be evaluated in turn. The template and language parameters are used for templated/web content data; otherwise they are ignored.
 
 The selected response processor will render the actual response using the data provided, for example a struct will become JSON text if `processor.JSON` renders it.
 

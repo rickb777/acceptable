@@ -8,6 +8,7 @@ import (
 
 	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/templates"
 	"github.com/spf13/afero"
 )
@@ -25,10 +26,10 @@ func TestProductionInstance_using_files(t *testing.T) {
 		Subtype:  "html",
 		Language: "en",
 		Charset:  "utf-8",
-		Data: Declaration{
+		Data: data.Of(Declaration{
 			Proclamation: "A Title",
 			Articles:     []Article{{N: 1, Text: "Text 1."}},
-		},
+		}),
 	}
 
 	// request 1
@@ -65,7 +66,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 		Subtype:  "html",
 		Language: "en",
 		Charset:  "utf-8",
-		Data:     map[string]string{"Title": "Hello"},
+		Data:     data.Of(map[string]string{"Title": "Hello"}),
 	}
 
 	//---------- request 1 ----------
@@ -102,7 +103,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 		Subtype:  "xhtml+xml",
 		Language: "en",
 		Charset:  "utf-8",
-		Data:     map[string]string{"Title": "Hello"},
+		Data:     data.Of(map[string]string{"Title": "Hello"}),
 	}, "foo/bar/baz.html")
 	g.Expect(err).NotTo(HaveOccurred())
 
@@ -119,7 +120,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 		Subtype:  "xhtml+xml",
 		Language: "en",
 		Charset:  "utf-8",
-		Data:     map[string]string{"Title": "Hello"},
+		Data:     data.Of(map[string]string{"Title": "Hello"}),
 	}, "foo/bar/baz.html")
 	g.Expect(err).NotTo(HaveOccurred())
 

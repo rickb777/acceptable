@@ -5,21 +5,21 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rickb777/acceptable"
-
 	. "github.com/onsi/gomega"
+	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/processor"
 )
 
 func TestBinaryShouldWriteResponseBody(t *testing.T) {
 	g := NewGomegaWithT(t)
 	models := []struct {
-		stuff    interface{}
+		stuff    data.Data
 		expected string
 	}{
-		{[]byte("Joe Bloggs"), "Joe Bloggs"},
-		{func() (interface{}, error) { return []byte("Joe Bloggs"), nil }, "Joe Bloggs"},
-		{strings.NewReader("Joe Bloggs"), "Joe Bloggs"},
+		{data.Of([]byte("Joe Bloggs")), "Joe Bloggs"},
+		{data.Lazy(func(string, string) (interface{}, error) { return []byte("Joe Bloggs"), nil }), "Joe Bloggs"},
+		{data.Of(strings.NewReader("Joe Bloggs")), "Joe Bloggs"},
 		{nil, ""},
 	}
 

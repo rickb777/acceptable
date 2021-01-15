@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/processor"
 
 	. "github.com/onsi/gomega"
@@ -26,7 +27,7 @@ func TestJSONShouldWriteResponseBody(t *testing.T) {
 		Subtype:  "json",
 		Language: "en",
 		Charset:  "utf-8",
-		Data:     func() (interface{}, error) { return model, nil },
+		Data:     data.Lazy(func(string, string) (interface{}, error) { return model, nil }),
 	}
 
 	p := processor.JSON()
@@ -55,7 +56,7 @@ func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 			Subtype:  "json",
 			Language: "cn",
 			Charset:  enc,
-			Data:     model,
+			Data:     data.Of(model),
 		}
 
 		p := processor.JSON("")
@@ -76,7 +77,7 @@ func TestJSONShouldReturnError(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	model := &User{"Joe Bloggs"}
-	match := acceptable.Match{Data: model}
+	match := acceptable.Match{Data: data.Of(model)}
 
 	p := processor.JSON()
 

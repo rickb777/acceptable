@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/rickb777/acceptable"
-	"github.com/rickb777/acceptable/internal"
 )
 
 const TextPlain = "text/plain"
@@ -23,13 +22,15 @@ var DefaultTXTOffer = acceptable.OfferOf(TextPlain).Using(TXT())
 // * fmt.Stringer
 //
 // * encoding.TextMarshaler
-//
-// * acceptable.Supplier function returning one of the above
 func TXT() acceptable.Processor {
 	return func(rw http.ResponseWriter, match acceptable.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
-		data, err := internal.CallDataSuppliers(match.Data, template, match.Language)
+		if match.Data == nil {
+			return nil
+		}
+
+		data, err := match.Data.Content(template, match.Language)
 		if err != nil {
 			return err
 		}

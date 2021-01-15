@@ -14,7 +14,6 @@ const JSONContentType = "application/json"
 var DefaultJSONOffer = acceptable.OfferOf(JSONContentType).Using(JSON())
 
 // JSON creates a new processor for JSON with a specified indentation.
-// If match.Data is an acceptable.Supplier function, it is used to provide the model data.
 func JSON(indent ...string) acceptable.Processor {
 	in := ""
 	if len(indent) > 0 {
@@ -24,12 +23,16 @@ func JSON(indent ...string) acceptable.Processor {
 	return func(rw http.ResponseWriter, match acceptable.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
+		if match.Data == nil {
+			return nil
+		}
+
 		p := &internal.WriterProxy{W: w}
 
 		enc := json.NewEncoder(p)
 		enc.SetIndent("", in)
 
-		data, err := internal.CallDataSuppliers(match.Data, template, match.Language)
+		data, err := match.Data.Content(template, match.Language)
 		if err != nil {
 			return err
 		}

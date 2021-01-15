@@ -7,7 +7,6 @@ import (
 	"reflect"
 
 	"github.com/rickb777/acceptable"
-	"github.com/rickb777/acceptable/internal"
 )
 
 const TextCsv = "text/csv"
@@ -31,8 +30,6 @@ var DefaultCSVOffer = acceptable.OfferOf(TextCsv).Using(CSV())
 // * struct for some struct in which all the fields are exported and of simple types (as above).
 //
 // * []struct for some struct in which all the fields are exported and of simple types (as above).
-//
-// * acceptable.Supplier function returning one of the above
 func CSV(comma ...rune) acceptable.Processor {
 
 	in := ','
@@ -43,16 +40,19 @@ func CSV(comma ...rune) acceptable.Processor {
 	return func(rw http.ResponseWriter, match acceptable.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
+		if match.Data == nil {
+			return nil
+		}
+
 		writer := csv.NewWriter(w)
 		writer.Comma = in
-		//return p.flush(writer, p.process(writer, dataModel))
 
-		match.Data, err = internal.CallDataSuppliers(match.Data, template, match.Language)
+		data, err := match.Data.Content(template, match.Language)
 		if err != nil {
 			return err
 		}
 
-		err = writeCSV(writer, match)
+		err = writeCSV(writer, data)
 		if err != nil {
 			return err
 		}
@@ -62,10 +62,10 @@ func CSV(comma ...rune) acceptable.Processor {
 	}
 }
 
-func writeCSV(writer *csv.Writer, match acceptable.Match) error {
-	debug("csvProcessor.process %T\n", match.Data)
+func writeCSV(writer *csv.Writer, data interface{}) error {
+	debug("csvProcessor.process %T\n", data)
 
-	switch v := match.Data.(type) {
+	switch v := data.(type) {
 	case string:
 		return writer.Write([]string{v})
 	case []string:
@@ -74,7 +74,7 @@ func writeCSV(writer *csv.Writer, match acceptable.Match) error {
 		return writer.WriteAll(v)
 	}
 
-	value := reflect.Indirect(reflect.ValueOf(match.Data))
+	value := reflect.Indirect(reflect.ValueOf(data))
 	debug("  is %v\n", value.Kind())
 
 	switch value.Kind() {
@@ -83,7 +83,7 @@ func writeCSV(writer *csv.Writer, match acceptable.Match) error {
 			return nil // nothing to write
 		}
 
-		return writeStructFields(writer, value, match.Data)
+		return writeStructFields(writer, value, data)
 
 	case reflect.Array, reflect.Slice:
 		if value.Len() == 0 {
@@ -110,7 +110,7 @@ func writeCSV(writer *csv.Writer, match acceptable.Match) error {
 				return writeArrayOfStringers(writer, value)
 			}
 
-			return writeArrayOfStructFields(writer, value, match.Data)
+			return writeArrayOfStructFields(writer, value, data)
 
 		case reflect.Array, reflect.Slice:
 			if v0.Len() == 0 {
@@ -137,12 +137,12 @@ func writeCSV(writer *csv.Writer, match acceptable.Match) error {
 		}
 	}
 
-	s, ok := match.Data.(fmt.Stringer)
+	s, ok := data.(fmt.Stringer)
 	if ok {
 		return writer.Write([]string{s.String()})
 	}
 
-	return fmt.Errorf("Unsupported type for CSV: %T", match.Data)
+	return fmt.Errorf("Unsupported type for CSV: %T", data)
 }
 
 func writeArrayOfStructFields(writer *csv.Writer, value reflect.Value, dataModel interface{}) error {

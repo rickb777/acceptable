@@ -21,8 +21,11 @@ var Fs = afero.NewOsFs()
 var ReloadOnTheFly = false
 
 // Templates finds all the templates in the directory dir and its subdirectories
-// that have names ending with the given suffix. The function map can be nil if not
-// required. It returns a processor that handles requests using the templates available.
+// that have names ending with the given suffix (usually ".html").
+//
+// The function map can be nil if not required.
+//
+// A processor is returned that handles requests using the templates available.
 func Templates(dir, suffix string, funcMap template.FuncMap) acceptable.Processor {
 	if funcMap == nil {
 		funcMap = template.FuncMap{}

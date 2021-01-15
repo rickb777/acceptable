@@ -4,16 +4,12 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/acceptable/internal"
 )
 
-// Supplier supplies data in the form of a struct, a slice, etc.
-// This allows for evaluation on demand ('lazy'), e.g. fetching from a database.
-type Supplier func() (interface{}, error)
-
 // Processor is a function that renders content according to the matched result.
-// The data can be a struct, slice etc or a Supplier.
 type Processor func(w http.ResponseWriter, match Match, template string) error
 
 // Offer holds information about one particular resource representation that can potentially
@@ -30,8 +26,7 @@ type Offer struct {
 	langs []string
 
 	// data is an optional response to be rendered if this offer is selected.
-	// If Data is a Supplier function, the data can be sourced lazily.
-	data map[string]interface{}
+	data map[string]data.Data
 }
 
 // OfferOf constructs an Offer easily. Zero or more languages can be specified.
@@ -51,7 +46,7 @@ func OfferOf(contentType string, language ...string) Offer {
 
 	offer := Offer{
 		ContentType: ct,
-		data:        make(map[string]interface{}),
+		data:        make(map[string]data.Data),
 	}
 
 	if len(language) == 0 {
@@ -75,17 +70,24 @@ func (o Offer) Using(processor Processor) Offer {
 	return o
 }
 
-// With attaches response data to an offer.
-// The original offer is unchanged.
-func (o Offer) With(language string, data interface{}) Offer {
-	if data == nil {
-		data = emptyValue
+// With attaches response data to an offer. The data can be a value (struct, slice, etc) or
+// a data.Data. It may also be nil, which serves to add the language to the Offer's supported
+// languages.
+//
+//The original offer is unchanged.
+func (o Offer) With(language string, d interface{}) Offer {
+	if d == nil {
+		d = emptyValue
 	}
 	if len(o.data) == 0 && len(o.langs) == 1 && o.langs[0] == "*" {
 		o.langs = nil
 	}
 	o.langs = append(o.langs, language)
-	o.data[language] = data
+	if s, ok := d.(data.Data); ok {
+		o.data[language] = s
+	} else {
+		o.data[language] = data.Of(d)
+	}
 	return o
 }
 
@@ -108,6 +110,14 @@ func (o Offer) String() string {
 //-------------------------------------------------------------------------------------------------
 
 type empty struct{}
+
+func (e empty) Content(template, language string) (interface{}, error) {
+	panic("not reachable")
+}
+
+func (e empty) Headers() map[string]string {
+	panic("not reachable")
+}
 
 var emptyValue = empty{}
 

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rickb777/acceptable/data"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/htmlindex"
 )
@@ -17,7 +18,7 @@ type Match struct {
 	Language string
 	Charset  string
 	Vary     []string
-	Data     interface{}
+	Data     data.Data
 	Render   Processor
 }
 
@@ -65,6 +66,14 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) io.Writer {
 
 	if enc != nil {
 		return enc.NewEncoder().Writer(rw)
+	}
+
+	if m.Data != nil {
+		// optional headers are applied last, allowing for the unusual possibility of
+		// overwriting the headers set above
+		for h, v := range m.Data.Headers() {
+			rw.Header().Set(h, v)
+		}
 	}
 
 	return rw

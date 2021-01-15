@@ -1,5 +1,6 @@
-// Package processor contains flexible implementations for rendering JSON, XML, CSV etc.
-// A Render is defined as
+// Package processor contains flexible implementations for rendering JSON, XML, CSV and plain text.
 //
-//    type Render func(w http.ResponseWriter, match Match, template string, dataModel interface{}) error
+// An acceptable.Processor is defined as
+//
+//    type Processor func(w http.ResponseWriter, match Match, template string) error
 package processor

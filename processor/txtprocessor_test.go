@@ -5,23 +5,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rickb777/acceptable"
-
 	. "github.com/onsi/gomega"
+	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/processor"
 )
 
 func TestTXTShouldWriteResponseBody(t *testing.T) {
 	g := NewGomegaWithT(t)
 	models := []struct {
-		stuff    interface{}
+		stuff    data.Data
 		expected string
 	}{
-		{"Joe Bloggs", "Joe Bloggs\n"},
-		{"Joe Bloggs\n", "Joe Bloggs\n"},
-		{func() (interface{}, error) { return "Joe Bloggs", nil }, "Joe Bloggs\n"},
-		{hidden{tt(2001, 10, 31)}, "(2001-10-31)\n"},
-		{tm{"Joe Bloggs"}, "Joe Bloggs\n"},
+		{data.Of("Joe Bloggs"), "Joe Bloggs\n"},
+		{data.Of("Joe Bloggs\n"), "Joe Bloggs\n"},
+		{data.Lazy(func(string, string) (interface{}, error) { return "Joe Bloggs", nil }), "Joe Bloggs\n"},
+		{data.Of(hidden{tt(2001, 10, 31)}), "(2001-10-31)\n"},
+		{data.Of(tm{"Joe Bloggs"}), "Joe Bloggs\n"},
 	}
 
 	p := processor.TXT()

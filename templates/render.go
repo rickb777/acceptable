@@ -17,7 +17,11 @@ func productionProcessor(root *template.Template) acceptable.Processor {
 
 		p := &internal.WriterProxy{W: w}
 
-		data, err := internal.CallDataSuppliers(match.Data, template, match.Language)
+		if match.Data == nil {
+			return nil
+		}
+
+		data, err := match.Data.Content(template, match.Language)
 		if err != nil {
 			return err
 		}
@@ -40,14 +44,13 @@ func debugProcessor(root *template.Template, rootDir, suffix string, files map[s
 
 		w := match.ApplyHeaders(rw)
 
+		if match.Data == nil {
+			return nil
+		}
+
 		p := &internal.WriterProxy{W: w}
 
-		if fn, isFunc := match.Data.(func(string, string) (interface{}, error)); isFunc {
-			match.Data, err = fn(template, match.Language)
-			if err != nil {
-				return err
-			}
-		}
+		data, err := match.Data.Content(template, match.Language)
 
 		if template == "" {
 			template = DefaultPage
@@ -57,7 +60,7 @@ func debugProcessor(root *template.Template, rootDir, suffix string, files map[s
 		if template == "" {
 			return root.Execute(p, match.Data)
 		}
-		return root.ExecuteTemplate(p, template, match.Data)
+		return root.ExecuteTemplate(p, template, data)
 	}
 }
 

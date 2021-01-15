@@ -10,6 +10,7 @@ import (
 
 	"github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/acceptable/processor"
 	"github.com/rickb777/acceptable/templates"
@@ -451,21 +452,19 @@ func TestMain(m *testing.M) {
 }
 
 func ExampleRenderBestMatch() {
-	// In this example, the same content is available in three languages. We're using functions
-	// for the sake of illustration, but simple values (often structs) will also work and will
-	// sometimes be more appropriate.
+	// In this example, the same content is available in three languages. Three different
+	// approaches can be used.
 
-	en := func() (interface{}, error) {
-		return "Hello!", nil // get English content - eg from database
-	}
+	// 1. simple values can be used
+	en := "Hello!" // get English content
 
-	fr := func() (interface{}, error) {
-		return "Bonjour!", nil // get French content - eg from database
-	}
+	// 2. values can be wrapped in a data.Data
+	fr := data.Of("Bonjour!") // get French content
 
-	es := func() (interface{}, error) {
+	// 3. this uses a lazy evaluation function, wrapped in a data.Data
+	es := data.Lazy(func(template string, language string) (interface{}, error) {
 		return "Hola!", nil // get Spanish content - eg from database
-	}
+	})
 
 	// We're implementing an HTTP handler, so we are given a request and a response.
 
