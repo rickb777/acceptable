@@ -2,7 +2,6 @@ package data
 
 import (
 	"errors"
-	"fmt"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -14,17 +13,14 @@ func TestValue_future_expiry(t *testing.T) {
 	g := NewGomegaWithT(t)
 
 	// Given ...
-	d := Lazy(func(template, language string) (interface{}, error) {
+	d := Lazy(func(template, language string) (interface{}, string, error) {
 		g.Expect(template).To(Equal("home.html"))
 		g.Expect(language).To(Equal("en"))
-		return "foo", nil
+		return "foo", "abcdef", nil
 	}).
 		Expires(time.Date(2020, 2, 3, 1, 1, 1, 0, time.UTC)).
 		LastModified(time.Date(2020, 1, 1, 1, 1, 1, 0, time.UTC)).
-		MaxAge(10 * time.Second).
-		ETag(func(x interface{}) string {
-			return fmt.Sprintf("abc-%v-def", x)
-		})
+		MaxAge(10 * time.Second)
 
 	w := httptest.NewRecorder()
 
@@ -38,14 +34,14 @@ func TestValue_future_expiry(t *testing.T) {
 	g.Expect(w.Header().Get("Cache-Control")).To(Equal("max-age=10"))
 	g.Expect(w.Header().Get("Expires")).To(Equal("Mon, 03 Feb 2020 01:01:01 UTC"))
 	g.Expect(w.Header().Get("Last-Modified")).To(Equal("Wed, 01 Jan 2020 01:01:01 UTC"))
-	g.Expect(w.Header().Get("ETag")).To(Equal(`"abc-foo-def"`))
+	g.Expect(w.Header().Get("ETag")).To(Equal(`"abcdef"`))
 }
 
 func TestValue_no_cache(t *testing.T) {
 	g := NewGomegaWithT(t)
 
 	// Given ...
-	d := Of("foo").NoCache().With("Abc", 1, "Def", true)
+	d := Of("foo").NoCache().With("Abc", "1", "Def", "true")
 
 	w := httptest.NewRecorder()
 
@@ -66,10 +62,10 @@ func TestValue_error(t *testing.T) {
 	g := NewGomegaWithT(t)
 
 	// Given ...
-	d := Lazy(func(template, language string) (interface{}, error) {
+	d := Lazy(func(template, language string) (interface{}, string, error) {
 		g.Expect(template).To(Equal("home.html"))
 		g.Expect(language).To(Equal("en"))
-		return nil, errors.New("expected error")
+		return nil, "", errors.New("expected error")
 	})
 
 	w := httptest.NewRecorder()

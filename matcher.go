@@ -30,6 +30,19 @@ func RenderBestMatch(w http.ResponseWriter, req *http.Request, template string, 
 	return best.Render(w, *best, template)
 }
 
+func conditionalRequestMatches(hash, ifNoneMatch string) bool {
+	if ifNoneMatch != "" {
+		parts := strings.Split(ifNoneMatch, ",")
+		for _, p := range parts {
+			etag := strings.Trim(p, `" `)
+			if etag == hash {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // BestRequestMatch finds the content type and language that best matches the accepted media
 // ranges and languages contained in request headers.
 // The result contains the best match, based on the rules of RFC-7231.

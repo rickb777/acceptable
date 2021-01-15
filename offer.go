@@ -111,11 +111,11 @@ func (o Offer) String() string {
 
 type empty struct{}
 
-func (e empty) Content(template, language string) (interface{}, error) {
+func (e empty) Content(template, language string) (interface{}, string, error) {
 	panic("not reachable")
 }
 
-func (e empty) Headers() map[string]interface{} {
+func (e empty) Headers() map[string]string {
 	panic("not reachable")
 }
 

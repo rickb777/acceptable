@@ -26,7 +26,7 @@ func TestXMLShouldWriteResponseBody(t *testing.T) {
 		Subtype:  "json",
 		Language: "en",
 		Charset:  "utf-8",
-		Data:     data.Lazy(func(string, string) (interface{}, error) { return model, nil }),
+		Data:     data.Lazy(func(string, string) (interface{}, string, error) { return model, "", nil }),
 	}
 
 	p := processor.XML()

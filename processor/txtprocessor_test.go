@@ -19,7 +19,7 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 	}{
 		{data.Of("Joe Bloggs"), "Joe Bloggs\n"},
 		{data.Of("Joe Bloggs\n"), "Joe Bloggs\n"},
-		{data.Lazy(func(string, string) (interface{}, error) { return "Joe Bloggs", nil }), "Joe Bloggs\n"},
+		{data.Lazy(func(string, string) (interface{}, string, error) { return "Joe Bloggs", "", nil }), "Joe Bloggs\n"},
 		{data.Of(hidden{tt(2001, 10, 31)}), "(2001-10-31)\n"},
 		{data.Of(tm{"Joe Bloggs"}), "Joe Bloggs\n"},
 	}

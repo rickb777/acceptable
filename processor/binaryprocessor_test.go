@@ -18,7 +18,7 @@ func TestBinaryShouldWriteResponseBody(t *testing.T) {
 		expected string
 	}{
 		{data.Of([]byte("Joe Bloggs")), "Joe Bloggs"},
-		{data.Lazy(func(string, string) (interface{}, error) { return []byte("Joe Bloggs"), nil }), "Joe Bloggs"},
+		{data.Lazy(func(string, string) (interface{}, string, error) { return []byte("Joe Bloggs"), "", nil }), "Joe Bloggs"},
 		{data.Of(strings.NewReader("Joe Bloggs")), "Joe Bloggs"},
 		{nil, ""},
 	}
