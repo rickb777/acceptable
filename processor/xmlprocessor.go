@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
 )
 
@@ -23,8 +24,9 @@ func XML(indent ...string) acceptable.Processor {
 	return func(rw http.ResponseWriter, match acceptable.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
-		if match.Data == nil {
-			return nil
+		d, err := data.GetContentAndApplyExtraHeaders(rw, match.Data, template, match.Language)
+		if err != nil || d == nil {
+			return err
 		}
 
 		p := &internal.WriterProxy{W: w}
@@ -32,12 +34,7 @@ func XML(indent ...string) acceptable.Processor {
 		enc := xml.NewEncoder(p)
 		enc.Indent("", in)
 
-		data, err := match.Data.Content(template, match.Language)
-		if err != nil {
-			return err
-		}
-
-		err = enc.Encode(data)
+		err = enc.Encode(d)
 		if err != nil {
 			return err
 		}

@@ -115,7 +115,7 @@ func (e empty) Content(template, language string) (interface{}, error) {
 	panic("not reachable")
 }
 
-func (e empty) Headers() map[string]string {
+func (e empty) Headers() map[string]interface{} {
 	panic("not reachable")
 }
 

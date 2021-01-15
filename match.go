@@ -68,14 +68,6 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) io.Writer {
 		return enc.NewEncoder().Writer(rw)
 	}
 
-	if m.Data != nil {
-		// optional headers are applied last, allowing for the unusual possibility of
-		// overwriting the headers set above
-		for h, v := range m.Data.Headers() {
-			rw.Header().Set(h, v)
-		}
-	}
-
 	return rw
 }
 

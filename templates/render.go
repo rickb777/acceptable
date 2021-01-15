@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
 )
 
@@ -17,19 +18,15 @@ func productionProcessor(root *template.Template) acceptable.Processor {
 
 		p := &internal.WriterProxy{W: w}
 
-		if match.Data == nil {
-			return nil
-		}
-
-		data, err := match.Data.Content(template, match.Language)
-		if err != nil {
+		d, err := data.GetContentAndApplyExtraHeaders(rw, match.Data, template, match.Language)
+		if err != nil || d == nil {
 			return err
 		}
 
 		if template == "" {
 			template = DefaultPage
 		}
-		return root.ExecuteTemplate(p, template, data)
+		return root.ExecuteTemplate(p, template, d)
 	}
 }
 
@@ -44,23 +41,19 @@ func debugProcessor(root *template.Template, rootDir, suffix string, files map[s
 
 		w := match.ApplyHeaders(rw)
 
-		if match.Data == nil {
-			return nil
+		d, err := data.GetContentAndApplyExtraHeaders(rw, match.Data, template, match.Language)
+		if err != nil || d == nil {
+			return err
 		}
-
-		p := &internal.WriterProxy{W: w}
-
-		data, err := match.Data.Content(template, match.Language)
 
 		if template == "" {
 			template = DefaultPage
 		}
 
+		p := &internal.WriterProxy{W: w}
 		root = getCurrentTemplateTree(root, rootDir, suffix, files, funcMap)
-		if template == "" {
-			return root.Execute(p, match.Data)
-		}
-		return root.ExecuteTemplate(p, template, data)
+
+		return root.ExecuteTemplate(p, template, d)
 	}
 }
 
