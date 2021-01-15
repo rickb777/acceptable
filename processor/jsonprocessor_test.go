@@ -94,8 +94,3 @@ type User struct {
 func (u *User) MarshalJSON() ([]byte, error) {
 	return nil, errors.New("oops")
 }
-
-//func jsontestErrorHandler(w http.ResponseWriter, err error) {
-//	w.WriteHeader(500)
-//	w.Write([]byte(err.Error()))
-//}

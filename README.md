@@ -32,16 +32,50 @@ The `acceptable.Parse` function can be used for `Accept-Encoding` as well as `Ac
 
 ## Putting it together - simple content negotiation
 
-Finding the best match depends on you listing your available response representations. For example
+Finding the best match depends on you listing your available response representations. This is all rolled up into a simple-to-use function `acceptable.RenderBestMatch`
 
 ```go
-    offer1 := acceptable.OfferOf("application/json")
-    offer2 := acceptable.OfferOf("application/xml")
-    best := acceptable.BestRequestMatch(request, offer1, offer2)
+    en := ... obtain some content in English
+    fr := ... obtain some content in English
+
+    // long-hand construction of an offer for indented JSON
+    offer1 := acceptable.OfferOf("application/json").Using(processor.JSON("  ")).With("en", en).With("fr", fr)
+
+    // short-hand construction of an XML offer
+    offer2 := processor.DefaultXMLOffer.With("en", en).With("fr", fr)
+    // equivalent to
+    //offer2 := acceptable.OfferOf("application/xml").Using(processor.XML()).With("en", en).With("fr", fr)
+
+    // a catch-all offer is optional
+    catchAll := acceptable.OfferOf("*/*").Using(processor.TXT()).With("en", en).With("fr", fr)
+    
+    err := acceptable.RenderBestMatch(request, offer1, offer2, catchAll)
 ```
 
-The `best` result will be the one that best matches the request headers. If none match, it will be nil and the response should be 406-Not Acceptable. If you need to have a catch-all case, include `acceptable.OfferOf("*/*")` last in the list.
+The best result will be the one that best matches the request headers. If none match, the response will be 406-Not Acceptable. If you need to have a catch-all case, include `acceptable.OfferOf("*/*")` last in the list.
 
-The offers can also be restricted by language matching using their `Language` field. This matches `Accept-Language` using the basic prefix algorithm, which means for example that if you specify "en" it will match "en", "en-GB" and everything else beginning with "en-".
+The offers will usually hold a suitable rendering function. This is attached with the `Using` method. Sub-packages `processor` and `templates` provide useful renderers but you can also provide your own.
 
-The offers can hold a suitable rendering function in their `Processor` field if required. If the best offer matched is not nil, you can easily call its `Processor` function in order to render the response.
+The offers can also be restricted by language matching. This is done either using `OfferOf` or with the `With` method, This matches `Accept-Language` using the basic prefix algorithm, which means for example that if you specify "en" it will match "en", "en-GB" and everything else beginning with "en-".
+
+### Providing response data
+
+The response data (`en` and `fr` above) can be structs, slices, maps, or other values. Alternatively they can be functions that return values. These functions are either
+
+```go
+    en := func() (interface{}, error) {
+        return ...
+    }
+```
+
+or for template/web content data
+
+```go
+    en := func(template, language string) (interface{}, error) {
+        return ...
+    }
+```
+
+and they can even be nested, returning another such function.
+
+The selected response processor will render the actual response using the data provided, for example a struct will become JSON text if `processor.JSON` renders it.

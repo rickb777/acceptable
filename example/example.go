@@ -66,7 +66,8 @@ func hello(c echo.Context) error {
 			With("en", en).With("fr", fr).With("es", es).With("ru", ru),
 
 		templates.ApplicationXhtmlOffer("en", "example/templates/en", ".html", nil).
-			With("en", en).With("fr", fr).With("es", es).With("ru", ru))
+			With("en", en).With("fr", fr).With("es", es).With("ru", ru),
+	)
 
 	if best == nil {
 		return c.String(http.StatusNotAcceptable, http.StatusText(http.StatusNotAcceptable))

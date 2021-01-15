@@ -13,6 +13,23 @@ func IsAjax(req *http.Request) bool {
 	return strings.ToLower(req.Header.Get(header.XRequestedWith)) == header.XMLHttpRequest
 }
 
+// RenderBestMatch uses BestRequestMatch to find the best matching offer for the request,
+// and then renders the response.
+func RenderBestMatch(w http.ResponseWriter, req *http.Request, template string, available ...Offer) error {
+	best := BestRequestMatch(req, available...)
+
+	if best == nil {
+		w.WriteHeader(http.StatusNotAcceptable)
+		return nil
+	}
+
+	if best.Render == nil {
+		panic(fmt.Sprintf("misconfigured offers for %s/%s;charset=%s;lang=%s", best.Type, best.Subtype, best.Charset, best.Language))
+	}
+
+	return best.Render(w, *best, template)
+}
+
 // BestRequestMatch finds the content type and language that best matches the accepted media
 // ranges and languages contained in request headers.
 // The result contains the best match, based on the rules of RFC-7231.
@@ -185,19 +202,34 @@ func buildMatch(offer Offer, offeredLang string, acceptedCT header.MediaRange, p
 		Data:     offer.data[offeredLang],
 		Render:   offer.processor,
 	}
+
 	if offer.Subtype == "*" && acceptedCT.Subtype != "*" {
 		m.Subtype = acceptedCT.Subtype
 		if offer.Type == "*" && acceptedCT.Type != "*" {
 			m.Type = acceptedCT.Type
 		}
 	}
+
+	if m.Type == "text" && m.Subtype == "*" {
+		m.Subtype = "plain"
+	} else if m.Type == "*" || m.Subtype == "*" {
+		m.Type = "application"
+		m.Subtype = "octet-stream"
+		// Ideally this should choose text/plain when the content is purely textual,
+		// allowing for the encoding of the selected character set. This is hard to do
+		// without knowledge of the response content; the standard library sniffs the
+		// first 512 bytes but there is no attempt to do that here.
+	}
+
 	if offeredLang == "*" && prefLang.Value != "*" {
 		m.Language = prefLang.Value
 		m.Data = offer.data[prefLang.Value]
 	}
+
 	if m.Data == emptyValue {
 		m.Data = nil
 	}
+
 	return m
 }
 
