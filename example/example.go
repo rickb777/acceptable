@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
+
+	"github.com/rickb777/acceptable/data"
 
 	"github.com/rickb777/acceptable/templates"
 
@@ -52,9 +55,13 @@ func main() {
 
 // Handler
 func hello(c echo.Context) error {
+	lazyEn := data.Lazy(func(string, string, bool) (interface{}, string, error) {
+		return en, "hash123", nil
+	}).MaxAge(10 * time.Second)
+
 	best := acceptable.BestRequestMatch(c.Request(),
 		acceptable.OfferOf("application/json", "en").Using(processor.JSON("  ")).
-			With("en", en).With("fr", fr).With("es", es).With("ru", ru),
+			With("en", lazyEn).With("fr", fr).With("es", es).With("ru", ru),
 
 		acceptable.OfferOf("application/xml").Using(processor.XML("  ")).
 			With("en", en).With("fr", fr).With("es", es).With("ru", ru),

@@ -116,6 +116,14 @@ func GetContentAndApplyExtraHeaders(rw http.ResponseWriter, req *http.Request, d
 		return nil, err
 	}
 
+	for hn, hv := range d.Headers() {
+		rw.Header().Set(hn, hv)
+	}
+
+	if etag != "" {
+		rw.Header().Set("ETag", fmt.Sprintf("%q", etag))
+	}
+
 	sendContent := true
 
 	if etag != "" {
@@ -125,14 +133,6 @@ func GetContentAndApplyExtraHeaders(rw http.ResponseWriter, req *http.Request, d
 			sendContent = false
 			v = nil
 		}
-	}
-
-	for hn, hv := range d.Headers() {
-		rw.Header().Set(hn, hv)
-	}
-
-	if etag != "" {
-		rw.Header().Set("ETag", fmt.Sprintf("%q", etag))
 	}
 
 	if sendContent && v == nil {
