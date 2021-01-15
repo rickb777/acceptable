@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/internal"
 )
 
 const TextPlain = "text/plain"
@@ -28,24 +29,22 @@ func TXT() acceptable.Processor {
 	return func(rw http.ResponseWriter, match acceptable.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
-		if fn, isFunc := match.Data.(func() (interface{}, error)); isFunc {
-			match.Data, err = fn()
-			if err != nil {
-				return err
-			}
+		data, err := internal.CallDataSuppliers(match.Data, template, match.Language)
+		if err != nil {
+			return err
 		}
 
-		s, ok := match.Data.(string)
+		s, ok := data.(string)
 		if ok {
 			return writeWithNewline(w, []byte(s))
 		}
 
-		st, ok := match.Data.(fmt.Stringer)
+		st, ok := data.(fmt.Stringer)
 		if ok {
 			return writeWithNewline(w, []byte(st.String()))
 		}
 
-		tm, ok := match.Data.(encoding.TextMarshaler)
+		tm, ok := data.(encoding.TextMarshaler)
 		if ok {
 			b, e2 := tm.MarshalText()
 			if e2 != nil {
@@ -54,7 +53,7 @@ func TXT() acceptable.Processor {
 			return writeWithNewline(w, b)
 		}
 
-		_, err = fmt.Fprintf(w, "%v\n", match.Data)
+		_, err = fmt.Fprintf(w, "%v\n", data)
 		return err
 	}
 }

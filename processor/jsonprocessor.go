@@ -29,14 +29,12 @@ func JSON(indent ...string) acceptable.Processor {
 		enc := json.NewEncoder(p)
 		enc.SetIndent("", in)
 
-		if fn, isFunc := match.Data.(acceptable.Supplier); isFunc {
-			match.Data, err = fn()
-			if err != nil {
-				return err
-			}
+		data, err := internal.CallDataSuppliers(match.Data, template, match.Language)
+		if err != nil {
+			return err
 		}
 
-		err = enc.Encode(match.Data)
+		err = enc.Encode(data)
 		if err != nil {
 			return err
 		}

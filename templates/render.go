@@ -17,17 +17,15 @@ func productionProcessor(root *template.Template) acceptable.Processor {
 
 		p := &internal.WriterProxy{W: w}
 
-		if fn, isFunc := match.Data.(func(string, string) (interface{}, error)); isFunc {
-			match.Data, err = fn(template, match.Language)
-			if err != nil {
-				return err
-			}
+		data, err := internal.CallDataSuppliers(match.Data, template, match.Language)
+		if err != nil {
+			return err
 		}
 
 		if template == "" {
 			template = DefaultPage
 		}
-		return root.ExecuteTemplate(p, template, match.Data)
+		return root.ExecuteTemplate(p, template, data)
 	}
 }
 

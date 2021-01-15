@@ -29,14 +29,12 @@ func XML(indent ...string) acceptable.Processor {
 		enc := xml.NewEncoder(p)
 		enc.Indent("", in)
 
-		if fn, isFunc := match.Data.(func() (interface{}, error)); isFunc {
-			match.Data, err = fn()
-			if err != nil {
-				return err
-			}
+		data, err := internal.CallDataSuppliers(match.Data, template, match.Language)
+		if err != nil {
+			return err
 		}
 
-		err = enc.Encode(match.Data)
+		err = enc.Encode(data)
 		if err != nil {
 			return err
 		}

@@ -37,7 +37,7 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) (w io.Writer) {
 		if err == nil {
 			// get the canonical name of the encoding
 			cs, _ = htmlindex.Name(enc)
-			rw.Header().Set("Content-Encoding", cs)
+			rw.Header().Set("Content-Language", cs)
 			w = enc.NewEncoder().Writer(w)
 		} else {
 			Debug("%v\n", err)

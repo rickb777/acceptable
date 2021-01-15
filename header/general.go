@@ -15,6 +15,19 @@ import (
 	"github.com/rickb777/acceptable/internal"
 )
 
+const (
+	Accept         = "Accept"
+	AcceptLanguage = "Accept-Language"
+	AcceptCharset  = "Accept-Charset"
+	// AcceptEncoding is handled effectively by net/http and can be disregarded here
+
+	// XRequestedWith defines the header strings used for XHR.
+	XRequestedWith = "X-Requested-With"
+	XMLHttpRequest = "xmlhttprequest"
+)
+
+//-------------------------------------------------------------------------------------------------
+
 // Parse splits a prioritised "Accept-Language", "Accept-Encoding" or "Accept-Charset"
 // header value and sorts the parts. These are returned in order with the most
 // preferred first.

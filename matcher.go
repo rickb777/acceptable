@@ -8,22 +8,9 @@ import (
 	"github.com/rickb777/acceptable/header"
 )
 
-const (
-	Accept         = "Accept"
-	AcceptLanguage = "Accept-Language"
-	AcceptCharset  = "Accept-Charset"
-	// AcceptEncoding is handled effectively by net/http and can be disregarded here
-
-	// The header strings used for XHR.
-	XRequestedWith = "X-Requested-With"
-	XMLHttpRequest = "xmlhttprequest"
-)
-
-//-------------------------------------------------------------------------------------------------
-
 // IsAjax tests whether a request has the Ajax header sent by browsers for XHR requests.
 func IsAjax(req *http.Request) bool {
-	return strings.ToLower(req.Header.Get(XRequestedWith)) == XMLHttpRequest
+	return strings.ToLower(req.Header.Get(header.XRequestedWith)) == header.XMLHttpRequest
 }
 
 // BestRequestMatch finds the content type and language that best matches the accepted media
@@ -58,14 +45,14 @@ func BestRequestMatch(req *http.Request, available ...Offer) *Match {
 	best := c.bestMatch(mrs, languages, available, vary)
 
 	if best != nil {
-		charsets := header.Parse(req.Header.Get(AcceptCharset))
+		charsets := header.Parse(req.Header.Get(header.AcceptCharset))
 		best.Charset = "utf-8"
 		// If at all possible, stick with utf-8 because (a) it is recommended; (b) no trancoding is necessary.
 		// If other charsets are listed, choose one only if utf-8 is not included.
 		if len(charsets) > 0 && !(charsets.Contains("utf-8") || charsets.Contains("utf8")) {
 			// something other than utf-8 is legacy and deprecated, but supported anyway
 			best.Charset = charsets[0].Value
-			best.Vary = append(best.Vary, AcceptCharset)
+			best.Vary = append(best.Vary, header.AcceptCharset)
 		}
 	}
 
@@ -73,13 +60,13 @@ func BestRequestMatch(req *http.Request, available ...Offer) *Match {
 }
 
 func readHeaders(req *http.Request) (accept, accLang string, vary []string) {
-	accept = req.Header.Get(Accept)
-	accLang = req.Header.Get(AcceptLanguage)
+	accept = req.Header.Get(header.Accept)
+	accLang = req.Header.Get(header.AcceptLanguage)
 	if accept != "" {
-		vary = []string{Accept}
+		vary = []string{header.Accept}
 	}
 	if accLang != "" {
-		vary = append(vary, AcceptLanguage)
+		vary = append(vary, header.AcceptLanguage)
 	}
 	return accept, accLang, vary
 }

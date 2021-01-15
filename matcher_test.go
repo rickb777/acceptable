@@ -10,6 +10,7 @@ import (
 
 	"github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/acceptable/processor"
 	"github.com/rickb777/acceptable/templates"
 )
@@ -38,7 +39,7 @@ func Test_should_give_JSON_response_for_ajax_requests(t *testing.T) {
 	a := acceptable.OfferOf("")
 
 	req, _ := http.NewRequest("GET", "/", nil)
-	req.Header.Add(acceptable.XRequestedWith, acceptable.XMLHttpRequest)
+	req.Header.Add(header.XRequestedWith, header.XMLHttpRequest)
 
 	best := acceptable.BestRequestMatch(req, a)
 
@@ -56,7 +57,7 @@ func Test_should_give_406_for_unmatched_ajax_requests(t *testing.T) {
 	a := acceptable.OfferOf("text/plain")
 
 	req, _ := http.NewRequest("GET", "/", nil)
-	req.Header.Add(acceptable.XRequestedWith, acceptable.XMLHttpRequest)
+	req.Header.Add(header.XRequestedWith, header.XMLHttpRequest)
 
 	best := acceptable.BestRequestMatch(req, a)
 
@@ -94,7 +95,7 @@ func Test_should_return_406_if_there_are_no_offers_for_ajax(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept", "image/png")
-	req.Header.Add(acceptable.XRequestedWith, acceptable.XMLHttpRequest)
+	req.Header.Add(header.XRequestedWith, header.XMLHttpRequest)
 
 	best := acceptable.BestRequestMatch(req)
 

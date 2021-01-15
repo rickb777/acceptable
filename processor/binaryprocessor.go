@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/internal"
 )
 
 // DefaultImageOffer is an Offer for image/* content using the Binary() processor.
@@ -23,17 +25,16 @@ func Binary() acceptable.Processor {
 	return func(rw http.ResponseWriter, match acceptable.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
-		if fn, isFunc := match.Data.(func() (interface{}, error)); isFunc {
-			match.Data, err = fn()
-			if err != nil {
-				return err
-			}
+		data, err := internal.CallDataSuppliers(match.Data, template, match.Language)
+		if err != nil {
+			return err
 		}
 
-		switch v := match.Data.(type) {
+		switch v := data.(type) {
 		case io.Reader:
 			_, err = io.Copy(w, v)
 		case []byte:
+			rw.Header().Set("Content-Length", strconv.Itoa(len(v)))
 			_, err = io.Copy(w, bytes.NewBuffer(v))
 		case nil:
 			// no-op

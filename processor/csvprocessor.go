@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/internal"
 )
 
 const TextCsv = "text/csv"
@@ -46,11 +47,9 @@ func CSV(comma ...rune) acceptable.Processor {
 		writer.Comma = in
 		//return p.flush(writer, p.process(writer, dataModel))
 
-		if fn, isFunc := match.Data.(func() (interface{}, error)); isFunc {
-			match.Data, err = fn()
-			if err != nil {
-				return err
-			}
+		match.Data, err = internal.CallDataSuppliers(match.Data, template, match.Language)
+		if err != nil {
+			return err
 		}
 
 		err = writeCSV(writer, match)
