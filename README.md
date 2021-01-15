@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/rickb777/acceptable.svg?branch=master)](https://travis-ci.org/rickb777/acceptable/builds)
 [![Issues](https://img.shields.io/github/issues/rickb777/acceptable.svg)](https://github.com/rickb777/acceptable/issues)
 
-This is a library that handles `Accept` headers, which form the basis of content negotiation in HTTP server applications written in Go. It provides an implementation of the content negotiation algorithm specified in RFC-7231.
+This is a library that handles `Accept` headers, which form the basis of content negotiation in HTTP server applications written in Go. It provides an implementation of the proactive server-driven content negotiation algorithm specified in RFC-7231.
 
 ## Accept parsing
 
@@ -15,7 +15,7 @@ The `Accept` header is parsed using `ParseMediaRanges(hdr)`, which returns the s
     mediaRanges := header.ParseMediaRanges("application/json;q=0.8, application/xml, application/*;q=0.1")
 ```
 
-The resulting slice is sorted according to precedence and quality rules, so in this example the order is `{"application/xml", "application/json", "application/*"}` because the middle item has an implied quality of 1, whereas the first item has a lower quality.
+The resulting slice is ready-sorted according to precedence and quality rules, so in this example the order is `{"application/xml", "application/json", "application/*"}` because the middle item has an implied quality of 1, whereas the first item has a lower quality.
 
 ## Accept-Language and Accept-Charset parsing
 
@@ -56,7 +56,9 @@ The best result will be the one that best matches the request headers. If none m
 
 The offers will usually hold a suitable rendering function. This is attached with the `Using` method. Sub-packages `processor` and `templates` provide useful renderers but you can also provide your own.
 
-The offers can also be restricted by language matching. This is done either using `OfferOf` or with the `With` method, This matches `Accept-Language` using the basic prefix algorithm, which means for example that if you specify "en" it will match "en", "en-GB" and everything else beginning with "en-".
+The offers can also be restricted by language matching. This is done either using `OfferOf` or with the `With` method, This matches `Accept-Language` using the basic prefix algorithm. This means for example that if you specify "en" it will match "en", "en-GB" and everything else beginning with "en-", but if you specify "en-GB", it only matches "en-GB" and "en-GB-*" but won't match "en-US".
+
+The `With` method might not care about language, so simply use the wildcard instead, e.g `offer.With("*", data)` attaches `data` to the offer and doesn't restrict the offer to any particular language. This could also be used as a catch-all case if it comes after one or more `With` with a specified language. However, the standard (RFC-7231) advises that a response should be returned even when language matching has failed; this implementation will do this by picking the first language listed, so the catch-all case is only necessary if its data is different to that of the first case.
 
 ### Providing response data
 
@@ -79,3 +81,15 @@ or for template/web content data
 and they can even be nested, returning another such function.
 
 The selected response processor will render the actual response using the data provided, for example a struct will become JSON text if `processor.JSON` renders it.
+
+### Character set transcoding
+
+Most responses will be UTF-8, sometimes UTF-16. All other character sets (e.g. Windows-1252) are now deprecated.
+
+However, transcoding is implemented by `Match.ApplyHeaders` so that the `Accept-Charset` content negotiation can be implemented. This depends on finding an encoder in `golang.org/x/text/encoding/htmlindex` (no other encoders are supported).
+
+Whenever possible, responses will be UTF-8. Not only is this strongly recommended, it also avoids any transcoding processing overhead. It means for example that `Accept-Charset: iso-8859-1, utf-8` will ignore the iso-8859-1 preference and use UTF-8.
+
+## Status
+
+This API is well-tested and known to work but not yet fully released because it may yet require breaking API changes.
