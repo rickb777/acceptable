@@ -33,3 +33,12 @@ func (ss Strings) RemoveQuotes() Strings {
 	}
 	return ss
 }
+
+func (ss Strings) Contains(v string) bool {
+	for _, s := range ss {
+		if s == v {
+			return true
+		}
+	}
+	return false
+}

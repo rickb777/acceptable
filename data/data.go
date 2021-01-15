@@ -6,13 +6,24 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/rickb777/acceptable/header"
+	"github.com/rickb777/acceptable/internal"
 )
 
+// Data provides a source for response content. It is optimised for lazy evaluation, avoiding
+// wasted processing.
 type Data interface {
 	// Content returns the data as a value that can be processed by encoders such as "encoding/json"
 	// The returned values are the data itself, a hash that will be used as the entity tag (if required),
 	// and an error if arising. The hash should be blank if not needed.
-	Content(template, language string) (interface{}, string, error)
+	//
+	// The contentRequired flag is initially false; this gives an opportunity to obtain the entity tag
+	// without the data. At this stage, data may be returned only if it is convenient.
+	//
+	// If necessary, the method will be called a second time, this time with contentRequired true. The
+	// data must always be returned in this case. However the etag will be ignored.
+	Content(template, language string, contentRequired bool) (interface{}, string, error)
 
 	// Headers returns response headers relating to the data (optional)
 	Headers() map[string]string
@@ -28,25 +39,25 @@ func Of(v interface{}, etag ...string) *Value {
 }
 
 // Lazy wraps a function that supplies a data value, but only when it is needed.
-func Lazy(fn func(template, language string) (interface{}, string, error)) *Value {
+func Lazy(fn func(template, language string, contentRequired bool) (interface{}, string, error)) *Value {
 	return &Value{supplier: fn}
 }
 
 // Value is a simple implementation of Data.
 type Value struct {
-	supplier func(template, language string) (interface{}, string, error)
+	supplier func(template, language string, contentRequired bool) (interface{}, string, error)
 	value    interface{}
 	etag     string
 	hdrs     map[string]string
 }
 
-func (v *Value) Content(template, language string) (result interface{}, etag string, err error) {
+func (v *Value) Content(template, language string, contentRequired bool) (result interface{}, etag string, err error) {
 	if v.value != nil {
 		return v.value, v.etag, nil
 	}
 
 	if v.supplier != nil {
-		v.value, v.etag, err = v.supplier(template, language)
+		v.value, v.etag, err = v.supplier(template, language, contentRequired)
 	}
 
 	return v.value, v.etag, err
@@ -100,9 +111,20 @@ func GetContentAndApplyExtraHeaders(rw http.ResponseWriter, req *http.Request, d
 		return nil, nil
 	}
 
-	v, etag, err := d.Content(template, language)
+	v, etag, err := d.Content(template, language, false)
 	if err != nil {
 		return nil, err
+	}
+
+	sendContent := true
+
+	if etag != "" {
+		ifNoneMatch := internal.Split(req.Header.Get(header.IfNoneMatch), ",")
+		if ifNoneMatch.TrimSpace().RemoveQuotes().Contains(etag) {
+			rw.WriteHeader(http.StatusNotModified)
+			sendContent = false
+			v = nil
+		}
 	}
 
 	for hn, hv := range d.Headers() {
@@ -111,6 +133,13 @@ func GetContentAndApplyExtraHeaders(rw http.ResponseWriter, req *http.Request, d
 
 	if etag != "" {
 		rw.Header().Set("ETag", fmt.Sprintf("%q", etag))
+	}
+
+	if sendContent && v == nil {
+		v, _, err = d.Content(template, language, true)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return v, nil

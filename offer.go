@@ -111,7 +111,7 @@ func (o Offer) String() string {
 
 type empty struct{}
 
-func (e empty) Content(template, language string) (interface{}, string, error) {
+func (e empty) Content(string, string, bool) (interface{}, string, error) {
 	panic("not reachable")
 }
 

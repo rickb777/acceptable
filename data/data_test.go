@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rickb777/acceptable/header"
+
 	. "github.com/onsi/gomega"
 )
 
@@ -14,7 +16,7 @@ func TestValue_future_expiry(t *testing.T) {
 	g := NewGomegaWithT(t)
 
 	// Given ...
-	d := Lazy(func(template, language string) (interface{}, string, error) {
+	d := Lazy(func(template, language string, cr bool) (interface{}, string, error) {
 		g.Expect(template).To(Equal("home.html"))
 		g.Expect(language).To(Equal("en"))
 		return "foo", "abcdef", nil
@@ -61,11 +63,36 @@ func TestValue_no_cache(t *testing.T) {
 	g.Expect(w.Header().Get("Def")).To(Equal("true"))
 }
 
+func TestValue_not_modified(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	// Given ...
+	d := Of("foo", "hash123").NoCache().With("Abc", "1", "Def", "true")
+
+	req, _ := http.NewRequest("GET", "/", nil)
+	req.Header.Set(header.IfNoneMatch, `"foo", "hash123", "bar"`)
+	w := httptest.NewRecorder()
+
+	// When ...
+	c, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
+
+	// Then ...
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(c).To(BeNil())
+	g.Expect(w.Code).To(Equal(304))
+	g.Expect(w.HeaderMap).To(HaveLen(5))
+	g.Expect(w.Header().Get("ETag")).To(Equal(`"hash123"`))
+	g.Expect(w.Header().Get("Cache-Control")).To(Equal("no-cache, must-revalidate"))
+	g.Expect(w.Header().Get("Pragma")).To(Equal("no-cache"))
+	g.Expect(w.Header().Get("Abc")).To(Equal("1"))
+	g.Expect(w.Header().Get("Def")).To(Equal("true"))
+}
+
 func TestValue_error(t *testing.T) {
 	g := NewGomegaWithT(t)
 
 	// Given ...
-	d := Lazy(func(template, language string) (interface{}, string, error) {
+	d := Lazy(func(template, language string, cr bool) (interface{}, string, error) {
 		g.Expect(template).To(Equal("home.html"))
 		g.Expect(language).To(Equal("en"))
 		return nil, "", errors.New("expected error")

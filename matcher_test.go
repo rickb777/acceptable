@@ -462,7 +462,7 @@ func ExampleRenderBestMatch() {
 	fr := data.Of("Bonjour!") // get French content
 
 	// 3. this uses a lazy evaluation function, wrapped in a data.Data
-	es := data.Lazy(func(template string, language string) (interface{}, string, error) {
+	es := data.Lazy(func(template string, language string, cr bool) (interface{}, string, error) {
 		return "Hola!", "", nil // get Spanish content - eg from database
 	})
 
