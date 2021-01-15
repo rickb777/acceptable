@@ -6,6 +6,8 @@
 
 This is a library that handles `Accept` headers, which form the basis of content negotiation in HTTP server applications written in Go. It provides an implementation of the proactive server-driven content negotiation algorithm specified in RFC-7231.
 
+There is also support for conditional requests (RFC-7232) using entity tags.
+
 ## Accept parsing
 
 The `Accept` header is parsed using `ParseMediaRanges(hdr)`, which returns the slice of media ranges, e.g.
@@ -62,21 +64,25 @@ Sometimes, the `With` method might not care about language, so simply use the wi
 
 ### Providing response data
 
-The response data (`en` and `fr` above) can be structs, slices, maps, or other values. Alternatively they can be `data.Data` values. These allow for lazy evaluation of the content
+The response data (`en` and `fr` above) can be structs, slices, maps, or other values. Alternatively they can be `data.Data` values. These allow for lazy evaluation of the content and also support conditional requests.
 
 ```go
-    en := data.Lazy(func(template, language string) (interface{}, error) {
+    en := data.Lazy(func(template, language string, dataRequired bool) (data interface{}, etag string, err error) {
         return ...
     })
 ```
 
-and they can even be nested, returning another such function which will be evaluated in turn. The template and language parameters are used for templated/web content data; otherwise they are ignored.
+Besides the data and error returned values, a string returns a short hash of the data known as the entity tag (or etag). If this is blank, it is simply ignored. However, if it contains a hash of the data (e.g. via MD5), then the response will have an `ETag` header. User agents that recognise this will later repeat the request along with an `If-None-Match` header. If present, `If-None-Match` is recognised before rendering starts and a successful match will avoid the need for any rendering. Due to the lazy content fetching, it removes unnecessary database traffic etc.
 
-The selected response processor will render the actual response using the data provided, for example a struct will become JSON text if `processor.JSON` renders it.
+The `template` and `language` parameters are used for templated/web content data; otherwise they are ignored. The `dataRequired` parameter is used for a two-pass approach: the first call is to get the etag; the data itself can also be returned but *is optional*. The second call is made if the first call didn't return data - this time it *is required*.
+
+The two-pass lazy evaulation is intended to avoid fetching large data items when they will actually not be needed, i.e. in conditional requests that yield 304-Not Modified.
+
+Otherwise, the selected response processor will render the actual response using the data provided, for example a struct will become JSON text if `processor.JSON` renders it.
 
 ### Character set transcoding
 
-Most responses will be UTF-8, sometimes UTF-16. All other character sets (e.g. Windows-1252) are now deprecated.
+Most responses will be UTF-8, sometimes UTF-16. All other character sets (e.g. Windows-1252) are now strongly deprecated.
 
 However, transcoding is implemented by `Match.ApplyHeaders` so that the `Accept-Charset` content negotiation can be implemented. This depends on finding an encoder in `golang.org/x/text/encoding/htmlindex` (no other encoders are supported).
 

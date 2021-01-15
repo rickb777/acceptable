@@ -15,10 +15,10 @@ import (
 // wasted processing.
 //
 // When preparing to render, Content will be called once or twice. The first time, the
-// contentRequired flag is false; this gives an opportunity to obtain the entity tag
+// dataRequired flag is false; this gives an opportunity to obtain the entity tag
 // with or without the data. At this stage, data may be returned only if it is convenient.
 //
-// If necessary, Content will be called a second time, this time with contentRequired true. The
+// If necessary, Content will be called a second time, this time with dataRequired true. The
 // data must always be returned in this case. However the etag will be ignored.
 //
 // The hash should be blank if not needed.
@@ -26,7 +26,7 @@ type Data interface {
 	// Content returns the data as a value that can be processed by encoders such as "encoding/json"
 	// The returned values are the data itself, a hash that will be used as the entity tag (if required),
 	// and an error if arising.
-	Content(template, language string, contentRequired bool) (data interface{}, etag string, err error)
+	Content(template, language string, dataRequired bool) (data interface{}, etag string, err error)
 
 	// Headers returns response headers relating to the data (optional)
 	Headers() map[string]string
@@ -42,25 +42,25 @@ func Of(v interface{}, etag ...string) *Value {
 }
 
 // Lazy wraps a function that supplies a data value, but only when it is needed.
-func Lazy(fn func(template, language string, contentRequired bool) (interface{}, string, error)) *Value {
+func Lazy(fn func(template, language string, dataRequired bool) (interface{}, string, error)) *Value {
 	return &Value{supplier: fn}
 }
 
 // Value is a simple implementation of Data.
 type Value struct {
-	supplier func(template, language string, contentRequired bool) (interface{}, string, error)
+	supplier func(template, language string, dataRequired bool) (interface{}, string, error)
 	value    interface{}
 	etag     string
 	hdrs     map[string]string
 }
 
-func (v *Value) Content(template, language string, contentRequired bool) (result interface{}, etag string, err error) {
+func (v *Value) Content(template, language string, dataRequired bool) (result interface{}, etag string, err error) {
 	if v.value != nil {
 		return v.value, v.etag, nil
 	}
 
 	if v.supplier != nil {
-		v.value, v.etag, err = v.supplier(template, language, contentRequired)
+		v.value, v.etag, err = v.supplier(template, language, dataRequired)
 	}
 
 	return v.value, v.etag, err
