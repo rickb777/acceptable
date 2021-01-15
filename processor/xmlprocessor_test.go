@@ -3,6 +3,7 @@ package processor_test
 import (
 	"encoding/xml"
 	"errors"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 
 func TestXMLShouldWriteResponseBody(t *testing.T) {
 	g := NewGomegaWithT(t)
+	req := &http.Request{}
 	w := httptest.NewRecorder()
 
 	model := &ValidXMLUser{
@@ -31,7 +33,7 @@ func TestXMLShouldWriteResponseBody(t *testing.T) {
 
 	p := processor.XML()
 
-	p(w, match, "template")
+	p(w, req, match, "template")
 
 	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
 	g.Expect(w.Header().Get("Content-Language")).To(Equal("en"))
@@ -40,6 +42,7 @@ func TestXMLShouldWriteResponseBody(t *testing.T) {
 
 func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 	g := NewGomegaWithT(t)
+	req := &http.Request{}
 
 	model := &ValidXMLUser{Name: "名称"}
 	cases := []string{"utf-16be"} // unsupported: "unicodefffe"
@@ -56,7 +59,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 		p := processor.XML("  ")
 		w := httptest.NewRecorder()
 
-		p(w, match, "template")
+		p(w, req, match, "template")
 
 		g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16be"), enc)
 		g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"), enc)
@@ -71,6 +74,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 
 func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 	g := NewGomegaWithT(t)
+	req := &http.Request{}
 
 	model := &ValidXMLUser{Name: "名称"}
 	cases := []string{"utf-16le", "utf-16"} // unsupported "unicode"
@@ -87,7 +91,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 		p := processor.XML("  ")
 		w := httptest.NewRecorder()
 
-		p(w, match, "template")
+		p(w, req, match, "template")
 
 		g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16le"), enc)
 		g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"), enc)
@@ -102,6 +106,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 
 func TestXMLShouldRPanicOnError(t *testing.T) {
 	g := NewGomegaWithT(t)
+	req := &http.Request{}
 	w := httptest.NewRecorder()
 
 	model := &XMLUser{Name: "Joe Bloggs"}
@@ -109,7 +114,7 @@ func TestXMLShouldRPanicOnError(t *testing.T) {
 
 	p := processor.XML("  ")
 
-	err := p(w, match, "template")
+	err := p(w, req, match, "template")
 
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("oops"))

@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -22,10 +23,11 @@ func TestValue_future_expiry(t *testing.T) {
 		LastModified(time.Date(2020, 1, 1, 1, 1, 1, 0, time.UTC)).
 		MaxAge(10 * time.Second)
 
+	req := &http.Request{}
 	w := httptest.NewRecorder()
 
 	// When ...
-	c, err := GetContentAndApplyExtraHeaders(w, d, "home.html", "en")
+	c, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
 
 	// Then ...
 	g.Expect(err).NotTo(HaveOccurred())
@@ -43,10 +45,11 @@ func TestValue_no_cache(t *testing.T) {
 	// Given ...
 	d := Of("foo").NoCache().With("Abc", "1", "Def", "true")
 
+	req := &http.Request{}
 	w := httptest.NewRecorder()
 
 	// When ...
-	c, err := GetContentAndApplyExtraHeaders(w, d, "home.html", "en")
+	c, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
 
 	// Then ...
 	g.Expect(err).NotTo(HaveOccurred())
@@ -68,10 +71,11 @@ func TestValue_error(t *testing.T) {
 		return nil, "", errors.New("expected error")
 	})
 
+	req := &http.Request{}
 	w := httptest.NewRecorder()
 
 	// When ...
-	_, err := GetContentAndApplyExtraHeaders(w, d, "home.html", "en")
+	_, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
 
 	// Then ...
 	g.Expect(err).To(HaveOccurred())

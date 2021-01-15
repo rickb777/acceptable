@@ -2,6 +2,7 @@ package processor_test
 
 import (
 	"errors"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 
 func TestJSONShouldWriteResponseBody(t *testing.T) {
 	g := NewGomegaWithT(t)
+	req := &http.Request{}
 	w := httptest.NewRecorder()
 
 	model := struct {
@@ -32,7 +34,7 @@ func TestJSONShouldWriteResponseBody(t *testing.T) {
 
 	p := processor.JSON()
 
-	p(w, match, "template")
+	p(w, req, match, "template")
 
 	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
 	g.Expect(w.Header().Get("Content-Language")).To(Equal("en"))
@@ -41,6 +43,7 @@ func TestJSONShouldWriteResponseBody(t *testing.T) {
 
 func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 	g := NewGomegaWithT(t)
+	req := &http.Request{}
 
 	model := struct {
 		Name string
@@ -62,7 +65,7 @@ func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 		p := processor.JSON("")
 		w := httptest.NewRecorder()
 
-		p(w, match, "template")
+		p(w, req, match, "template")
 
 		g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16le"))
 		g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"))
@@ -74,6 +77,7 @@ func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 
 func TestJSONShouldReturnError(t *testing.T) {
 	g := NewGomegaWithT(t)
+	req := &http.Request{}
 	w := httptest.NewRecorder()
 
 	model := &User{"Joe Bloggs"}
@@ -81,7 +85,7 @@ func TestJSONShouldReturnError(t *testing.T) {
 
 	p := processor.JSON()
 
-	err := p(w, match, "template")
+	err := p(w, req, match, "template")
 
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("error calling MarshalJSON for type"))

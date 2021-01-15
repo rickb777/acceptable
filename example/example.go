@@ -73,5 +73,5 @@ func hello(c echo.Context) error {
 		return c.String(http.StatusNotAcceptable, http.StatusText(http.StatusNotAcceptable))
 	}
 
-	return best.Render(c.Response(), *best, c.Request().URL.String()[1:])
+	return best.Render(c.Response(), c.Request(), *best, c.Request().URL.String()[1:])
 }

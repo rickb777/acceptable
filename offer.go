@@ -10,7 +10,7 @@ import (
 )
 
 // Processor is a function that renders content according to the matched result.
-type Processor func(w http.ResponseWriter, match Match, template string) error
+type Processor func(w http.ResponseWriter, req *http.Request, match Match, template string) error
 
 // Offer holds information about one particular resource representation that can potentially
 // provide an acceptable response.
@@ -36,7 +36,7 @@ type Offer struct {
 func OfferOf(contentType string, language ...string) Offer {
 	t, s := "*", "*"
 	if contentType != "" {
-		t, s = internal.Split(contentType, '/')
+		t, s = internal.Split1(contentType, '/')
 	}
 
 	ct := header.ContentType{

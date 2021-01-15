@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/header"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/htmlindex"
 )
@@ -21,6 +22,48 @@ type Match struct {
 	Data     data.Data
 	Render   Processor
 }
+
+func buildMatch(offer Offer, offeredLang string, acceptedCT header.MediaRange, prefLang header.PrecedenceValue, vary []string) *Match {
+	m := &Match{
+		Type:     offer.Type,
+		Subtype:  offer.Subtype,
+		Language: offeredLang,
+		Vary:     vary,
+		Data:     offer.data[offeredLang],
+		Render:   offer.processor,
+	}
+
+	if offer.Subtype == "*" && acceptedCT.Subtype != "*" {
+		m.Subtype = acceptedCT.Subtype
+		if offer.Type == "*" && acceptedCT.Type != "*" {
+			m.Type = acceptedCT.Type
+		}
+	}
+
+	if m.Type == "text" && m.Subtype == "*" {
+		m.Subtype = "plain"
+	} else if m.Type == "*" || m.Subtype == "*" {
+		m.Type = "application"
+		m.Subtype = "octet-stream"
+		// Ideally this should choose text/plain when the content is purely textual,
+		// allowing for the encoding of the selected character set. This is hard to do
+		// without knowledge of the response content; the standard library sniffs the
+		// first 512 bytes but there is no attempt to do that here.
+	}
+
+	if offeredLang == "*" && prefLang.Value != "*" {
+		m.Language = prefLang.Value
+		m.Data = offer.data[prefLang.Value]
+	}
+
+	if m.Data == emptyValue {
+		m.Data = nil
+	}
+
+	return m
+}
+
+//-------------------------------------------------------------------------------------------------
 
 // ApplyHeaders sets response headers so that the user agent is notified of the content
 // negotiation decisons made. Four headers may be set, depending on context.

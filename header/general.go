@@ -1,7 +1,7 @@
 // package header provides parsing rules for content negotiation headers according
 // to RFC-7231.
 //
-// For "Accept-Language", "Accept-Encoding" or "Accept-Charset" use the Parse function.
+// For "Accept-Language", "Accept-Encoding" or "Accept-Charset" use the ParsePrecedenceValues function.
 //
 // For "Accept" use the ParseMediaRanges function. This has more complex attributes
 // and rules.
@@ -21,6 +21,8 @@ const (
 	AcceptCharset  = "Accept-Charset"
 	// AcceptEncoding is handled effectively by net/http and can be disregarded here
 
+	IfNoneMatch = "If-None-Match"
+
 	// XRequestedWith defines the header strings used for XHR.
 	XRequestedWith = "X-Requested-With"
 	XMLHttpRequest = "xmlhttprequest"
@@ -28,10 +30,18 @@ const (
 
 //-------------------------------------------------------------------------------------------------
 
-// Parse splits a prioritised "Accept-Language", "Accept-Encoding" or "Accept-Charset"
+// ParseQuotedList extracts the comma-separated component parts from quoted headers such as If-None-Match.
+// Surrounding spaces and quotes are removed.
+func ParseQuotedList(listHeader string) internal.Strings {
+	return internal.Split(strings.ToLower(listHeader), ",").TrimSpace().RemoveQuotes()
+}
+
+//-------------------------------------------------------------------------------------------------
+
+// ParsePrecedenceValues splits a prioritised "Accept-Language", "Accept-Encoding" or "Accept-Charset"
 // header value and sorts the parts. These are returned in order with the most
 // preferred first.
-func Parse(acceptXyzHeader string) PrecedenceValues {
+func ParsePrecedenceValues(acceptXyzHeader string) PrecedenceValues {
 	wvs := splitHeaderParts(strings.ToLower(acceptXyzHeader))
 	sort.Stable(wvByPrecedence(wvs))
 	return wvs
@@ -42,7 +52,7 @@ func splitHeaderParts(acceptHeader string) PrecedenceValues {
 		return nil
 	}
 
-	parts := strings.Split(acceptHeader, ",")
+	parts := internal.Split(acceptHeader, ",").TrimSpace()
 	wvs := make(PrecedenceValues, 0, len(parts))
 
 	for _, part := range parts {
@@ -64,7 +74,7 @@ func handlePartWithParams(value string, acceptParams []string) PrecedenceValue {
 
 	for _, ap := range acceptParams {
 		ap = strings.TrimSpace(ap)
-		k, v := internal.Split(ap, '=')
+		k, v := internal.Split1(ap, '=')
 		if strings.TrimSpace(k) == qualityParam {
 			wv.Quality = parseQuality(v)
 		}

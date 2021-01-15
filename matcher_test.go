@@ -47,7 +47,7 @@ func Test_should_give_JSON_response_for_ajax_requests(t *testing.T) {
 
 	// When ...
 	best := acceptable.BestRequestMatch(req, a)
-	err := best.Render(w, *best, "")
+	err := best.Render(w, req, *best, "")
 
 	// Then ...
 	g.Expect(err).NotTo(gomega.HaveOccurred())

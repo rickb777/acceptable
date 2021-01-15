@@ -1,6 +1,7 @@
 package processor_test
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -34,11 +35,12 @@ func TestCSVShouldWriteResponseBody(t *testing.T) {
 		{data.Of([][]*hidden{{{tt(2001, 12, 30)}, {tt(2001, 12, 31)}}}), "(2001-12-30),(2001-12-31)\n"},
 	}
 
+	req := &http.Request{}
 	p := processor.CSV()
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		p(w, acceptable.Match{Data: m.stuff}, "")
+		p(w, req, acceptable.Match{Data: m.stuff}, "")
 		g.Expect(w.Body.String()).To(Equal(m.expected))
 	}
 }
@@ -62,11 +64,12 @@ func TestCSVShouldWriteResponseBodyWithTabs(t *testing.T) {
 		{data.Of([]Data{{"x", 9, 4, true}, {"y", 7, 1, false}}), "x\t9\t4\ttrue\ny\t7\t1\tfalse\n"},
 	}
 
+	req := &http.Request{}
 	p := processor.CSV('\t')
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		p(w, acceptable.Match{Data: m.stuff}, "")
+		p(w, req, acceptable.Match{Data: m.stuff}, "")
 		g.Expect(w.Body.String()).To(Equal(m.expected))
 	}
 }

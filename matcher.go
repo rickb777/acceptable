@@ -27,20 +27,7 @@ func RenderBestMatch(w http.ResponseWriter, req *http.Request, template string, 
 		panic(fmt.Sprintf("misconfigured offers for %s/%s;charset=%s;lang=%s", best.Type, best.Subtype, best.Charset, best.Language))
 	}
 
-	return best.Render(w, *best, template)
-}
-
-func conditionalRequestMatches(hash, ifNoneMatch string) bool {
-	if ifNoneMatch != "" {
-		parts := strings.Split(ifNoneMatch, ",")
-		for _, p := range parts {
-			etag := strings.Trim(p, `" `)
-			if etag == hash {
-				return true
-			}
-		}
-	}
-	return false
+	return best.Render(w, req, *best, template)
 }
 
 // BestRequestMatch finds the content type and language that best matches the accepted media
@@ -65,7 +52,7 @@ func BestRequestMatch(req *http.Request, available ...Offer) *Match {
 	accept, accLang, vary := readHeaders(req)
 
 	mrs := header.ParseMediaRanges(accept).WithDefault()
-	languages := header.Parse(accLang).WithDefault()
+	languages := header.ParsePrecedenceValues(accLang).WithDefault()
 
 	if IsAjax(req) {
 		available = Offers(available).Filter("application", "json")
@@ -75,7 +62,7 @@ func BestRequestMatch(req *http.Request, available ...Offer) *Match {
 	best := c.bestMatch(mrs, languages, available, vary)
 
 	if best != nil {
-		charsets := header.Parse(req.Header.Get(header.AcceptCharset))
+		charsets := header.ParsePrecedenceValues(req.Header.Get(header.AcceptCharset))
 		best.Charset = "utf-8"
 		// If at all possible, stick with utf-8 because (a) it is recommended; (b) no trancoding is necessary.
 		// If other charsets are listed, choose one only if utf-8 is not included.
@@ -204,46 +191,6 @@ func (c context) findBestMatch(mrs header.MediaRanges, languages header.Preceden
 
 	Debug("%s no %s match for offer %s, langs=%v\n", c, kind, offer.ContentType, offer.langs)
 	return nil, foundCtMatch
-}
-
-func buildMatch(offer Offer, offeredLang string, acceptedCT header.MediaRange, prefLang header.PrecedenceValue, vary []string) *Match {
-	m := &Match{
-		Type:     offer.Type,
-		Subtype:  offer.Subtype,
-		Language: offeredLang,
-		Vary:     vary,
-		Data:     offer.data[offeredLang],
-		Render:   offer.processor,
-	}
-
-	if offer.Subtype == "*" && acceptedCT.Subtype != "*" {
-		m.Subtype = acceptedCT.Subtype
-		if offer.Type == "*" && acceptedCT.Type != "*" {
-			m.Type = acceptedCT.Type
-		}
-	}
-
-	if m.Type == "text" && m.Subtype == "*" {
-		m.Subtype = "plain"
-	} else if m.Type == "*" || m.Subtype == "*" {
-		m.Type = "application"
-		m.Subtype = "octet-stream"
-		// Ideally this should choose text/plain when the content is purely textual,
-		// allowing for the encoding of the selected character set. This is hard to do
-		// without knowledge of the response content; the standard library sniffs the
-		// first 512 bytes but there is no attempt to do that here.
-	}
-
-	if offeredLang == "*" && prefLang.Value != "*" {
-		m.Language = prefLang.Value
-		m.Data = offer.data[prefLang.Value]
-	}
-
-	if m.Data == emptyValue {
-		m.Data = nil
-	}
-
-	return m
 }
 
 //-------------------------------------------------------------------------------------------------

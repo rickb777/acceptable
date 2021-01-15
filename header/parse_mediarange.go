@@ -29,13 +29,13 @@ func parseMediaRangeHeader(acceptHeader string) MediaRanges {
 		return nil
 	}
 
-	parts := strings.Split(strings.ToLower(acceptHeader), ",")
+	parts := internal.Split(strings.ToLower(acceptHeader), ",").TrimSpace()
 	wvs := make(MediaRanges, 0, len(parts))
 
 	for _, part := range parts {
-		valueAndParams := strings.Split(part, ";")
+		valueAndParams := internal.Split(part, ";").TrimSpace()
 		if len(valueAndParams) == 1 {
-			t, s := internal.Split(strings.TrimSpace(valueAndParams[0]), '/')
+			t, s := internal.Split1(strings.TrimSpace(valueAndParams[0]), '/')
 			wvs = append(wvs, MediaRange{ContentType: ContentType{Type: t, Subtype: s}, Quality: DefaultQuality})
 		} else {
 			wvs = append(wvs, handleMediaRangeWithParams(valueAndParams[0], valueAndParams[1:]))
@@ -47,13 +47,13 @@ func parseMediaRangeHeader(acceptHeader string) MediaRanges {
 
 func handleMediaRangeWithParams(value string, acceptParams []string) MediaRange {
 	wv := new(MediaRange)
-	wv.Type, wv.Subtype = internal.Split(strings.TrimSpace(value), '/')
+	wv.Type, wv.Subtype = internal.Split1(value, '/')
 	wv.Quality = DefaultQuality
 
 	hasQ := false
 	for _, ap := range acceptParams {
 		ap = strings.TrimSpace(ap)
-		k, v := internal.Split(ap, '=')
+		k, v := internal.Split1(ap, '=')
 		if strings.TrimSpace(k) == qualityParam {
 			wv.Quality = parseQuality(v)
 			hasQ = true

@@ -1,6 +1,7 @@
 package processor_test
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -13,6 +14,8 @@ import (
 
 func TestTXTShouldWriteResponseBody(t *testing.T) {
 	g := NewGomegaWithT(t)
+	req := &http.Request{}
+
 	models := []struct {
 		stuff    data.Data
 		expected string
@@ -28,18 +31,19 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		p(w, acceptable.Match{Data: m.stuff}, "")
+		p(w, req, acceptable.Match{Data: m.stuff}, "")
 		g.Expect(w.Body.String()).To(Equal(m.expected))
 	}
 }
 
 func TestTXTShouldNotReturnError(t *testing.T) {
 	g := NewGomegaWithT(t)
+	req := &http.Request{}
 	w := httptest.NewRecorder()
 
 	p := processor.TXT()
 
-	err := p(w, acceptable.Match{}, "")
+	err := p(w, req, acceptable.Match{}, "")
 
 	g.Expect(err).NotTo(HaveOccurred())
 }

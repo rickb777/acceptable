@@ -180,19 +180,19 @@ func TestMediaRanges_should_handle_quality_precedence(t *testing.T) {
 
 func TestMediaRanges_should_ignore_case_of_quality_and_whitespace(t *testing.T) {
 	g := NewGomegaWithT(t)
-	mr := ParseMediaRanges("text/* ; q=0.3, text/html ; Q=0.7, text/html;level=2; q=0.4, */*; q=0.5")
+	mr := ParseMediaRanges("text/* ; q=0.3, TEXT/html ; Q=0.7, text/html;level=2; q=0.4, */*; q=0.5")
 
-	g.Expect(4).To(Equal(len(mr)))
+	g.Expect(len(mr)).To(Equal(4))
 
-	g.Expect("text/html").To(Equal(mr[0].Value()))
-	g.Expect(0.7).To(Equal(mr[0].Quality))
+	g.Expect(mr[0].Value()).To(Equal("text/html"))
+	g.Expect(mr[0].Quality).To(Equal(0.7))
 
-	g.Expect("*/*").To(Equal(mr[1].Value()))
-	g.Expect(0.5).To(Equal(mr[1].Quality))
+	g.Expect(mr[1].Value()).To(Equal("*/*"))
+	g.Expect(mr[1].Quality).To(Equal(0.5))
 
-	g.Expect("text/html;level=2").To(Equal(mr[2].Value()))
-	g.Expect(0.4).To(Equal(mr[2].Quality))
+	g.Expect(mr[2].Value()).To(Equal("text/html;level=2"))
+	g.Expect(mr[2].Quality).To(Equal(0.4))
 
-	g.Expect("text/*").To(Equal(mr[3].Value()))
-	g.Expect(0.3).To(Equal(mr[3].Quality))
+	g.Expect(mr[3].Value()).To(Equal("text/*"))
+	g.Expect(mr[3].Quality).To(Equal(0.3))
 }

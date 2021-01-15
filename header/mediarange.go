@@ -58,7 +58,7 @@ func ContentTypeOf(typ, subtype string, paramKV ...string) ContentType {
 	if len(paramKV) > 0 {
 		params = make([]KV, 0, len(paramKV))
 		for _, p := range paramKV {
-			k, v := internal.Split(p, '=')
+			k, v := internal.Split1(p, '=')
 			params = append(params, KV{Key: k, Value: v})
 		}
 	}

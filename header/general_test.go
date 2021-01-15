@@ -55,7 +55,7 @@ func TestParseAcceptXyzHeader_with_inverse_string(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		actual := Parse(c.actual)
+		actual := ParsePrecedenceValues(c.actual)
 		g.Expect(actual).To(Equal(c.expected))
 		g.Expect(actual.String()).To(Equal(c.actual))
 	}
@@ -114,7 +114,7 @@ func TestParseAcceptXyzHeader_special_cases(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		actual := Parse(c.actual)
+		actual := ParsePrecedenceValues(c.actual)
 		g.Expect(actual).To(Equal(c.expected))
 	}
 }

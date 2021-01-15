@@ -1,6 +1,7 @@
 package templates_test
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
@@ -33,9 +34,10 @@ func TestProductionInstance_using_files(t *testing.T) {
 	}
 
 	// request 1
+	req := &http.Request{}
 	w1 := httptest.NewRecorder()
 
-	err := render(w1, match, "home.html")
+	err := render(w1, req, match, "home.html")
 	g.Expect(err).NotTo(HaveOccurred())
 
 	g.Expect(w1.Body.String()).To(Equal("<html>\n<body>\n<h1>Home.</h1>\n<h4>A Title</h4>\n\n<h3>1</h3>\n<p>Text 1.</p>\n\n</body>\n</html>\n"))
@@ -43,7 +45,7 @@ func TestProductionInstance_using_files(t *testing.T) {
 	// request 2
 	w2 := httptest.NewRecorder()
 
-	err = render(w2, match, "foo/bar.html")
+	err = render(w2, req, match, "foo/bar.html")
 	g.Expect(err).NotTo(HaveOccurred())
 
 	g.Expect(w2.Body.String()).To(Equal("<html>\n<body>\n<h1>Bar.</h1>\n<h4>A Title</h4>\n\n<h3>1</h3>\n<p>Text 1.</p>\n\n</body>\n</html>\n"))
@@ -71,10 +73,11 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 
 	//---------- request 1 ----------
 	rec.opened = nil
+	req := &http.Request{}
 	w := httptest.NewRecorder()
 
 	//t0 := time.Now()
-	err := render(w, match, "foo/home.html")
+	err := render(w, req, match, "foo/home.html")
 	//d1 := time.Now().Sub(t0)
 	g.Expect(err).NotTo(HaveOccurred())
 
@@ -86,7 +89,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	w = httptest.NewRecorder()
 
 	//t2 := time.Now()
-	err = render(w, match, "foo/home.html")
+	err = render(w, req, match, "foo/home.html")
 	//d2 := time.Now().Sub(t2)
 	g.Expect(err).NotTo(HaveOccurred())
 
@@ -98,7 +101,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	rec.opened = nil
 	w = httptest.NewRecorder()
 
-	err = render(w, acceptable.Match{
+	err = render(w, req, acceptable.Match{
 		Type:     "application",
 		Subtype:  "xhtml+xml",
 		Language: "en",
@@ -115,7 +118,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	w = httptest.NewRecorder()
 	afero.WriteFile(rec.fs, "synthetic/foo/bar/baz.html", []byte("<html>{{.Title}}-Updated</html>"), 0644)
 
-	err = render(w, acceptable.Match{
+	err = render(w, req, acceptable.Match{
 		Type:     "application",
 		Subtype:  "xhtml+xml",
 		Language: "en",
@@ -132,7 +135,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	w = httptest.NewRecorder()
 	afero.WriteFile(rec.fs, "synthetic/foo/bar/new.html", []byte("<html>{{.Title}}-New</html>"), 0644)
 
-	err = render(w, match, "foo/bar/new.html")
+	err = render(w, req, match, "foo/bar/new.html")
 	g.Expect(err).NotTo(HaveOccurred())
 
 	g.Expect(w.Body.String()).To(Equal("<html>Hello-New</html>"))
@@ -143,7 +146,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	w = httptest.NewRecorder()
 	rec.fs.Remove("synthetic/foo/bar/baz.html")
 
-	err = render(w, match, "foo/bar/new.html")
+	err = render(w, req, match, "foo/bar/new.html")
 	g.Expect(err).NotTo(HaveOccurred())
 
 	g.Expect(w.Body.String()).To(Equal("<html>Hello-New</html>"))

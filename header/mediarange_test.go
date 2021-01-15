@@ -49,7 +49,7 @@ func TestPrecedenceValues_String(t *testing.T) {
 func TestOffer_String(t *testing.T) {
 	g := gomega.NewWithT(t)
 
-	o := acceptable.OfferOf("text/html", "en").Using(func(w http.ResponseWriter, match acceptable.Match, template string) error {
+	o := acceptable.OfferOf("text/html", "en").Using(func(w http.ResponseWriter, req *http.Request, match acceptable.Match, template string) error {
 		return nil
 	})
 

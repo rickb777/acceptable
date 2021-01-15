@@ -95,7 +95,7 @@ func (v Value) NoCache() *Value {
 
 // GetContentAndApplyExtraHeaders applies all lazy functions to produce the resulting content to be
 // rendered; this value is returned. It also sets any extra response headers.
-func GetContentAndApplyExtraHeaders(rw http.ResponseWriter, d Data, template, language string) (interface{}, error) {
+func GetContentAndApplyExtraHeaders(rw http.ResponseWriter, req *http.Request, d Data, template, language string) (interface{}, error) {
 	if d == nil {
 		return nil, nil
 	}

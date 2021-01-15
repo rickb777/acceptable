@@ -38,10 +38,10 @@ func CSV(comma ...rune) acceptable.Processor {
 		in = comma[0]
 	}
 
-	return func(rw http.ResponseWriter, match acceptable.Match, template string) (err error) {
+	return func(rw http.ResponseWriter, req *http.Request, match acceptable.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
-		d, err := data.GetContentAndApplyExtraHeaders(rw, match.Data, template, match.Language)
+		d, err := data.GetContentAndApplyExtraHeaders(rw, req, match.Data, template, match.Language)
 		if err != nil || d == nil {
 			return err
 		}

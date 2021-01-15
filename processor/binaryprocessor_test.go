@@ -1,6 +1,7 @@
 package processor_test
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -23,11 +24,12 @@ func TestBinaryShouldWriteResponseBody(t *testing.T) {
 		{nil, ""},
 	}
 
+	req := &http.Request{}
 	p := processor.Binary()
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		p(w, acceptable.Match{Data: m.stuff}, "")
+		p(w, req, acceptable.Match{Data: m.stuff}, "")
 		g.Expect(w.Body.String()).To(Equal(m.expected))
 	}
 }
@@ -36,9 +38,10 @@ func TestBinaryShouldNotReturnError(t *testing.T) {
 	g := NewGomegaWithT(t)
 	w := httptest.NewRecorder()
 
+	req := &http.Request{}
 	p := processor.Binary()
 
-	err := p(w, acceptable.Match{}, "")
+	err := p(w, req, acceptable.Match{}, "")
 
 	g.Expect(err).NotTo(HaveOccurred())
 }
