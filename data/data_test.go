@@ -63,16 +63,44 @@ func TestValue_no_cache(t *testing.T) {
 	g.Expect(w.Header().Get("Def")).To(Equal("true"))
 }
 
-func TestValue_not_modified_get_request(t *testing.T) {
+func TestValue_if_none_match_not_modified_get_request(t *testing.T) {
 	g := NewGomegaWithT(t)
 
 	// Given ...
-	d := Of("foo", "hash123").With("Abc", "1", "Def", "true").MaxAge(10 * time.Second)
-	d.meta.LastModified = time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC)
+	d := Of("foo", "hash123").With("Abc", "1", "Def", "true").MaxAge(10 * time.Second).
+		LastModified(time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC))
 
 	for _, method := range []string{"GET", "HEAD"} {
 		req, _ := http.NewRequest(method, "/", nil)
 		req.Header.Set(header.IfNoneMatch, `"foo", "hash123", "bar"`)
+		w := httptest.NewRecorder()
+
+		// When ...
+		c, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
+
+		// Then ...
+		g.Expect(err).NotTo(HaveOccurred())
+		g.Expect(c).To(BeNil())
+		g.Expect(w.Code).To(Equal(304))
+		g.Expect(w.Header()).To(HaveLen(5))
+		g.Expect(w.Header().Get("ETag")).To(Equal(`"hash123"`))
+		g.Expect(w.Header().Get("Last-Modified")).To(Equal(`Thu, 02 Jan 2020 03:04:05 UTC`))
+		g.Expect(w.Header().Get("Cache-Control")).To(Equal("max-age=10"))
+		g.Expect(w.Header().Get("Abc")).To(Equal("1"))
+		g.Expect(w.Header().Get("Def")).To(Equal("true"))
+	}
+}
+
+func TestValue_if_modified_since_not_modified_get_request(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	// Given ...
+	d := Of("foo").ETag("hash123").With("Abc", "1", "Def", "true").MaxAge(10 * time.Second).
+		LastModified(time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC))
+
+	for _, method := range []string{"GET", "HEAD"} {
+		req, _ := http.NewRequest(method, "/", nil)
+		req.Header.Set(header.IfModifiedSince, `Wed, 01 Jan 2020 00:00:00 UTC`)
 		w := httptest.NewRecorder()
 
 		// When ...

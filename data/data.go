@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/rickb777/acceptable/header"
-	"github.com/rickb777/acceptable/internal"
 )
 
 // Data provides a source for response content. It is optimised for lazy evaluation, avoiding
@@ -67,7 +66,21 @@ func (v *Value) Content(template, language string, dataRequired bool) (result in
 	}
 
 	if v.supplier != nil {
+		oldMeta := v.meta
+
 		v.value, v.meta, err = v.supplier(template, language, dataRequired)
+
+		// preserve the oldMeta values unless they were overwritten
+		if v.meta == nil {
+			v.meta = oldMeta
+		} else if oldMeta != nil {
+			if v.meta.Hash == "" {
+				v.meta.Hash = oldMeta.Hash
+			}
+			if v.meta.LastModified.IsZero() {
+				v.meta.LastModified = oldMeta.LastModified
+			}
+		}
 	}
 
 	return v.value, v.meta, err
@@ -92,10 +105,26 @@ func (v Value) With(hdr string, value string, others ...string) *Value {
 	return &v
 }
 
+// ETag sets the entity tag for the content. This allows for conditional requests, possibly
+// avoiding network traffic. This is not necessary if Lazy was used and the function
+// returns metadata.
+func (v Value) ETag(hash string) *Value {
+	if v.meta == nil {
+		v.meta = &Metadata{}
+	}
+	v.meta.Hash = hash
+	return &v //.With("Last-Modified", at.Format(time.RFC1123))
+}
+
 // LastModified sets the time at which the content was last modified. This allows for conditional
-// requests, possibly avoiding network traffic. ETag takes precedence.
+// requests, possibly avoiding network traffic, although ETag takes precedence. This is not
+// necessary if Lazy was used and the function returns metadata.
 func (v Value) LastModified(at time.Time) *Value {
-	return v.With("Last-Modified", at.Format(time.RFC1123))
+	if v.meta == nil {
+		v.meta = &Metadata{}
+	}
+	v.meta.LastModified = at
+	return &v //.With("Last-Modified", at.Format(time.RFC1123))
 }
 
 // Expires sets the time at which the response becomes stale. MaxAge takes precedence.
@@ -131,10 +160,14 @@ func GetContentAndApplyExtraHeaders(rw http.ResponseWriter, req *http.Request, d
 	}
 
 	var etag string
-	if meta != nil && meta.Hash != "" && (req.Method == http.MethodGet || req.Method == http.MethodHead) {
-		etag = meta.Hash
-		rw.Header().Set("ETag", fmt.Sprintf("%q", etag))
+	var lastModified time.Time
+	if meta != nil && (req.Method == http.MethodGet || req.Method == http.MethodHead) {
+		if meta.Hash != "" {
+			etag = meta.Hash
+			rw.Header().Set("ETag", fmt.Sprintf("%q", etag))
+		}
 		if !meta.LastModified.IsZero() {
+			lastModified = meta.LastModified
 			rw.Header().Set("Last-Modified", meta.LastModified.Format(time.RFC1123))
 		}
 	}
@@ -142,11 +175,23 @@ func GetContentAndApplyExtraHeaders(rw http.ResponseWriter, req *http.Request, d
 	sendContent := true
 
 	if etag != "" {
-		ifNoneMatch := internal.Split(req.Header.Get(header.IfNoneMatch), ",")
-		if ifNoneMatch.TrimSpace().RemoveQuotes().Contains(etag) {
+		ifNoneMatch := header.ETagsOf(req.Header.Get(header.IfNoneMatch))
+		if ifNoneMatch.WeaklyMatches(etag) {
 			rw.WriteHeader(http.StatusNotModified)
 			sendContent = false
 			v = nil
+		}
+	}
+
+	if sendContent && !lastModified.IsZero() {
+		var ifModifiedSince time.Time
+		ifModifiedSince, err = time.Parse(time.RFC1123, req.Header.Get(header.IfModifiedSince))
+		if err == nil {
+			if lastModified.After(ifModifiedSince) {
+				rw.WriteHeader(http.StatusNotModified)
+				sendContent = false
+				v = nil
+			}
 		}
 	}
 
