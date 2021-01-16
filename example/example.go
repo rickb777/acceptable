@@ -55,8 +55,8 @@ func main() {
 
 // Handler
 func hello(c echo.Context) error {
-	lazyEn := data.Lazy(func(string, string, bool) (interface{}, string, error) {
-		return en, "hash123", nil
+	lazyEn := data.Lazy(func(string, string, bool) (interface{}, *data.Metadata, error) {
+		return en, &data.Metadata{Hash: "hash123"}, nil
 	}).MaxAge(10 * time.Second)
 
 	best := acceptable.BestRequestMatch(c.Request(),

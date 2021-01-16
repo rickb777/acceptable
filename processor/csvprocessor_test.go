@@ -18,7 +18,7 @@ func TestCSVShouldWriteResponseBody(t *testing.T) {
 		expected string
 	}{
 		{data.Of("Joe Bloggs"), "Joe Bloggs\n"},
-		{data.Lazy(func(string, string, bool) (interface{}, string, error) { return "Joe Bloggs", "", nil }), "Joe Bloggs\n"},
+		{data.Lazy(func(string, string, bool) (interface{}, *data.Metadata, error) { return "Joe Bloggs", nil, nil }), "Joe Bloggs\n"},
 		{data.Of([]string{"Red", "Green", "Blue"}), "Red,Green,Blue\n"},
 		{data.Of([][]string{{"Red", "Green", "Blue"}, {"Cyan", "Magenta", "Yellow"}}), "Red,Green,Blue\nCyan,Magenta,Yellow\n"},
 		{data.Of([]int{101, -5, 42}), "101,-5,42\n"},

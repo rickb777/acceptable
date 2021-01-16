@@ -26,44 +26,51 @@ type Data interface {
 	// Content returns the data as a value that can be processed by encoders such as "encoding/json"
 	// The returned values are the data itself, a hash that will be used as the entity tag (if required),
 	// and an error if arising.
-	Content(template, language string, dataRequired bool) (data interface{}, etag string, err error)
+	Content(template, language string, dataRequired bool) (data interface{}, meta *Metadata, err error)
 
 	// Headers returns response headers relating to the data (optional)
 	Headers() map[string]string
 }
 
+// Metadata provides optional entity tag and last modified information about some data.
+type Metadata struct {
+	Hash         string    // used as entity tag; blank if not required
+	LastModified time.Time // used for Last-Modified header; zero if not required
+}
+
 // Of wraps a data value. An optional entity tag can also be passed in. This is often the MD5 sum
-// of the content, or something similar. If this is non-blank, the ETag response header will be sent.
+// of the content, or something similar. If this is non-blank, the ETag response header will be sent
+// on responses to GET/HEAD requests.
 func Of(v interface{}, etag ...string) *Value {
 	if len(etag) == 0 {
 		return &Value{value: v}
 	}
-	return &Value{value: v, etag: etag[0]}
+	return &Value{value: v, meta: &Metadata{Hash: etag[0]}}
 }
 
-// Lazy wraps a function that supplies a data value, but only when it is needed.
-func Lazy(fn func(template, language string, dataRequired bool) (interface{}, string, error)) *Value {
+// Lazy wraps a function that supplies a data value, but only fetches te data when it is needed.
+func Lazy(fn func(template, language string, dataRequired bool) (interface{}, *Metadata, error)) *Value {
 	return &Value{supplier: fn}
 }
 
 // Value is a simple implementation of Data.
 type Value struct {
-	supplier func(template, language string, dataRequired bool) (interface{}, string, error)
+	supplier func(template, language string, dataRequired bool) (interface{}, *Metadata, error)
 	value    interface{}
-	etag     string
+	meta     *Metadata
 	hdrs     map[string]string
 }
 
-func (v *Value) Content(template, language string, dataRequired bool) (result interface{}, etag string, err error) {
+func (v *Value) Content(template, language string, dataRequired bool) (result interface{}, meta *Metadata, err error) {
 	if v.value != nil {
-		return v.value, v.etag, nil
+		return v.value, v.meta, nil
 	}
 
 	if v.supplier != nil {
-		v.value, v.etag, err = v.supplier(template, language, dataRequired)
+		v.value, v.meta, err = v.supplier(template, language, dataRequired)
 	}
 
-	return v.value, v.etag, err
+	return v.value, v.meta, err
 }
 
 func (v Value) Headers() map[string]string {
@@ -114,7 +121,7 @@ func GetContentAndApplyExtraHeaders(rw http.ResponseWriter, req *http.Request, d
 		return nil, nil
 	}
 
-	v, etag, err := d.Content(template, language, false)
+	v, meta, err := d.Content(template, language, false)
 	if err != nil {
 		return nil, err
 	}
@@ -123,8 +130,13 @@ func GetContentAndApplyExtraHeaders(rw http.ResponseWriter, req *http.Request, d
 		rw.Header().Set(hn, hv)
 	}
 
-	if etag != "" {
+	var etag string
+	if meta != nil && meta.Hash != "" && (req.Method == http.MethodGet || req.Method == http.MethodHead) {
+		etag = meta.Hash
 		rw.Header().Set("ETag", fmt.Sprintf("%q", etag))
+		if !meta.LastModified.IsZero() {
+			rw.Header().Set("Last-Modified", meta.LastModified.Format(time.RFC1123))
+		}
 	}
 
 	sendContent := true

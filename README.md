@@ -67,7 +67,7 @@ Sometimes, the `With` method might not care about language, so simply use the wi
 The response data (`en` and `fr` above) can be structs, slices, maps, or other values. Alternatively they can be `data.Data` values. These allow for lazy evaluation of the content and also support conditional requests.
 
 ```go
-    en := data.Lazy(func(template, language string, dataRequired bool) (data interface{}, etag string, err error) {
+    en := data.Lazy(func(template, language string, dataRequired bool) (data interface{}, meta *data.Metadata, err error) {
         return ...
     })
 ```
