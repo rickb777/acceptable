@@ -2,7 +2,6 @@ package acceptable_test
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
-	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/acceptable/processor"
 	"github.com/rickb777/acceptable/templates"
@@ -445,57 +443,8 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	if testing.Verbose() {
-		acceptable.Debug = func(m string, a ...interface{}) { fmt.Printf(m, a...) }
-	}
+	//if testing.Verbose() {
+	//	acceptable.Debug = func(m string, a ...interface{}) { fmt.Printf(m, a...) }
+	//}
 	os.Exit(m.Run())
-}
-
-func ExampleRenderBestMatch() {
-	// In this example, the same content is available in three languages. Three different
-	// approaches can be used.
-
-	// 1. simple values can be used
-	en := "Hello!" // get English content
-
-	// 2. values can be wrapped in a data.Data
-	fr := data.Of("Bonjour!") // get French content
-
-	// 3. this uses a lazy evaluation function, wrapped in a data.Data
-	es := data.Lazy(func(template string, language string, cr bool) (interface{}, *data.Metadata, error) {
-		return "Hola!", nil, nil // get Spanish content - eg from database
-	})
-
-	// We're implementing an HTTP handler, so we are given a request and a response.
-
-	req := &http.Request{}                               // some incoming request
-	var res http.ResponseWriter = httptest.NewRecorder() // replace with the server's response writer
-
-	// Now do the content negotiation. This example has six supported content types, all of them
-	// able to serve any of the three example languages.
-	//
-	// The first offer is for JSON - this is often the most widely used because it also supports
-	// Ajax requests.
-
-	acceptable.RenderBestMatch(res, req, "home.html",
-		acceptable.OfferOf(processor.JSON("  "), "application/json").
-			With(en, "en").With(fr, "fr").With(es, "es"),
-
-		acceptable.OfferOf(processor.XML("  "), "application/xml").
-			With(en, "en").With(fr, "fr").With(es, "es"),
-
-		acceptable.OfferOf(processor.CSV(), "text/csv").
-			With(en, "en").With(fr, "fr").With(es, "es"),
-
-		acceptable.OfferOf(processor.TXT(), "text/plain").
-			With(en, "en").With(fr, "fr").With(es, "es"),
-
-		templates.TextHtmlOffer("templates/en", ".html", nil).
-			With(en, "en").With(fr, "fr").With(es, "es"),
-
-		templates.ApplicationXhtmlOffer("templates/en", ".html", nil).
-			With(en, "en").With(fr, "fr").With(es, "es"),
-	)
-
-	// RenderBestMatch returns an error which should be checked
 }

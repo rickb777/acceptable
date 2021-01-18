@@ -1,25 +1,26 @@
 package header_test
 
 import (
+	"fmt"
 	"testing"
 
 	. "github.com/onsi/gomega"
-	. "github.com/rickb777/acceptable/header"
+	"github.com/rickb777/acceptable/header"
 )
 
 func TestParseAcceptHeader_parses_single(t *testing.T) {
 	g := NewGomegaWithT(t)
-	mr := ParseMediaRanges("application/json")
+	mr := header.ParseMediaRanges("application/json")
 
 	g.Expect(len(mr)).To(Equal(1))
 	g.Expect(mr[0].Type).To(Equal("application"))
 	g.Expect(mr[0].Subtype).To(Equal("json"))
-	g.Expect(mr[0].Quality).To(Equal(DefaultQuality))
+	g.Expect(mr[0].Quality).To(Equal(header.DefaultQuality))
 }
 
 func TestParseAcceptHeader_converts_mediaRange_to_lowercase(t *testing.T) {
 	g := NewGomegaWithT(t)
-	mr := ParseMediaRanges("Application/CEA")
+	mr := header.ParseMediaRanges("Application/CEA")
 
 	g.Expect(len(mr)).To(Equal(1))
 	g.Expect(mr[0].Type).To(Equal("application"))
@@ -28,15 +29,15 @@ func TestParseAcceptHeader_converts_mediaRange_to_lowercase(t *testing.T) {
 
 func TestParseAcceptHeader_defaults_quality_if_not_explicit(t *testing.T) {
 	g := NewGomegaWithT(t)
-	mr := ParseMediaRanges("text/plain")
+	mr := header.ParseMediaRanges("text/plain")
 
 	g.Expect(len(mr)).To(Equal(1))
-	g.Expect(mr[0].Quality).To(Equal(DefaultQuality))
+	g.Expect(mr[0].Quality).To(Equal(header.DefaultQuality))
 }
 
 func TestParseAcceptHeader_should_parse_quality(t *testing.T) {
 	g := NewGomegaWithT(t)
-	mr := ParseMediaRanges("application/json; q=0.9")
+	mr := header.ParseMediaRanges("application/json; q=0.9")
 
 	g.Expect(len(mr)).To(Equal(1))
 	g.Expect(mr[0].Type).To(Equal("application"))
@@ -46,23 +47,23 @@ func TestParseAcceptHeader_should_parse_quality(t *testing.T) {
 
 func TestParseAcceptHeader_extension_can_omit_value(t *testing.T) {
 	g := NewGomegaWithT(t)
-	mr := ParseMediaRanges("application/json; q=0.9; label")
+	mr := header.ParseMediaRanges("application/json; q=0.9; label")
 
 	g.Expect(len(mr)).To(Equal(1))
 	g.Expect(mr[0].Type).To(Equal("application"))
 	g.Expect(mr[0].Subtype).To(Equal("json"))
-	g.Expect(mr[0].Extensions).To(ConsistOf(KV{Key: "label"}))
+	g.Expect(mr[0].Extensions).To(ConsistOf(header.KV{Key: "label"}))
 }
 
 func TestParseAcceptHeader_sorts_by_decending_quality(t *testing.T) {
 	g := NewGomegaWithT(t)
-	mr := ParseMediaRanges("application/json;q=0.8, application/xml, application/*;q=0.1")
+	mr := header.ParseMediaRanges("application/json;q=0.8, application/xml, application/*;q=0.1")
 
 	g.Expect(len(mr)).To(Equal(3))
 
 	g.Expect(mr[0].Type).To(Equal("application"))
 	g.Expect(mr[0].Subtype).To(Equal("xml"))
-	g.Expect(mr[0].Quality).To(Equal(DefaultQuality))
+	g.Expect(mr[0].Quality).To(Equal(header.DefaultQuality))
 
 	g.Expect(mr[1].Type).To(Equal("application"))
 	g.Expect(mr[1].Subtype).To(Equal("json"))
@@ -75,12 +76,12 @@ func TestParseAcceptHeader_sorts_by_decending_quality(t *testing.T) {
 
 func TestMediaRanges_should_ignore_invalid_quality(t *testing.T) {
 	g := NewGomegaWithT(t)
-	mr := ParseMediaRanges("text/html;q=blah")
+	mr := header.ParseMediaRanges("text/html;q=blah")
 
 	g.Expect(len(mr)).To(Equal(1))
 	g.Expect(mr[0].Type).To(Equal("text"))
 	g.Expect(mr[0].Subtype).To(Equal("html"))
-	g.Expect(mr[0].Quality).To(Equal(DefaultQuality))
+	g.Expect(mr[0].Quality).To(Equal(header.DefaultQuality))
 	g.Expect(mr[0].Params).To(HaveLen(0))
 }
 
@@ -96,46 +97,46 @@ func TestMediaRanges_should_handle_precedence(t *testing.T) {
 		"text/plain, text/plain;format=flowed, */*, text/*",
 	}
 	for _, c := range cases {
-		mr := ParseMediaRanges(c)
+		mr := header.ParseMediaRanges(c)
 
 		g.Expect(len(mr)).To(Equal(4))
-		g.Expect(mr[0]).To(Equal(MediaRange{
-			ContentType: ContentTypeOf("text", "plain", "format=flowed"),
-			Quality:     DefaultQuality,
+		g.Expect(mr[0]).To(Equal(header.MediaRange{
+			ContentType: header.ContentTypeOf("text", "plain", "format=flowed"),
+			Quality:     header.DefaultQuality,
 		}), c)
-		g.Expect(mr[1]).To(Equal(MediaRange{
-			ContentType: ContentTypeOf("text", "plain"),
-			Quality:     DefaultQuality,
+		g.Expect(mr[1]).To(Equal(header.MediaRange{
+			ContentType: header.ContentTypeOf("text", "plain"),
+			Quality:     header.DefaultQuality,
 		}), c)
-		g.Expect(mr[2]).To(Equal(MediaRange{
-			ContentType: ContentTypeOf("text", "*"),
-			Quality:     DefaultQuality,
+		g.Expect(mr[2]).To(Equal(header.MediaRange{
+			ContentType: header.ContentTypeOf("text", "*"),
+			Quality:     header.DefaultQuality,
 		}), c)
-		g.Expect(mr[3]).To(Equal(MediaRange{
-			ContentType: ContentTypeOf("*", "*"),
-			Quality:     DefaultQuality,
+		g.Expect(mr[3]).To(Equal(header.MediaRange{
+			ContentType: header.ContentTypeOf("*", "*"),
+			Quality:     header.DefaultQuality,
 		}), c)
 	}
 }
 
 func TestMediaRanges_should_not_remove_accept_extension(t *testing.T) {
 	g := NewGomegaWithT(t)
-	mr := ParseMediaRanges("text/html; q=0.5; a=1;b=2")
+	mr := header.ParseMediaRanges("text/html; q=0.5; a=1;b=2")
 
 	g.Expect(len(mr)).To(Equal(1))
 	g.Expect(mr[0].Type).To(Equal("text"))
 	g.Expect(mr[0].Subtype).To(Equal("html"))
 	g.Expect(mr[0].Quality).To(Equal(0.5))
 	g.Expect(mr[0].Params).To(BeEmpty())
-	g.Expect(mr[0].Extensions).To(ConsistOf(KV{"a", "1"}, KV{"b", "2"}))
+	g.Expect(mr[0].Extensions).To(ConsistOf(header.KV{"a", "1"}, header.KV{"b", "2"}))
 }
 
 func TestMediaRanges_string(t *testing.T) {
 	g := NewGomegaWithT(t)
-	header := "text/html;level=1;q=0.9;a=1;b=2, text/html;q=0.5, text/*;q=0.3"
-	mr := ParseMediaRanges(header)
+	h := "text/html;level=1;q=0.9;a=1;b=2, text/html;q=0.5, text/*;q=0.3"
+	mr := header.ParseMediaRanges(h)
 	g.Expect(mr[0].Value()).To(Equal("text/html;level=1"))
-	g.Expect(mr.String()).To(Equal(header))
+	g.Expect(mr.String()).To(Equal(h))
 }
 
 func TestMediaRanges_should_handle_quality_precedence(t *testing.T) {
@@ -148,31 +149,31 @@ func TestMediaRanges_should_handle_quality_precedence(t *testing.T) {
 		"text/html;level=2;q=0.4, */*;q=0.5, text/*;q=0.3, text/html;q=0.7, text/html;level=1",
 	}
 	for _, c := range cases {
-		mr := ParseMediaRanges(c)
+		mr := header.ParseMediaRanges(c)
 		g.Expect(5, len(mr))
 
-		g.Expect(mr[0]).To(Equal(MediaRange{
-			ContentType: ContentTypeOf("text", "html", "level=1"),
-			Quality:     DefaultQuality,
+		g.Expect(mr[0]).To(Equal(header.MediaRange{
+			ContentType: header.ContentTypeOf("text", "html", "level=1"),
+			Quality:     header.DefaultQuality,
 		}), c)
 
-		g.Expect(mr[1]).To(Equal(MediaRange{
-			ContentType: ContentTypeOf("text", "html"),
+		g.Expect(mr[1]).To(Equal(header.MediaRange{
+			ContentType: header.ContentTypeOf("text", "html"),
 			Quality:     0.7,
 		}), c)
 
-		g.Expect(mr[2]).To(Equal(MediaRange{
-			ContentType: ContentTypeOf("*", "*"),
+		g.Expect(mr[2]).To(Equal(header.MediaRange{
+			ContentType: header.ContentTypeOf("*", "*"),
 			Quality:     0.5,
 		}), c)
 
-		g.Expect(mr[3]).To(Equal(MediaRange{
-			ContentType: ContentTypeOf("text", "html", "level=2"),
+		g.Expect(mr[3]).To(Equal(header.MediaRange{
+			ContentType: header.ContentTypeOf("text", "html", "level=2"),
 			Quality:     0.4,
 		}), c)
 
-		g.Expect(mr[4]).To(Equal(MediaRange{
-			ContentType: ContentTypeOf("text", "*"),
+		g.Expect(mr[4]).To(Equal(header.MediaRange{
+			ContentType: header.ContentTypeOf("text", "*"),
 			Quality:     0.3,
 		}), c)
 	}
@@ -180,7 +181,7 @@ func TestMediaRanges_should_handle_quality_precedence(t *testing.T) {
 
 func TestMediaRanges_should_ignore_case_of_quality_and_whitespace(t *testing.T) {
 	g := NewGomegaWithT(t)
-	mr := ParseMediaRanges("text/* ; q=0.3, TEXT/html ; Q=0.7, text/html;level=2; q=0.4, */*; q=0.5")
+	mr := header.ParseMediaRanges("text/* ; q=0.3, TEXT/html ; Q=0.7, text/html;level=2; q=0.4, */*; q=0.5")
 
 	g.Expect(len(mr)).To(Equal(4))
 
@@ -195,4 +196,17 @@ func TestMediaRanges_should_ignore_case_of_quality_and_whitespace(t *testing.T) 
 
 	g.Expect(mr[3].Value()).To(Equal("text/*"))
 	g.Expect(mr[3].Quality).To(Equal(0.3))
+}
+
+func ExampleParseMediaRanges() {
+	mrs := header.ParseMediaRanges("text/* ; q=0.3, TEXT/html ; Q=0.7, text/html;level=2; q=0.4, */*; q=0.5")
+
+	for i, mr := range mrs {
+		fmt.Printf("mr%d = %s\n", i, mr)
+	}
+	// Output:
+	// mr0 = text/html;q=0.7
+	// mr1 = */*;q=0.5
+	// mr2 = text/html;level=2;q=0.4
+	// mr3 = text/*;q=0.3
 }

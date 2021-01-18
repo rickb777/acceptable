@@ -1,10 +1,3 @@
-// package header provides parsing rules for content negotiation headers according
-// to RFC-7231.
-//
-// For "Accept-Language", "Accept-Encoding" or "Accept-Charset" use the ParsePrecedenceValues function.
-//
-// For "Accept" use the ParseMediaRanges function. This has more complex attributes
-// and rules.
 package header
 
 import (
