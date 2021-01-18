@@ -61,19 +61,19 @@ func hello(c echo.Context) error {
 
 	best := acceptable.BestRequestMatch(c.Request(),
 		acceptable.OfferOf(processor.JSON("  "), "application/json").
-			With("en", lazyEn).With("fr", fr).With("es", es).With("ru", ru),
+			With(lazyEn, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 
 		acceptable.OfferOf(processor.XML("  "), "application/xml").
-			With("en", en).With("fr", fr).With("es", es).With("ru", ru),
+			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 
 		acceptable.OfferOf(processor.TXT(), "text/plain").
-			With("en", en).With("fr", fr).With("es", es).With("ru", ru),
+			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 
 		templates.TextHtmlOffer("example/templates/en", ".html", nil).
-			With("en", en).With("fr", fr).With("es", es).With("ru", ru),
+			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 
 		templates.ApplicationXhtmlOffer("example/templates/en", ".html", nil).
-			With("en", en).With("fr", fr).With("es", es).With("ru", ru),
+			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 	)
 
 	if best == nil {

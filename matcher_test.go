@@ -132,7 +132,7 @@ func Test_should_return_406_when_media_range_is_explicitly_excluded(t *testing.T
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(processor.TXT(), "text/test").With("en", nil)
+	a := acceptable.OfferOf(processor.TXT(), "text/test").With(nil, "en")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	// this header means "anything but text/test"
@@ -153,7 +153,7 @@ func Test_should_return_200_even_when_language_is_explicitly_excluded(t *testing
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(processor.TXT(), "text/test").With("en", nil)
+	a := acceptable.OfferOf(processor.TXT(), "text/test").With(nil, "en")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	// this header means "anything but text/test"
@@ -177,11 +177,11 @@ func Test_should_negotiate_using_media_and_language(t *testing.T) {
 
 	// Given ...
 	// should be skipped because of media mismatch
-	a := acceptable.OfferOf(processor.TXT(), "text/html").With("en", nil)
+	a := acceptable.OfferOf(processor.TXT(), "text/html").With(nil, "en")
 	// should be skipped because of language mismatch
-	b := acceptable.OfferOf(processor.TXT(), "text/test").With("de", nil)
+	b := acceptable.OfferOf(processor.TXT(), "text/test").With(nil, "de")
 	// should match
-	c := acceptable.OfferOf(processor.TXT(), "text/test").With("en", nil)
+	c := acceptable.OfferOf(processor.TXT(), "text/test").With(nil, "en")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept", "text/test, text/*")
@@ -249,7 +249,7 @@ func Test_should_render_iso8859_html_using_templates(t *testing.T) {
 
 	// Given ...
 	p := templates.Templates("example/templates/en", ".html", nil)
-	a := acceptable.OfferOf(p, "text/html").With("en", nil)
+	a := acceptable.OfferOf(p, "text/html").With(nil, "en")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept", "text/html")
@@ -297,8 +297,8 @@ func Test_should_match_language_wildcard_and_return_selected_language(t *testing
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(nil, "").With("en", nil)
-	b := acceptable.OfferOf(nil, "").With("de", nil)
+	a := acceptable.OfferOf(nil, "").With(nil, "en")
+	b := acceptable.OfferOf(nil, "").With(nil, "de")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept-Language", "*")
@@ -320,9 +320,9 @@ func Test_should_select_language_of_first_matched_offer_when_no_language_matches
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(nil, "text/csv").With("es", nil)
-	b := acceptable.OfferOf(nil, "text/html").With("en", nil)
-	c := acceptable.OfferOf(nil, "text/html").With("de", nil)
+	a := acceptable.OfferOf(nil, "text/csv").With(nil, "es")
+	b := acceptable.OfferOf(nil, "text/html").With(nil, "en")
+	c := acceptable.OfferOf(nil, "text/html").With(nil, "de")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept", "text/html")
@@ -479,22 +479,22 @@ func ExampleRenderBestMatch() {
 
 	acceptable.RenderBestMatch(res, req, "home.html",
 		acceptable.OfferOf(processor.JSON("  "), "application/json").
-			With("en", en).With("fr", fr).With("es", es),
+			With(en, "en").With(fr, "fr").With(es, "es"),
 
 		acceptable.OfferOf(processor.XML("  "), "application/xml").
-			With("en", en).With("fr", fr).With("es", es),
+			With(en, "en").With(fr, "fr").With(es, "es"),
 
 		acceptable.OfferOf(processor.CSV(), "text/csv").
-			With("en", en).With("fr", fr).With("es", es),
+			With(en, "en").With(fr, "fr").With(es, "es"),
 
 		acceptable.OfferOf(processor.TXT(), "text/plain").
-			With("en", en).With("fr", fr).With("es", es),
+			With(en, "en").With(fr, "fr").With(es, "es"),
 
 		templates.TextHtmlOffer("templates/en", ".html", nil).
-			With("en", en).With("fr", fr).With("es", es),
+			With(en, "en").With(fr, "fr").With(es, "es"),
 
 		templates.ApplicationXhtmlOffer("templates/en", ".html", nil).
-			With("en", en).With("fr", fr).With("es", es),
+			With(en, "en").With(fr, "fr").With(es, "es"),
 	)
 
 	// RenderBestMatch returns an error which should be checked

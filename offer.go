@@ -1,6 +1,7 @@
 package acceptable
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -44,23 +45,57 @@ func OfferOf(processor Processor, contentType string) Offer {
 	}
 }
 
-// With attaches response data to an offer. The data can be a value (struct, slice, etc) or
-// a data.Data. It may also be nil, which serves to add the language to the Offer's supported
-// languages.
+// With attaches response data to an offer.
+// The language parameter specifies what language (or language group) the offer
+// will match. It can be "*" to match any. The method panics if it is blank.
+// Other languages can also be specified, but these must not be "*" (or blank).
 //
-//The original offer is unchanged.
-func (o Offer) With(language string, d interface{}) Offer {
+// The data can be a value (struct, slice, etc) or a data.Data. It may also be
+// nil, which means the method merely serves to add the language to the Offer's
+// supported languages.
+//
+// The original offer is unchanged.
+func (o Offer) With(d interface{}, language string, otherLanguages ...string) Offer {
+	if language == "" {
+		panic("language must not be blank")
+	}
+	for i, l := range otherLanguages {
+		if l == "" {
+			panic(fmt.Sprintf("other language %d must not be blank", i))
+		}
+		if l == "*" {
+			panic(fmt.Sprintf("other language %d must not be * wildcard", i))
+		}
+	}
+
 	if d == nil {
+		if language == "*" {
+			return o
+		}
 		d = emptyValue
 	}
+
+	// clear pre-existing wildcard
 	if len(o.data) == 0 && len(o.langs) == 1 && o.langs[0] == "*" {
 		o.langs = nil
 	}
+
 	o.langs = append(o.langs, language)
+
 	if s, ok := d.(data.Data); ok {
 		o.data[language] = s
 	} else {
 		o.data[language] = data.Of(d)
+	}
+
+	for _, l := range otherLanguages {
+		o.langs = append(o.langs, l)
+
+		if s, ok := d.(data.Data); ok {
+			o.data[l] = s
+		} else {
+			o.data[l] = data.Of(d)
+		}
 	}
 	return o
 }
@@ -76,7 +111,7 @@ func (o Offer) String() string {
 		for _, l := range o.langs {
 			buf.WriteString(comma)
 			buf.WriteString(l)
-			comma = ", "
+			comma = ","
 		}
 	}
 	return buf.String()
