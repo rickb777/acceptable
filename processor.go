@@ -10,7 +10,7 @@ import (
 
 var (
 	// DefaultImageOffer is an Offer for image/* content using the Binary() processor.
-	DefaultImageOffer = offer.Of(Binary(), contenttype.ImageStar)
+	DefaultImageOffer = offer.Of(Binary(), contenttype.ImageAny)
 
 	// DefaultCSVOffer is an Offer for text/plain content using the CSV() processor.
 	DefaultCSVOffer = offer.Of(CSV(), contenttype.TextCSV)
