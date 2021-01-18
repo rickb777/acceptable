@@ -1,4 +1,4 @@
-package processor_test
+package acceptable_test
 
 import (
 	"net/http"
@@ -6,10 +6,12 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
+
+	"github.com/rickb777/acceptable/offer"
+
+	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable/data"
-	"github.com/rickb777/acceptable/processor"
 )
 
 func TestTXTShouldWriteResponseBody(t *testing.T) {
@@ -27,11 +29,11 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 		{data.Of(tm{"Joe Bloggs"}), "Joe Bloggs\n"},
 	}
 
-	p := processor.TXT()
+	p := acceptable.TXT()
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		p(w, req, acceptable.Match{Data: m.stuff}, "")
+		p(w, req, offer.Match{Data: m.stuff}, "")
 		g.Expect(w.Body.String()).To(Equal(m.expected))
 	}
 }
@@ -41,9 +43,9 @@ func TestTXTShouldNotReturnError(t *testing.T) {
 	req := &http.Request{}
 	w := httptest.NewRecorder()
 
-	p := processor.TXT()
+	p := acceptable.TXT()
 
-	err := p(w, req, acceptable.Match{}, "")
+	err := p(w, req, offer.Match{}, "")
 
 	g.Expect(err).NotTo(HaveOccurred())
 }

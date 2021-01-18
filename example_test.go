@@ -9,8 +9,7 @@ import (
 
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
-	"github.com/rickb777/acceptable/processor"
-	"github.com/rickb777/acceptable/templates"
+	"github.com/rickb777/acceptable/offer"
 )
 
 func Example() {
@@ -55,22 +54,22 @@ func Example() {
 		// Ajax requests.
 
 		err := acceptable.RenderBestMatch(res, req, "home.html",
-			acceptable.OfferOf(processor.JSON("  "), "application/json").
+			offer.Of(acceptable.JSON("  "), "application/json").
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			acceptable.OfferOf(processor.XML("  "), "application/xml").
+			offer.Of(acceptable.XML("  "), "application/xml").
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			acceptable.OfferOf(processor.CSV(), "text/csv").
+			offer.Of(acceptable.CSV(), "text/csv").
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			acceptable.OfferOf(processor.TXT(), "text/plain").
+			offer.Of(acceptable.TXT(), "text/plain").
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			templates.TextHtmlOffer("example/templates/en", ".html", nil).
+			acceptable.TextHtmlOffer("example/templates/en", ".html", nil).
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			templates.ApplicationXhtmlOffer("example/templates/en", ".html", nil).
+			acceptable.ApplicationXhtmlOffer("example/templates/en", ".html", nil).
 				With(en, "en").With(fr, "fr").With(es, "es"),
 		)
 

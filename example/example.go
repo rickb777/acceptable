@@ -5,14 +5,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rickb777/acceptable/data"
-
-	"github.com/rickb777/acceptable/templates"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rickb777/acceptable"
-	"github.com/rickb777/acceptable/processor"
+	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/offer"
+	"github.com/rickb777/acceptable/templates"
 )
 
 // Some requests to try:
@@ -60,19 +58,19 @@ func hello(c echo.Context) error {
 	}).MaxAge(10 * time.Second)
 
 	best := acceptable.BestRequestMatch(c.Request(),
-		acceptable.OfferOf(processor.JSON("  "), "application/json").
+		offer.Of(acceptable.JSON("  "), "application/json").
 			With(lazyEn, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 
-		acceptable.OfferOf(processor.XML("  "), "application/xml").
+		offer.Of(acceptable.XML("  "), "application/xml").
 			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 
-		acceptable.OfferOf(processor.TXT(), "text/plain").
+		offer.Of(acceptable.TXT(), "text/plain").
 			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 
-		templates.TextHtmlOffer("example/templates/en", ".html", nil).
+		acceptable.TextHtmlOffer("example/templates/en", ".html", nil).
 			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 
-		templates.ApplicationXhtmlOffer("example/templates/en", ".html", nil).
+		acceptable.ApplicationXhtmlOffer("example/templates/en", ".html", nil).
 			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 	)
 

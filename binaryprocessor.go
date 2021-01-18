@@ -1,4 +1,4 @@
-package processor
+package acceptable
 
 import (
 	"bytes"
@@ -7,12 +7,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/offer"
 )
-
-// DefaultImageOffer is an Offer for image/* content using the Binary() processor.
-var DefaultImageOffer = acceptable.OfferOf(Binary(), "image/*")
 
 // Binary creates an output processor that outputs binary data in a form suitable for image/* and similar responses.
 // Model values should be one of the following:
@@ -20,8 +17,8 @@ var DefaultImageOffer = acceptable.OfferOf(Binary(), "image/*")
 // * []byte
 // * io.Reader
 // * nil
-func Binary() acceptable.Processor {
-	return func(rw http.ResponseWriter, req *http.Request, match acceptable.Match, template string) (err error) {
+func Binary() offer.Processor {
+	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
 		d, err := data.GetContentAndApplyExtraHeaders(rw, req, match.Data, template, match.Language)

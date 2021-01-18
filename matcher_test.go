@@ -7,10 +7,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/rickb777/acceptable/offer"
+
 	"github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/header"
-	"github.com/rickb777/acceptable/processor"
 	"github.com/rickb777/acceptable/templates"
 )
 
@@ -18,8 +19,8 @@ func Test_should_use_default_processor_if_no_accept_header(t *testing.T) {
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(processor.TXT(), "text/test")
-	b := acceptable.OfferOf(processor.TXT(), "text/plain")
+	a := offer.Of(acceptable.TXT(), "text/test")
+	b := offer.Of(acceptable.TXT(), "text/plain")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
@@ -37,7 +38,7 @@ func Test_should_give_JSON_response_for_ajax_requests(t *testing.T) {
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(processor.JSON(), "application/json")
+	a := offer.Of(acceptable.JSON(), "application/json")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add(header.XRequestedWith, header.XMLHttpRequest)
@@ -57,7 +58,7 @@ func Test_should_give_406_for_unmatched_ajax_requests(t *testing.T) {
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(processor.JSON(), "text/plain")
+	a := offer.Of(acceptable.JSON(), "text/plain")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add(header.XRequestedWith, header.XMLHttpRequest)
@@ -81,7 +82,7 @@ func Test_should_return_406_if_no_matching_accept_header(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/", nil)
 		req.Header.Add("Accept", "image/png")
 		w := httptest.NewRecorder()
-		a := acceptable.OfferOf(processor.JSON(), c)
+		a := offer.Of(acceptable.JSON(), c)
 
 		// When ...
 		err := acceptable.RenderBestMatch(w, req, "", a)
@@ -130,7 +131,7 @@ func Test_should_return_406_when_media_range_is_explicitly_excluded(t *testing.T
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(processor.TXT(), "text/test").With(nil, "en")
+	a := offer.Of(acceptable.TXT(), "text/test").With(nil, "en")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	// this header means "anything but text/test"
@@ -151,7 +152,7 @@ func Test_should_return_200_even_when_language_is_explicitly_excluded(t *testing
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(processor.TXT(), "text/test").With(nil, "en")
+	a := offer.Of(acceptable.TXT(), "text/test").With(nil, "en")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	// this header means "anything but text/test"
@@ -175,11 +176,11 @@ func Test_should_negotiate_using_media_and_language(t *testing.T) {
 
 	// Given ...
 	// should be skipped because of media mismatch
-	a := acceptable.OfferOf(processor.TXT(), "text/html").With(nil, "en")
+	a := offer.Of(acceptable.TXT(), "text/html").With(nil, "en")
 	// should be skipped because of language mismatch
-	b := acceptable.OfferOf(processor.TXT(), "text/test").With(nil, "de")
+	b := offer.Of(acceptable.TXT(), "text/test").With(nil, "de")
 	// should match
-	c := acceptable.OfferOf(processor.TXT(), "text/test").With(nil, "en")
+	c := offer.Of(acceptable.TXT(), "text/test").With(nil, "en")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept", "text/test, text/*")
@@ -202,7 +203,7 @@ func Test_should_match_subtype_wildcard1(t *testing.T) {
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(nil, "text/test")
+	a := offer.Of(nil, "text/test")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept", "text/*") // <-- wildcard
@@ -211,7 +212,7 @@ func Test_should_match_subtype_wildcard1(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&acceptable.Match{
+	g.Expect(best).To(gomega.Equal(&offer.Match{
 		Type:     "text",
 		Subtype:  "test",
 		Language: "*",
@@ -224,7 +225,7 @@ func Test_should_match_subtype_wildcard2(t *testing.T) {
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(nil, "text/*") // <-- wildcard
+	a := offer.Of(nil, "text/*") // <-- wildcard
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept", "text/test")
@@ -233,7 +234,7 @@ func Test_should_match_subtype_wildcard2(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&acceptable.Match{
+	g.Expect(best).To(gomega.Equal(&offer.Match{
 		Type:     "text",
 		Subtype:  "test",
 		Language: "*",
@@ -247,7 +248,7 @@ func Test_should_render_iso8859_html_using_templates(t *testing.T) {
 
 	// Given ...
 	p := templates.Templates("example/templates/en", ".html", nil)
-	a := acceptable.OfferOf(p, "text/html").With(nil, "en")
+	a := offer.Of(p, "text/html").With(nil, "en")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept", "text/html")
@@ -271,7 +272,7 @@ func Test_should_match_language_when_offer_language_is_not_specified(t *testing.
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(nil, "text/html")
+	a := offer.Of(nil, "text/html")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept", "application/json, text/html")
@@ -282,7 +283,7 @@ func Test_should_match_language_when_offer_language_is_not_specified(t *testing.
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&acceptable.Match{
+	g.Expect(best).To(gomega.Equal(&offer.Match{
 		Type:     "text",
 		Subtype:  "html",
 		Language: "en",
@@ -295,8 +296,8 @@ func Test_should_match_language_wildcard_and_return_selected_language(t *testing
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(nil, "").With(nil, "en")
-	b := acceptable.OfferOf(nil, "").With(nil, "de")
+	a := offer.Of(nil, "").With(nil, "en")
+	b := offer.Of(nil, "").With(nil, "de")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept-Language", "*")
@@ -305,7 +306,7 @@ func Test_should_match_language_wildcard_and_return_selected_language(t *testing
 	best := acceptable.BestRequestMatch(req, a, b)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&acceptable.Match{
+	g.Expect(best).To(gomega.Equal(&offer.Match{
 		Type:     "application",
 		Subtype:  "octet-stream",
 		Language: "en",
@@ -318,9 +319,9 @@ func Test_should_select_language_of_first_matched_offer_when_no_language_matches
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(nil, "text/csv").With(nil, "es")
-	b := acceptable.OfferOf(nil, "text/html").With(nil, "en")
-	c := acceptable.OfferOf(nil, "text/html").With(nil, "de")
+	a := offer.Of(nil, "text/csv").With(nil, "es")
+	b := offer.Of(nil, "text/html").With(nil, "en")
+	c := offer.Of(nil, "text/html").With(nil, "de")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept", "text/html")
@@ -330,7 +331,7 @@ func Test_should_select_language_of_first_matched_offer_when_no_language_matches
 	best := acceptable.BestRequestMatch(req, a, b, c)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&acceptable.Match{
+	g.Expect(best).To(gomega.Equal(&offer.Match{
 		Type:     "text",
 		Subtype:  "html",
 		Language: "en",
@@ -343,7 +344,7 @@ func Test_should_match_utf8_charset_when_acceptable(t *testing.T) {
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(processor.TXT(), "text/html")
+	a := offer.Of(acceptable.TXT(), "text/html")
 
 	cases := []string{
 		"utf-8, iso-8859-1",
@@ -375,8 +376,8 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	wildcard := acceptable.OfferOf(nil, "text/*")
-	a := acceptable.OfferOf(nil, "text/test")
+	wildcard := offer.Of(nil, "text/*")
+	a := offer.Of(nil, "text/test")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept", "*/*")
@@ -385,7 +386,7 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, wildcard)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&acceptable.Match{
+	g.Expect(best).To(gomega.Equal(&offer.Match{
 		Type:     "text",
 		Subtype:  "plain",
 		Language: "*",
@@ -397,7 +398,7 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 	best = acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&acceptable.Match{
+	g.Expect(best).To(gomega.Equal(&offer.Match{
 		Type:     "text",
 		Subtype:  "test",
 		Language: "*",
@@ -410,8 +411,8 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := acceptable.OfferOf(nil, "text/a")
-	b := acceptable.OfferOf(nil, "text/b")
+	a := offer.Of(nil, "text/a")
+	b := offer.Of(nil, "text/b")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept", "text/a, text/b")
@@ -420,7 +421,7 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&acceptable.Match{
+	g.Expect(best).To(gomega.Equal(&offer.Match{
 		Type:     "text",
 		Subtype:  "a",
 		Language: "*",
@@ -432,7 +433,7 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 	best = acceptable.BestRequestMatch(req, b)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&acceptable.Match{
+	g.Expect(best).To(gomega.Equal(&offer.Match{
 		Type:     "text",
 		Subtype:  "b",
 		Language: "*",

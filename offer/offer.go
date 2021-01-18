@@ -1,4 +1,4 @@
-package acceptable
+package offer
 
 import (
 	"fmt"
@@ -24,23 +24,24 @@ type Offer struct {
 	// How this is used is entirely at the discretion of the call site.
 	processor Processor
 
-	langs []string
+	// Langs lists the language(s) provided by this offer.
+	Langs []string
 
 	// data is an optional response to be rendered if this offer is selected.
 	data map[string]data.Data
 }
 
-// OfferOf constructs an Offer easily, given a content type.
+// Of constructs an Offer easily, given a content type.
 // If the content type is blank, it is assumed to be the full wildcard "*/*".
 // Also, contentType can be a partial wildcard "type/*".
-func OfferOf(processor Processor, contentType string) Offer {
+func Of(processor Processor, contentType string) Offer {
 	t, s := internal.Split1(contentType, '/')
 	ct := header.ContentTypeOf(t, s)
 
 	return Offer{
 		ContentType: ct,
 		processor:   processor,
-		langs:       []string{"*"},
+		Langs:       []string{"*"},
 		data:        make(map[string]data.Data),
 	}
 }
@@ -76,11 +77,11 @@ func (o Offer) With(d interface{}, language string, otherLanguages ...string) Of
 	}
 
 	// clear pre-existing wildcard
-	if len(o.data) == 0 && len(o.langs) == 1 && o.langs[0] == "*" {
-		o.langs = nil
+	if len(o.data) == 0 && len(o.Langs) == 1 && o.Langs[0] == "*" {
+		o.Langs = nil
 	}
 
-	o.langs = append(o.langs, language)
+	o.Langs = append(o.Langs, language)
 
 	if s, ok := d.(data.Data); ok {
 		o.data[language] = s
@@ -89,7 +90,7 @@ func (o Offer) With(d interface{}, language string, otherLanguages ...string) Of
 	}
 
 	for _, l := range otherLanguages {
-		o.langs = append(o.langs, l)
+		o.Langs = append(o.Langs, l)
 
 		if s, ok := d.(data.Data); ok {
 			o.data[l] = s
@@ -108,13 +109,61 @@ func (o Offer) String() string {
 	if len(o.data) > 0 {
 		buf.WriteString(". Accept-Language: ")
 		comma := ""
-		for _, l := range o.langs {
+		for _, l := range o.Langs {
 			buf.WriteString(comma)
 			buf.WriteString(l)
 			comma = ","
 		}
 	}
 	return buf.String()
+}
+
+//-------------------------------------------------------------------------------------------------
+
+// BuildMatch implements the transition between a selected Offer and the resulting Match.
+func (o Offer) BuildMatch(lang string, acceptedCT header.MediaRange) *Match {
+	t, s := o.resolvedType(acceptedCT)
+
+	return &Match{
+		Type:     t,
+		Subtype:  s,
+		Language: lang,
+		Data:     o.Data(lang),
+		Render:   o.processor,
+	}
+}
+
+func (o Offer) resolvedType(acceptedCT header.MediaRange) (string, string) {
+	t := o.Type
+	s := o.Subtype
+
+	if o.Subtype == "*" && acceptedCT.Subtype != "*" {
+		s = acceptedCT.Subtype
+		if o.Type == "*" && acceptedCT.Type != "*" {
+			t = acceptedCT.Type
+		}
+	}
+
+	if t == "text" && s == "*" {
+		s = "plain"
+	} else if t == "*" || s == "*" {
+		t = "application"
+		s = "octet-stream"
+		// Ideally this should choose text/plain when the content is purely textual,
+		// allowing for the encoding of the selected character set. This is hard to do
+		// without knowledge of the response content; the standard library sniffs the
+		// first 512 bytes but there is no attempt to do that here.
+	}
+
+	return t, s
+}
+
+func (o Offer) Data(lang string) data.Data {
+	d := o.data[lang]
+	if d == emptyValue {
+		d = nil
+	}
+	return d
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -144,7 +193,7 @@ func (offers Offers) Filter(typ, subtype string) Offers {
 
 	allowed := make(Offers, 0, len(offers))
 	for _, mr := range offers {
-		if equalOrWildcard(mr.Type, typ) && equalOrWildcard(mr.Subtype, subtype) {
+		if internal.EqualOrWildcard(mr.Type, typ) && internal.EqualOrWildcard(mr.Subtype, subtype) {
 			allowed = append(allowed, mr)
 		}
 	}

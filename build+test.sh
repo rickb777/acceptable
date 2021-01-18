@@ -24,16 +24,20 @@ if ! type -p goreturns; then
   v go install github.com/sqs/goreturns
 fi
 
+go test ./...
+
 echo acceptable...
 go test -v -covermode=count -coverprofile=test.out .
 go tool cover -func=test.out
 [ -z "$COVERALLS_TOKEN" ] || goveralls -coverprofile=test.out -service=travis-ci -repotoken $COVERALLS_TOKEN
 
-for d in header processor templates; do
-  echo $d...
-  go test -v -covermode=count -coverprofile=$d/test.out ./$d
-  go tool cover -func=$d/test.out
-  [ -z "$COVERALLS_TOKEN" ] || goveralls -coverprofile=$d/test.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+for d in *; do
+  if [ -f $d/doc.go ]; then
+    echo $d...
+    go test -v -covermode=count -coverprofile=$d/test.out ./$d
+    go tool cover -func=$d/test.out
+    [ -z "$COVERALLS_TOKEN" ] || goveralls -coverprofile=$d/test.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+  fi
 done
 
 v goreturns -l -w *.go */*.go

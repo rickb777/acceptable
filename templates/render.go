@@ -5,15 +5,16 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/offer"
+
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
 )
 
 const DefaultPage = "_index.html"
 
-func productionProcessor(root *template.Template) acceptable.Processor {
-	return func(rw http.ResponseWriter, req *http.Request, match acceptable.Match, template string) (err error) {
+func productionProcessor(root *template.Template) offer.Processor {
+	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
 		p := &internal.WriterProxy{W: w}
@@ -32,8 +33,8 @@ func productionProcessor(root *template.Template) acceptable.Processor {
 
 //-------------------------------------------------------------------------------------------------
 
-func debugProcessor(root *template.Template, rootDir, suffix string, files map[string]time.Time, funcMap template.FuncMap) acceptable.Processor {
-	return func(rw http.ResponseWriter, req *http.Request, match acceptable.Match, template string) (err error) {
+func debugProcessor(root *template.Template, rootDir, suffix string, files map[string]time.Time, funcMap template.FuncMap) offer.Processor {
+	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
 		path := rootDir + "/" + template
 		if _, exists := files[path]; !exists {
 			files = findTemplates(rootDir, suffix)

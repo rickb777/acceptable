@@ -1,27 +1,22 @@
-package processor
+package acceptable
 
 import (
 	"encoding/xml"
 	"net/http"
 
-	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
+	"github.com/rickb777/acceptable/offer"
 )
 
-const XMLContentType = "application/xml"
-
-// DefaultXMLOffer is an Offer for application/xml content using the XML() processor without indentation.
-var DefaultXMLOffer = acceptable.OfferOf(XML(), XMLContentType)
-
 // XML creates a new processor for XML with optional indentation.
-func XML(indent ...string) acceptable.Processor {
+func XML(indent ...string) offer.Processor {
 	in := ""
 	if len(indent) > 0 {
 		in = indent[0]
 	}
 
-	return func(rw http.ResponseWriter, req *http.Request, match acceptable.Match, template string) (err error) {
+	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
 		d, err := data.GetContentAndApplyExtraHeaders(rw, req, match.Data, template, match.Language)

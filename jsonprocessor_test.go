@@ -1,4 +1,4 @@
-package processor_test
+package acceptable_test
 
 import (
 	"errors"
@@ -6,11 +6,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
-	"github.com/rickb777/acceptable/processor"
-
-	. "github.com/onsi/gomega"
+	"github.com/rickb777/acceptable/offer"
 )
 
 func TestJSONShouldWriteResponseBody(t *testing.T) {
@@ -24,7 +23,7 @@ func TestJSONShouldWriteResponseBody(t *testing.T) {
 		"Joe Bloggs",
 	}
 
-	match := acceptable.Match{
+	match := offer.Match{
 		Type:     "application",
 		Subtype:  "json",
 		Language: "en",
@@ -32,7 +31,7 @@ func TestJSONShouldWriteResponseBody(t *testing.T) {
 		Data:     data.Lazy(func(string, string, bool) (interface{}, *data.Metadata, error) { return model, nil, nil }),
 	}
 
-	p := processor.JSON()
+	p := acceptable.JSON()
 
 	p(w, req, match, "template")
 
@@ -54,7 +53,7 @@ func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 	cases := []string{"utf-16le", "utf-16"} // unsupported "unicode"
 
 	for _, enc := range cases {
-		match := acceptable.Match{
+		match := offer.Match{
 			Type:     "application",
 			Subtype:  "json",
 			Language: "cn",
@@ -62,7 +61,7 @@ func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 			Data:     data.Of(model),
 		}
 
-		p := processor.JSON("")
+		p := acceptable.JSON("")
 		w := httptest.NewRecorder()
 
 		p(w, req, match, "template")
@@ -81,9 +80,9 @@ func TestJSONShouldReturnError(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	model := &User{"Joe Bloggs"}
-	match := acceptable.Match{Data: data.Of(model)}
+	match := offer.Match{Data: data.Of(model)}
 
-	p := processor.JSON()
+	p := acceptable.JSON()
 
 	err := p(w, req, match, "template")
 

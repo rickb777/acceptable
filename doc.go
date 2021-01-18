@@ -6,8 +6,11 @@
 // Subpackages
 //
 // * data - for holding response data & metadata prior to rendering the response
+//
 // * header - for parsing and representing certain HTTP headers
-// * processor - for rendering responses, e.g. as JSON
+//
+// * offer - for enumerating offers to be matched against requests
+//
 // * templates - for rendering Go templates
 //
 // Easy content negotiation
@@ -22,15 +25,15 @@
 //    fr := ... obtain some content in English
 //
 //    // long-hand construction of an offer for indented JSON
-//    offer1 := acceptable.OfferOf(processor.JSON("  "), "application/json").With(en, "en").With(fr, "fr")
+//    offer1 := offer.Of(processor.JSON("  "), "application/json").With(en, "en").With(fr, "fr")
 //
 //    // short-hand construction of an XML offer
-//    offer2 := processor.DefaultXMLOffer.With(en, "en").With(fr, "fr")
+//    offer2 := acceptable.DefaultXMLOffer.With(en, "en").With(fr, "fr")
 //    // equivalent to
-//    //offer2 := acceptable.OfferOf("application/xml").Using(processor.XML()).With(en, "en").With(fr, "fr")
+//    //offer2 := offer.Of("application/xml").Using(processor.XML()).With(en, "en").With(fr, "fr")
 //
 //    // a catch-all offer is optional
-//    catchAll := acceptable.OfferOf(processor.TXT(), "*/*").With(en, "en").With(fr, "fr")
+//    catchAll := offer.Of(processor.TXT(), "*/*").With(en, "en").With(fr, "fr")
 //
 //    err := acceptable.RenderBestMatch(request, offer1, offer2, catchAll)
 //

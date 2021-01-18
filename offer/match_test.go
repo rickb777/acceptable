@@ -1,11 +1,12 @@
-package acceptable_test
+package offer_test
 
 import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/rickb777/acceptable/offer"
+
 	"github.com/onsi/gomega"
-	"github.com/rickb777/acceptable"
 )
 
 func TestApplyHeaders(t *testing.T) {
@@ -13,12 +14,12 @@ func TestApplyHeaders(t *testing.T) {
 
 	// Given ...
 	cases := []struct {
-		m    acceptable.Match
+		m    offer.Match
 		hdrs map[string]string
 		utf8 bool
 	}{
 		{
-			m: acceptable.Match{
+			m: offer.Match{
 				Type:     "text",
 				Subtype:  "test",
 				Language: "en",
@@ -33,7 +34,7 @@ func TestApplyHeaders(t *testing.T) {
 			utf8: false,
 		},
 		{
-			m: acceptable.Match{
+			m: offer.Match{
 				Type:     "application",
 				Subtype:  "xhtml+xml",
 				Language: "fr",
@@ -48,7 +49,7 @@ func TestApplyHeaders(t *testing.T) {
 			utf8: true,
 		},
 		{
-			m: acceptable.Match{
+			m: offer.Match{
 				Type:     "image",
 				Subtype:  "png",
 				Language: "fr",
@@ -62,7 +63,7 @@ func TestApplyHeaders(t *testing.T) {
 			utf8: true,
 		},
 		{
-			m: acceptable.Match{
+			m: offer.Match{
 				Type:     "text",
 				Subtype:  "plain",
 				Language: "fr",
@@ -76,7 +77,7 @@ func TestApplyHeaders(t *testing.T) {
 			utf8: true,
 		},
 		{
-			m: acceptable.Match{
+			m: offer.Match{
 				Type:     "application",
 				Subtype:  "octet-stream",
 				Language: "fr",

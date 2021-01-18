@@ -1,4 +1,4 @@
-package processor
+package acceptable
 
 import (
 	"encoding"
@@ -6,14 +6,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/offer"
 )
-
-const TextPlain = "text/plain"
-
-// DefaultTXTOffer is an Offer for text/plain content using the TXT() processor.
-var DefaultTXTOffer = acceptable.OfferOf(TXT(), TextPlain)
 
 // TXT creates an output processor that serialises strings in a form suitable for text/plain responses.
 // Model values should be one of the following:
@@ -23,8 +18,8 @@ var DefaultTXTOffer = acceptable.OfferOf(TXT(), TextPlain)
 // * fmt.Stringer
 //
 // * encoding.TextMarshaler
-func TXT() acceptable.Processor {
-	return func(rw http.ResponseWriter, req *http.Request, match acceptable.Match, template string) (err error) {
+func TXT() offer.Processor {
+	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
 		d, err := data.GetContentAndApplyExtraHeaders(rw, req, match.Data, template, match.Language)
