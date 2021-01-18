@@ -1,6 +1,7 @@
 package header_test
 
 import (
+	"fmt"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -117,4 +118,16 @@ func TestParseAcceptXyzHeader_special_cases(t *testing.T) {
 		actual := ParsePrecedenceValues(c.actual)
 		g.Expect(actual).To(Equal(c.expected))
 	}
+}
+
+func ExampleParsePrecedenceValues() {
+	pvs := ParsePrecedenceValues("da, en-gb;q=0.8, en;q=0.7")
+
+	for i, pv := range pvs {
+		fmt.Printf("pv%d = %s\n", i, pv)
+	}
+	// Output:
+	// pv0 = da
+	// pv1 = en-gb;q=0.8
+	// pv2 = en;q=0.7
 }

@@ -1,4 +1,4 @@
-package processor_test
+package acceptable_test
 
 import (
 	"encoding/xml"
@@ -7,11 +7,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
-	"github.com/rickb777/acceptable/processor"
-
-	. "github.com/onsi/gomega"
+	"github.com/rickb777/acceptable/offer"
 )
 
 func TestXMLShouldWriteResponseBody(t *testing.T) {
@@ -23,7 +22,7 @@ func TestXMLShouldWriteResponseBody(t *testing.T) {
 		"Joe Bloggs",
 	}
 
-	match := acceptable.Match{
+	match := offer.Match{
 		Type:     "application",
 		Subtype:  "json",
 		Language: "en",
@@ -31,7 +30,7 @@ func TestXMLShouldWriteResponseBody(t *testing.T) {
 		Data:     data.Lazy(func(string, string, bool) (interface{}, *data.Metadata, error) { return model, nil, nil }),
 	}
 
-	p := processor.XML()
+	p := acceptable.XML()
 
 	p(w, req, match, "template")
 
@@ -48,7 +47,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 	cases := []string{"utf-16be"} // unsupported: "unicodefffe"
 
 	for _, enc := range cases {
-		match := acceptable.Match{
+		match := offer.Match{
 			Type:     "application",
 			Subtype:  "json",
 			Language: "cn",
@@ -56,7 +55,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 			Data:     data.Of(model),
 		}
 
-		p := processor.XML("  ")
+		p := acceptable.XML("  ")
 		w := httptest.NewRecorder()
 
 		p(w, req, match, "template")
@@ -80,7 +79,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 	cases := []string{"utf-16le", "utf-16"} // unsupported "unicode"
 
 	for _, enc := range cases {
-		match := acceptable.Match{
+		match := offer.Match{
 			Type:     "application",
 			Subtype:  "json",
 			Language: "cn",
@@ -88,7 +87,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 			Data:     data.Of(model),
 		}
 
-		p := processor.XML("  ")
+		p := acceptable.XML("  ")
 		w := httptest.NewRecorder()
 
 		p(w, req, match, "template")
@@ -110,9 +109,9 @@ func TestXMLShouldRPanicOnError(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	model := &XMLUser{Name: "Joe Bloggs"}
-	match := acceptable.Match{Data: data.Of(model)}
+	match := offer.Match{Data: data.Of(model)}
 
-	p := processor.XML("  ")
+	p := acceptable.XML("  ")
 
 	err := p(w, req, match, "template")
 

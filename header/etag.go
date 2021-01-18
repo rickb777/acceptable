@@ -17,6 +17,19 @@ type ETag struct {
 // ETag is a slice of ETag.
 type ETags []ETag
 
+// ETagsOf splits an etag header string and parses each part.
+func ETagsOf(s string) ETags {
+	if s == "" {
+		return nil
+	}
+	parts := internal.Split(s, ",").TrimSpace()
+	es := make(ETags, len(parts))
+	for i, p := range parts {
+		es[i] = eTagOf(p)
+	}
+	return es
+}
+
 // WeaklyMatches finds whether the tags match weakly.
 // See https://tools.ietf.org/html/rfc7232#section-2.3.2
 func (es ETags) WeaklyMatches(strongHash string) bool {
@@ -40,18 +53,6 @@ func (es ETags) StronglyMatches(strongHash string) bool {
 	return false
 }
 
-func ETagsOf(s string) ETags {
-	if s == "" {
-		return nil
-	}
-	parts := internal.Split(s, ",").TrimSpace()
-	es := make(ETags, len(parts))
-	for i, p := range parts {
-		es[i] = eTagOf(p)
-	}
-	return es
-}
-
 func eTagOf(s string) ETag {
 	if s == "*" {
 		return ETag{Hash: "*"}
@@ -65,6 +66,14 @@ func eTagOf(s string) ETag {
 		e = ETag{Hash: s[1 : len(s)-1]}
 	}
 	return e
+}
+
+func (etags ETags) String() string {
+	parts := make([]string, len(etags))
+	for i, p := range etags {
+		parts[i] = p.String()
+	}
+	return strings.Join(parts, ", ")
 }
 
 func (etag ETag) String() string {

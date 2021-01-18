@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/rickb777/acceptable/offer"
+
 	"github.com/onsi/gomega"
-	"github.com/rickb777/acceptable"
 	. "github.com/rickb777/acceptable/header"
 )
 
@@ -49,9 +50,10 @@ func TestPrecedenceValues_String(t *testing.T) {
 func TestOffer_String(t *testing.T) {
 	g := gomega.NewWithT(t)
 
-	o := acceptable.OfferOf("text/html", "en").Using(func(w http.ResponseWriter, req *http.Request, match acceptable.Match, template string) error {
+	p := func(w http.ResponseWriter, req *http.Request, match offer.Match, template string) error {
 		return nil
-	})
+	}
+	o := offer.Of(p, "text/html").With(nil, "en")
 
 	g.Expect(o.String()).To(gomega.Equal("Accept: text/html. Accept-Language: en"))
 }

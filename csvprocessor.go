@@ -1,4 +1,4 @@
-package processor
+package acceptable
 
 import (
 	"encoding/csv"
@@ -6,14 +6,9 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/offer"
 )
-
-const TextCsv = "text/csv"
-
-// DefaultCSVOffer is an Offer for text/plain content using the CSV() processor.
-var DefaultCSVOffer = acceptable.OfferOf(TextCsv).Using(CSV())
 
 // CSV creates an output processor that serialises a dataModel in CSV form. With no arguments, the default
 // format is comma-separated; you can supply any rune to be used as an alternative separator.
@@ -31,14 +26,14 @@ var DefaultCSVOffer = acceptable.OfferOf(TextCsv).Using(CSV())
 // * struct for some struct in which all the fields are exported and of simple types (as above).
 //
 // * []struct for some struct in which all the fields are exported and of simple types (as above).
-func CSV(comma ...rune) acceptable.Processor {
+func CSV(comma ...rune) offer.Processor {
 
 	in := ','
 	if len(comma) > 0 {
 		in = comma[0]
 	}
 
-	return func(rw http.ResponseWriter, req *http.Request, match acceptable.Match, template string) (err error) {
+	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
 		d, err := data.GetContentAndApplyExtraHeaders(rw, req, match.Data, template, match.Language)

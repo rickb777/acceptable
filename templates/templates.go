@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/offer"
 	"github.com/spf13/afero"
 )
 
@@ -26,7 +26,7 @@ var ReloadOnTheFly = false
 // The function map can be nil if not required.
 //
 // A processor is returned that handles requests using the templates available.
-func Templates(dir, suffix string, funcMap template.FuncMap) acceptable.Processor {
+func Templates(dir, suffix string, funcMap template.FuncMap) offer.Processor {
 	if funcMap == nil {
 		funcMap = template.FuncMap{}
 	}

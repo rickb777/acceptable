@@ -1,4 +1,4 @@
-package processor_test
+package acceptable_test
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
-	"github.com/rickb777/acceptable/processor"
+	"github.com/rickb777/acceptable/offer"
 )
 
 func TestBinaryShouldWriteResponseBody(t *testing.T) {
@@ -25,11 +25,11 @@ func TestBinaryShouldWriteResponseBody(t *testing.T) {
 	}
 
 	req := &http.Request{}
-	p := processor.Binary()
+	p := acceptable.Binary()
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		p(w, req, acceptable.Match{Data: m.stuff}, "")
+		p(w, req, offer.Match{Data: m.stuff}, "")
 		g.Expect(w.Body.String()).To(Equal(m.expected))
 	}
 }
@@ -39,9 +39,9 @@ func TestBinaryShouldNotReturnError(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	req := &http.Request{}
-	p := processor.Binary()
+	p := acceptable.Binary()
 
-	err := p(w, req, acceptable.Match{}, "")
+	err := p(w, req, offer.Match{}, "")
 
 	g.Expect(err).NotTo(HaveOccurred())
 }

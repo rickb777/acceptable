@@ -7,8 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rickb777/acceptable/offer"
+
 	. "github.com/onsi/gomega"
-	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/templates"
 	"github.com/spf13/afero"
@@ -22,7 +23,7 @@ func TestProductionInstance_using_files(t *testing.T) {
 
 	render := templates.Templates("../example/templates/en", ".html", nil)
 
-	match := acceptable.Match{
+	match := offer.Match{
 		Type:     "text",
 		Subtype:  "html",
 		Language: "en",
@@ -63,7 +64,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 
 	render := templates.Templates("synthetic", ".html", nil)
 
-	match := acceptable.Match{
+	match := offer.Match{
 		Type:     "text",
 		Subtype:  "html",
 		Language: "en",
@@ -101,7 +102,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	rec.opened = nil
 	w = httptest.NewRecorder()
 
-	err = render(w, req, acceptable.Match{
+	err = render(w, req, offer.Match{
 		Type:     "application",
 		Subtype:  "xhtml+xml",
 		Language: "en",
@@ -118,7 +119,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	w = httptest.NewRecorder()
 	afero.WriteFile(rec.fs, "synthetic/foo/bar/baz.html", []byte("<html>{{.Title}}-Updated</html>"), 0644)
 
-	err = render(w, req, acceptable.Match{
+	err = render(w, req, offer.Match{
 		Type:     "application",
 		Subtype:  "xhtml+xml",
 		Language: "en",
