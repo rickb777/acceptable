@@ -17,24 +17,33 @@ func Test_offer_construction(t *testing.T) {
 	}{
 		"1.Accept: */*": {o: OfferOf(nil, ""), n: 0},
 
-		"2.Accept: a/b": {o: OfferOf(nil, "a/b").With(nil, "*"), n: 0},
+		"2.Accept: text/*": {o: OfferOf(nil, "text/*"), n: 0},
 
-		"3.Accept: a/b. Accept-Language: *": {o: OfferOf(nil, "a/b").With("foo", "*"), n: 1},
+		"3.Accept: a/b": {o: OfferOf(nil, "a/b").With(nil, "*"), n: 0},
 
-		"4.Accept: a/b. Accept-Language: en": {o: OfferOf(nil, "a/b").With("foo", "en"), n: 1},
+		"4.Accept: a/b. Accept-Language: *": {o: OfferOf(nil, "a/b").With("foo", "*"), n: 1},
 
-		"5.Accept: a/b. Accept-Language: en,fr": {o: OfferOf(nil, "a/b").With("foo", "en").With("bar", "fr"), n: 2},
+		"5.Accept: a/b. Accept-Language: en": {o: OfferOf(nil, "a/b").With("foo", "en"), n: 1},
 
-		"6.Accept: a/b. Accept-Language: en,fr": {o: OfferOf(nil, "a/b").With("foo", "en", "fr"), n: 2},
+		"6.Accept: a/b. Accept-Language: en": {o: OfferOf(nil, "a/b").With(nil, "en"), n: 1},
 
-		"7.Accept: a/b. Accept-Language: en,fr": {o: OfferOf(nil, "a/b").With(data.Of("foo"), "en", "fr"), n: 2},
+		"7.Accept: a/b. Accept-Language: en,fr": {o: OfferOf(nil, "a/b").With("foo", "en").With("bar", "fr"), n: 2},
+
+		"8.Accept: a/b. Accept-Language: en,fr": {o: OfferOf(nil, "a/b").With("foo", "en", "fr"), n: 2},
+
+		"9.Accept: a/b. Accept-Language: en,fr": {o: OfferOf(nil, "a/b").With(data.Of("foo"), "en", "fr"), n: 2},
 	}
 
 	for s, c := range cases {
 		g.Expect(c.o.String()).To(gomega.Equal(s[2:]), s)
 		g.Expect(len(c.o.data)).To(gomega.Equal(c.n), s)
+
 		for l, d := range c.o.data {
-			g.Expect(fmt.Sprintf("%T", d)).To(gomega.Equal("*data.Value"), s+l)
+			g.Expect(fmt.Sprintf("%T", d)).To(
+				gomega.Or(
+					gomega.Equal("*data.Value"),
+					gomega.Equal("acceptable.empty"),
+				), s+"|"+l)
 		}
 	}
 }
