@@ -52,7 +52,7 @@ func TestOffer_String(t *testing.T) {
 	p := func(w http.ResponseWriter, req *http.Request, match acceptable.Match, template string) error {
 		return nil
 	}
-	o := acceptable.OfferOf(p, "text/html", "en")
+	o := acceptable.OfferOf(p, "text/html").With("en", nil)
 
 	g.Expect(o.String()).To(gomega.Equal("Accept: text/html. Accept-Language: en"))
 }

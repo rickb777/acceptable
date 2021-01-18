@@ -60,7 +60,7 @@ func hello(c echo.Context) error {
 	}).MaxAge(10 * time.Second)
 
 	best := acceptable.BestRequestMatch(c.Request(),
-		acceptable.OfferOf(processor.JSON("  "), "application/json", "en").
+		acceptable.OfferOf(processor.JSON("  "), "application/json").
 			With("en", lazyEn).With("fr", fr).With("es", es).With("ru", ru),
 
 		acceptable.OfferOf(processor.XML("  "), "application/xml").

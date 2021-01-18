@@ -67,7 +67,8 @@ func TestValue_if_none_match_not_modified_get_request(t *testing.T) {
 	g := NewGomegaWithT(t)
 
 	// Given ...
-	d := Of("foo", "hash123").With("Abc", "1", "Def", "true").MaxAge(10 * time.Second).
+	d := Of("foo").With("Abc", "1", "Def", "true").MaxAge(10 * time.Second).
+		ETag("hash123").
 		LastModified(time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC))
 
 	for _, method := range []string{"GET", "HEAD"} {
@@ -123,7 +124,7 @@ func TestValue_not_modified_put_request(t *testing.T) {
 	g := NewGomegaWithT(t)
 
 	// Given ...
-	d := Of("foo", "hash123").NoCache().With("Abc", "1", "Def", "true")
+	d := Of("foo").ETag("hash123").NoCache().With("Abc", "1", "Def", "true")
 
 	for _, method := range []string{"PUT", "POST", "DELETE"} {
 		req, _ := http.NewRequest(method, "/", nil)

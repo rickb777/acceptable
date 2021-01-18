@@ -37,17 +37,19 @@ type Metadata struct {
 	LastModified time.Time // used for Last-Modified header; zero if not required
 }
 
-// Of wraps a data value. An optional entity tag can also be passed in. This is often the MD5 sum
-// of the content, or something similar. If this is non-blank, the ETag response header will be sent
-// on responses to GET/HEAD requests.
-func Of(v interface{}, etag ...string) *Value {
-	if len(etag) == 0 {
-		return &Value{value: v}
-	}
-	return &Value{value: v, meta: &Metadata{Hash: etag[0]}}
+// Of wraps a data value.
+//
+// If an entity tag is known, the ETag method should be used. If a last-modified
+// timestamp is known, the LastModified method should also be used.
+func Of(v interface{}) *Value {
+	return &Value{value: v}
 }
 
 // Lazy wraps a function that supplies a data value, but only fetches te data when it is needed.
+//
+// If an entity tag is already known, the ETag method should be used. Likewise, if a last-modified
+// timestamp is already known, the LastModified method should also be used. Otherwise, metadata
+// can be returned by the supplier function.
 func Lazy(fn func(template, language string, dataRequired bool) (interface{}, *Metadata, error)) *Value {
 	return &Value{supplier: fn}
 }
