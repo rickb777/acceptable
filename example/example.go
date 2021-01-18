@@ -60,19 +60,19 @@ func hello(c echo.Context) error {
 	}).MaxAge(10 * time.Second)
 
 	best := acceptable.BestRequestMatch(c.Request(),
-		acceptable.OfferOf("application/json", "en").Using(processor.JSON("  ")).
+		acceptable.OfferOf(processor.JSON("  "), "application/json", "en").
 			With("en", lazyEn).With("fr", fr).With("es", es).With("ru", ru),
 
-		acceptable.OfferOf("application/xml").Using(processor.XML("  ")).
+		acceptable.OfferOf(processor.XML("  "), "application/xml").
 			With("en", en).With("fr", fr).With("es", es).With("ru", ru),
 
-		acceptable.OfferOf("text/plain").Using(processor.TXT()).
+		acceptable.OfferOf(processor.TXT(), "text/plain").
 			With("en", en).With("fr", fr).With("es", es).With("ru", ru),
 
-		templates.TextHtmlOffer("en", "example/templates/en", ".html", nil).
+		templates.TextHtmlOffer("example/templates/en", ".html", nil).
 			With("en", en).With("fr", fr).With("es", es).With("ru", ru),
 
-		templates.ApplicationXhtmlOffer("en", "example/templates/en", ".html", nil).
+		templates.ApplicationXhtmlOffer("example/templates/en", ".html", nil).
 			With("en", en).With("fr", fr).With("es", es).With("ru", ru),
 	)
 

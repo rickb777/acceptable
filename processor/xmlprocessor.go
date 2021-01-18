@@ -12,7 +12,7 @@ import (
 const XMLContentType = "application/xml"
 
 // DefaultXMLOffer is an Offer for application/xml content using the XML() processor without indentation.
-var DefaultXMLOffer = acceptable.OfferOf(XMLContentType).Using(XML())
+var DefaultXMLOffer = acceptable.OfferOf(XML(), XMLContentType)
 
 // XML creates a new processor for XML with optional indentation.
 func XML(indent ...string) acceptable.Processor {

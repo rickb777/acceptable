@@ -12,7 +12,7 @@ import (
 )
 
 // DefaultImageOffer is an Offer for image/* content using the Binary() processor.
-var DefaultImageOffer = acceptable.OfferOf("image/*").Using(Binary())
+var DefaultImageOffer = acceptable.OfferOf(Binary(), "image/*")
 
 // Binary creates an output processor that outputs binary data in a form suitable for image/* and similar responses.
 // Model values should be one of the following:

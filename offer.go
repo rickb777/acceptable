@@ -36,7 +36,7 @@ type Offer struct {
 // Zero or more languages can be specified. If the language is absent,
 // it is assumed to be the wildcard "*". Language matching can also be
 // added using With.
-func OfferOf(contentType string, language ...string) Offer {
+func OfferOf(processor Processor, contentType string, language ...string) Offer {
 	t, s := "*", "*"
 	if contentType != "" {
 		t, s = internal.Split1(contentType, '/')
@@ -49,6 +49,7 @@ func OfferOf(contentType string, language ...string) Offer {
 
 	offer := Offer{
 		ContentType: ct,
+		processor:   processor,
 		data:        make(map[string]data.Data),
 	}
 
@@ -64,14 +65,6 @@ func OfferOf(contentType string, language ...string) Offer {
 	}
 
 	return offer
-}
-
-// Using attaches a processor function to an offer and returns the modified offer.
-// The original offer is unchanged. This is required in normal use. Only one
-// processor can be attached.
-func (o Offer) Using(processor Processor) Offer {
-	o.processor = processor
-	return o
 }
 
 // With attaches response data to an offer. The data can be a value (struct, slice, etc) or

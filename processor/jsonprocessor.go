@@ -12,7 +12,7 @@ import (
 const JSONContentType = "application/json"
 
 // DefaultJSONOffer is an Offer for application/json content using the JSON() processor without indentation.
-var DefaultJSONOffer = acceptable.OfferOf(JSONContentType).Using(JSON())
+var DefaultJSONOffer = acceptable.OfferOf(JSON(), JSONContentType)
 
 // JSON creates a new processor for JSON with a specified indentation.
 func JSON(indent ...string) acceptable.Processor {

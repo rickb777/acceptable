@@ -7,13 +7,13 @@ import (
 )
 
 // TextHtmlOffer is an Offer for text/html content using the Template() processor.
-func TextHtmlOffer(language, dir, suffix string, funcMap template.FuncMap) acceptable.Offer {
-	return acceptable.OfferOf(TextHtml, language).Using(Templates(dir, suffix, funcMap))
+func TextHtmlOffer(dir, suffix string, funcMap template.FuncMap) acceptable.Offer {
+	return acceptable.OfferOf(Templates(dir, suffix, funcMap), TextHtml)
 }
 
 // ApplicationXhtmlOffer is an Offer for application/xhtml+xml content using the Template() processor.
-func ApplicationXhtmlOffer(language, dir, suffix string, funcMap template.FuncMap) acceptable.Offer {
-	return acceptable.OfferOf(ApplicationXhtml, language).Using(Templates(dir, suffix, funcMap))
+func ApplicationXhtmlOffer(dir, suffix string, funcMap template.FuncMap) acceptable.Offer {
+	return acceptable.OfferOf(Templates(dir, suffix, funcMap), ApplicationXhtml)
 }
 
 const (

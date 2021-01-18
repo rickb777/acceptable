@@ -13,7 +13,7 @@ import (
 const TextCsv = "text/csv"
 
 // DefaultCSVOffer is an Offer for text/plain content using the CSV() processor.
-var DefaultCSVOffer = acceptable.OfferOf(TextCsv).Using(CSV())
+var DefaultCSVOffer = acceptable.OfferOf(CSV(), TextCsv)
 
 // CSV creates an output processor that serialises a dataModel in CSV form. With no arguments, the default
 // format is comma-separated; you can supply any rune to be used as an alternative separator.
