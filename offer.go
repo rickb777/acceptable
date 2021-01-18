@@ -33,24 +33,15 @@ type Offer struct {
 // If the content type is blank, it is assumed to be the full wildcard "*/*".
 // Also, contentType can be a partial wildcard "type/*".
 func OfferOf(processor Processor, contentType string) Offer {
-	t, s := "*", "*"
-	if contentType != "" {
-		t, s = internal.Split1(contentType, '/')
-	}
+	t, s := internal.Split1(contentType, '/')
+	ct := header.ContentTypeOf(t, s)
 
-	ct := header.ContentType{
-		Type:    t,
-		Subtype: s,
-	}
-
-	offer := Offer{
+	return Offer{
 		ContentType: ct,
 		processor:   processor,
 		langs:       []string{"*"},
 		data:        make(map[string]data.Data),
 	}
-
-	return offer
 }
 
 // With attaches response data to an offer. The data can be a value (struct, slice, etc) or
@@ -82,9 +73,9 @@ func (o Offer) String() string {
 	if len(o.data) > 0 {
 		buf.WriteString(". Accept-Language: ")
 		comma := ""
-		for k := range o.data {
+		for _, l := range o.langs {
 			buf.WriteString(comma)
-			buf.WriteString(k)
+			buf.WriteString(l)
 			comma = ", "
 		}
 	}
