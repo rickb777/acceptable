@@ -1,5 +1,3 @@
-// package data provides wrappers for response data, optionally including response headers
-// such as ETag and Cache-Control.
 package data
 
 import (
@@ -17,10 +15,10 @@ import (
 // dataRequired flag is false; this gives an opportunity to obtain the entity tag
 // with or without the data. At this stage, data may be returned only if it is convenient.
 //
-// If necessary, Content will be called a second time, this time with dataRequired true. The
-// data must always be returned in this case. However the etag will be ignored.
+// If necessary, Content will be called a second time, this time with dataRequired=true. The
+// data must always be returned in this case. However the metadata will be ignored.
 //
-// The hash should be blank if not needed.
+// The metadata can be nil if not needed.
 type Data interface {
 	// Content returns the data as a value that can be processed by encoders such as "encoding/json"
 	// The returned values are the data itself, a hash that will be used as the entity tag (if required),
@@ -39,7 +37,7 @@ type Metadata struct {
 
 // Of wraps a data value.
 //
-// If an entity tag is known, the ETag method should be used. If a last-modified
+// If an entity tag is known, the ETag method should be used. Likewise, if a last-modified
 // timestamp is known, the LastModified method should also be used.
 func Of(v interface{}) *Value {
 	return &Value{value: v}
@@ -147,6 +145,12 @@ func (v Value) NoCache() *Value {
 
 // GetContentAndApplyExtraHeaders applies all lazy functions to produce the resulting content to be
 // rendered; this value is returned. It also sets any extra response headers.
+//
+// Along with Match.ApplyHeaders, this function handles the response preparation needed by response
+// processors (e.g. acceptable.JSON).
+//
+// If the returned result value is nil, the response has been set to 304-Not Modified, so the
+// response processor does not need to do anything further.
 func GetContentAndApplyExtraHeaders(rw http.ResponseWriter, req *http.Request, d Data, template, language string) (interface{}, error) {
 	if d == nil {
 		return nil, nil
@@ -161,48 +165,39 @@ func GetContentAndApplyExtraHeaders(rw http.ResponseWriter, req *http.Request, d
 		rw.Header().Set(hn, hv)
 	}
 
-	var etag string
-	var lastModified time.Time
-	if meta != nil && (req.Method == http.MethodGet || req.Method == http.MethodHead) {
-		if meta.Hash != "" {
-			etag = meta.Hash
-			rw.Header().Set("ETag", fmt.Sprintf("%q", etag))
-		}
-		if !meta.LastModified.IsZero() {
-			lastModified = meta.LastModified
-			rw.Header().Set("Last-Modified", meta.LastModified.Format(time.RFC1123))
-		}
-	}
+	isGetOrHeadMethod := req.Method == http.MethodGet || req.Method == http.MethodHead
 
 	sendContent := true
 
-	if etag != "" {
+	if isGetOrHeadMethod && meta != nil && meta.Hash != "" {
+		rw.Header().Set("ETag", fmt.Sprintf("%q", meta.Hash))
+
 		ifNoneMatch := header.ETagsOf(req.Header.Get(header.IfNoneMatch))
-		if ifNoneMatch.WeaklyMatches(etag) {
+		if ifNoneMatch.WeaklyMatches(meta.Hash) {
 			rw.WriteHeader(http.StatusNotModified)
 			sendContent = false
 			v = nil
 		}
 	}
 
-	if sendContent && !lastModified.IsZero() {
-		var ifModifiedSince time.Time
-		ifModifiedSince, err = time.Parse(time.RFC1123, req.Header.Get(header.IfModifiedSince))
-		if err == nil {
-			if lastModified.After(ifModifiedSince) {
-				rw.WriteHeader(http.StatusNotModified)
-				sendContent = false
-				v = nil
+	if isGetOrHeadMethod && meta != nil && !meta.LastModified.IsZero() {
+		rw.Header().Set("Last-Modified", meta.LastModified.Format(time.RFC1123))
+
+		if sendContent {
+			ifModifiedSince, e2 := time.Parse(time.RFC1123, req.Header.Get(header.IfModifiedSince))
+			if e2 == nil {
+				if meta.LastModified.After(ifModifiedSince) {
+					rw.WriteHeader(http.StatusNotModified)
+					sendContent = false
+					v = nil
+				}
 			}
 		}
 	}
 
 	if sendContent && v == nil {
 		v, _, err = d.Content(template, language, true)
-		if err != nil {
-			return nil, err
-		}
 	}
 
-	return v, nil
+	return v, err
 }
