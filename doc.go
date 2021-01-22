@@ -48,6 +48,7 @@
 // matched against the Accept-Language header using the basic prefix algorithm. This means for example that if you
 // specify "en" it will match "en", "en-GB" and everything else beginning with "en-", but if you specify "en-GB",
 // it only matches "en-GB" and "en-GB-*", but won't match "en-US" or even "en".
+// (This implements the basic filtering language matching algorithm defined in https://tools.ietf.org/html/rfc4647.)
 //
 // Sometimes, the With method might not care about language, so simply use the "*" wildcard instead. For example,
 // offer.With("*", data) attaches data to the offer and doesn't restrict the offer to any particular language.

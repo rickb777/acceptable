@@ -47,3 +47,22 @@ func Test_offer_construction(t *testing.T) {
 		}
 	}
 }
+
+func Test_offer_with(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	o1 := Of(nil, "text/plain")
+	o2 := o1.With("foo", "en")
+	o3 := o2.With("bar", "fr")
+
+	g.Expect(o1.Langs).To(gomega.HaveLen(1))
+	g.Expect(o1.Langs).To(gomega.ConsistOf("*"))
+	g.Expect(o2.Langs).To(gomega.HaveLen(1))
+	g.Expect(o2.Langs).To(gomega.ConsistOf("en"))
+	g.Expect(o3.Langs).To(gomega.HaveLen(2))
+	g.Expect(o3.Langs).To(gomega.ConsistOf("en", "fr"))
+
+	g.Expect(o1.data).To(gomega.HaveLen(0))
+	g.Expect(o2.data).To(gomega.HaveLen(1))
+	g.Expect(o3.data).To(gomega.HaveLen(2))
+}

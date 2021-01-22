@@ -46,6 +46,22 @@ func Of(processor Processor, contentType string) Offer {
 	}
 }
 
+// clone makes a defensive deep copy of the original offer.
+func (o Offer) clone() Offer {
+	c := Of(o.processor, o.ContentType.String())
+
+	c.Langs = make([]string, len(o.Langs))
+	for i, s := range o.Langs {
+		c.Langs[i] = s
+	}
+
+	for l, d := range o.data {
+		c.data[l] = d
+	}
+
+	return c
+}
+
 // With attaches response data to an offer.
 // The language parameter specifies what language (or language group) the offer
 // will match. It can be "*" to match any. The method panics if it is blank.
@@ -76,29 +92,31 @@ func (o Offer) With(d interface{}, language string, otherLanguages ...string) Of
 		d = emptyValue
 	}
 
+	c := o.clone()
+
 	// clear pre-existing wildcard
-	if len(o.data) == 0 && len(o.Langs) == 1 && o.Langs[0] == "*" {
-		o.Langs = nil
+	if len(c.data) == 0 && len(c.Langs) == 1 && c.Langs[0] == "*" {
+		c.Langs = nil
 	}
 
-	o.Langs = append(o.Langs, language)
+	c.Langs = append(c.Langs, language)
 
 	if s, ok := d.(data.Data); ok {
-		o.data[language] = s
+		c.data[language] = s
 	} else {
-		o.data[language] = data.Of(d)
+		c.data[language] = data.Of(d)
 	}
 
 	for _, l := range otherLanguages {
-		o.Langs = append(o.Langs, l)
+		c.Langs = append(c.Langs, l)
 
 		if s, ok := d.(data.Data); ok {
-			o.data[l] = s
+			c.data[l] = s
 		} else {
-			o.data[l] = data.Of(d)
+			c.data[l] = data.Of(d)
 		}
 	}
-	return o
+	return c
 }
 
 // String is merely for information purposes.
