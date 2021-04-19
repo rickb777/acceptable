@@ -53,15 +53,15 @@ func main() {
 
 // Handler
 func hello(c echo.Context) error {
-	lazyEn := data.Lazy(func(string, string, bool) (interface{}, *data.Metadata, error) {
-		return en, &data.Metadata{Hash: "hash123"}, nil
-	}).MaxAge(10 * time.Second)
+	lazyEn := data.Lazy(func(string, string) (interface{}, error) {
+		return en, nil
+	}).MaxAge(10 * time.Second).ETag("hash123")
 
 	best := acceptable.BestRequestMatch(c.Request(),
 		offer.Of(acceptable.JSON("  "), "application/json").
 			With(lazyEn, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 
-		offer.Of(acceptable.XML("  "), "application/xml").
+		offer.Of(acceptable.XML("xml", "  "), "application/xml").
 			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 
 		offer.Of(acceptable.TXT(), "text/plain").

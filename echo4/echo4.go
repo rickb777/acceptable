@@ -83,7 +83,8 @@ func TXT() offer.Processor {
 	return acceptable.TXT()
 }
 
-// XML creates a new processor for XML with optional indentation.
-func XML(indent ...string) offer.Processor {
-	return acceptable.XML(indent...)
+// XML creates a new processor for XML with root element and optional indentation.
+// The root element is used only when processing content that is a sequence of data items.
+func XML(root string, indent ...string) offer.Processor {
+	return acceptable.XML(root, indent...)
 }

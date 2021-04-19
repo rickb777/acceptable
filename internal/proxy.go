@@ -8,8 +8,10 @@ type WriterProxy struct {
 }
 
 func (d *WriterProxy) Write(p []byte) (n int, err error) {
-	n, err = d.W.Write(p)
-	d.hasNewline = len(p) > 0 && p[len(p)-1] == '\n'
+	if len(p) > 0 {
+		n, err = d.W.Write(p)
+		d.hasNewline = p[len(p)-1] == '\n'
+	}
 	return n, err
 }
 

@@ -23,117 +23,89 @@ func TestLazyValue_should_pass_template_and_language(t *testing.T) {
 		count := 0
 		expectedTemplate := fmt.Sprintf("p%d.html", i)
 		expectedLanguage := fmt.Sprintf("en-x%d", i)
-		d := Lazy(func(template, language string, dr bool) (interface{}, *Metadata, error) {
+
+		d := Lazy(func(template, language string) (interface{}, error) {
 			// Then ...
 			count++
 			g.Expect(template).To(Equal(expectedTemplate))
 			g.Expect(language).To(Equal(expectedLanguage))
-			return conditional(dr, "foo"), &Metadata{Hash: "abcdef", LastModified: t1}, nil
+			return "foo", nil
 		})
 
 		req, _ := http.NewRequest("GET", "/", nil)
 		w := httptest.NewRecorder()
 
 		// When ...
-		c, err := GetContentAndApplyExtraHeaders(w, req, d, expectedTemplate, expectedLanguage)
-		g.Expect(err).NotTo(HaveOccurred())
+		send, e1 := ConditionalRequest(w, req, d, expectedTemplate, expectedLanguage)
+		c, more, e2 := d.Content(expectedTemplate, expectedLanguage)
+
+		// Then ...
+		g.Expect(e1).NotTo(HaveOccurred())
+		g.Expect(send).To(BeTrue())
+
+		g.Expect(e2).NotTo(HaveOccurred())
+		g.Expect(more).To(BeFalse())
 		g.Expect(c).To(Equal("foo"))
-		g.Expect(count).To(Equal(2))
+		g.Expect(count).To(Equal(1))
 	}
 }
 
-func TestLazyValue_returning_metadata(t *testing.T) {
+func TestLazyValue_attaching_eager_metadata(t *testing.T) {
 	g := NewGomegaWithT(t)
 
-	for i := 1; i <= 2; i++ {
-		// Given ...
-		count := 0
-		d := Lazy(func(template, language string, dr bool) (interface{}, *Metadata, error) {
-			count++
-			if i == 1 {
-				return "foo", &Metadata{Hash: "abcdef", LastModified: t1}, nil
-			}
-			return conditional(dr, "foo"), &Metadata{Hash: "abcdef", LastModified: t1}, nil
+	// Given ...
+	d := Lazy(func(template, language string) (interface{}, error) {
+		return "foo", nil
+	}).
+		ETag("abcdef").
+		LastModified(t1)
+
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+
+	// When ...
+	send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
+	_, _, e2 := d.Content("home.html", "en")
+
+	// Then ...
+	g.Expect(e1).NotTo(HaveOccurred())
+	g.Expect(send).To(BeTrue())
+
+	g.Expect(e2).NotTo(HaveOccurred())
+	g.Expect(w.Header()).To(HaveLen(2))
+	g.Expect(w.Header().Get("Last-Modified")).To(Equal("Wed, 01 Jan 2020 01:01:01 UTC"))
+	g.Expect(w.Header().Get("ETag")).To(Equal(`"abcdef"`))
+}
+
+func TestLazyValue_attaching_lazy_metadata(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	// Given ...
+	d := Lazy(func(template, language string) (interface{}, error) {
+		return "foo", nil
+	}).
+		ETagUsing(func(template, language string) (string, error) {
+			return "abcdef", nil
+		}).
+		LastModifiedUsing(func(template, language string) (time.Time, error) {
+			return t1, nil
 		})
 
-		req, _ := http.NewRequest("GET", "/", nil)
-		w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
 
-		// When ...
-		c, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
+	// When ...
+	send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
+	_, _, e2 := d.Content("home.html", "en")
 
-		// Then ...
-		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(c).To(Equal("foo"))
-		g.Expect(w.Header()).To(HaveLen(2))
-		g.Expect(w.Header().Get("Last-Modified")).To(Equal("Wed, 01 Jan 2020 01:01:01 UTC"))
-		g.Expect(w.Header().Get("ETag")).To(Equal(`"abcdef"`))
-		g.Expect(count).To(Equal(i))
-	}
-}
+	// Then ...
+	g.Expect(e1).NotTo(HaveOccurred())
+	g.Expect(send).To(BeTrue())
 
-func TestLazyValue_attaching_metadata(t *testing.T) {
-	g := NewGomegaWithT(t)
-
-	for i := 1; i <= 2; i++ {
-		// Given ...
-		count := 0
-		d := Lazy(func(template, language string, dr bool) (interface{}, *Metadata, error) {
-			count++
-			if i == 1 {
-				return "foo", nil, nil
-			}
-			return conditional(dr, "foo"), nil, nil
-		}).
-			ETag("abcdef").
-			LastModified(t1)
-
-		req, _ := http.NewRequest("GET", "/", nil)
-		w := httptest.NewRecorder()
-
-		// When ...
-		c, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
-
-		// Then ...
-		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(c).To(Equal("foo"))
-		g.Expect(w.Header()).To(HaveLen(2))
-		g.Expect(w.Header().Get("Last-Modified")).To(Equal("Wed, 01 Jan 2020 01:01:01 UTC"))
-		g.Expect(w.Header().Get("ETag")).To(Equal(`"abcdef"`))
-		g.Expect(count).To(Equal(i))
-	}
-}
-
-func TestLazyValue_merging_metadata(t *testing.T) {
-	g := NewGomegaWithT(t)
-
-	for i := 1; i <= 2; i++ {
-		// Given ...
-		count := 0
-		d := Lazy(func(template, language string, dr bool) (interface{}, *Metadata, error) {
-			count++
-			if i == 1 {
-				return "foo", &Metadata{}, nil
-			}
-			return conditional(dr, "foo"), &Metadata{}, nil
-		}).
-			ETag("abcdef").
-			LastModified(t1)
-
-		req, _ := http.NewRequest("GET", "/", nil)
-		w := httptest.NewRecorder()
-
-		// When ...
-		c, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
-
-		// Then ...
-		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(c).To(Equal("foo"))
-		g.Expect(w.Header()).To(HaveLen(2))
-		g.Expect(w.Header().Get("Last-Modified")).To(Equal("Wed, 01 Jan 2020 01:01:01 UTC"))
-		g.Expect(w.Header().Get("ETag")).To(Equal(`"abcdef"`))
-		g.Expect(count).To(Equal(i))
-	}
+	g.Expect(e2).NotTo(HaveOccurred())
+	g.Expect(w.Header()).To(HaveLen(2))
+	g.Expect(w.Header().Get("Last-Modified")).To(Equal("Wed, 01 Jan 2020 01:01:01 UTC"))
+	g.Expect(w.Header().Get("ETag")).To(Equal(`"abcdef"`))
 }
 
 func TestLazyValue_returning_error(t *testing.T) {
@@ -141,26 +113,21 @@ func TestLazyValue_returning_error(t *testing.T) {
 
 	for i := 1; i <= 2; i++ {
 		// Given ...
-		count := 0
-		d := Lazy(func(template, language string, dr bool) (interface{}, *Metadata, error) {
-			count++
-			e := errors.New("expected error")
-			if i == 2 && !dr {
-				return nil, nil, nil
-			}
-			return nil, nil, e
+		d := Lazy(func(template, language string) (interface{}, error) {
+			return nil, errors.New("expected error")
 		})
 
 		req := &http.Request{}
 		w := httptest.NewRecorder()
 
 		// When ...
-		_, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
+		_, e1 := ConditionalRequest(w, req, d, "home.html", "en")
+		_, _, e2 := d.Content("home.html", "en")
 
 		// Then ...
-		g.Expect(err).To(HaveOccurred())
-		g.Expect(err.Error()).To(Equal("expected error"))
-		g.Expect(count).To(Equal(i))
+		g.Expect(e1).NotTo(HaveOccurred())
+		g.Expect(e2).To(HaveOccurred())
+		g.Expect(e2.Error()).To(Equal("expected error"))
 	}
 }
 
@@ -180,11 +147,14 @@ func TestValue_future_expiry(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	c, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
+	send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
+	_, _, e2 := d.Content("home.html", "en")
 
 	// Then ...
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(c).To(Equal("foo"))
+	g.Expect(e1).NotTo(HaveOccurred())
+	g.Expect(send).To(BeTrue())
+
+	g.Expect(e2).NotTo(HaveOccurred())
 	g.Expect(w.Header()).To(HaveLen(4))
 	g.Expect(w.Header().Get("Cache-Control")).To(Equal("max-age=10"))
 	g.Expect(w.Header().Get("Expires")).To(Equal("Thu, 02 Jan 2020 03:04:05 UTC"))
@@ -202,11 +172,14 @@ func TestValue_no_cache_and_additional_headers(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	c, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
+	send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
+	_, _, e2 := d.Content("home.html", "en")
 
 	// Then ...
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(c).To(Equal("foo"))
+	g.Expect(e1).NotTo(HaveOccurred())
+	g.Expect(send).To(BeTrue())
+
+	g.Expect(e2).NotTo(HaveOccurred())
 	g.Expect(w.Header()).To(HaveLen(4))
 	g.Expect(w.Header().Get("Cache-Control")).To(Equal("no-cache, must-revalidate"))
 	g.Expect(w.Header().Get("Pragma")).To(Equal("no-cache"))
@@ -228,11 +201,14 @@ func TestValue_if_none_match_not_modified_get_request(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		c, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
+		send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
+		_, _, e2 := d.Content("home.html", "en")
 
 		// Then ...
-		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(c).To(BeNil())
+		g.Expect(e1).NotTo(HaveOccurred())
+		g.Expect(send).To(BeFalse())
+
+		g.Expect(e2).NotTo(HaveOccurred())
 		g.Expect(w.Code).To(Equal(304))
 		g.Expect(w.Header()).To(HaveLen(5))
 		g.Expect(w.Header().Get("ETag")).To(Equal(`"hash123"`))
@@ -256,11 +232,14 @@ func TestValue_if_modified_since_not_modified_get_request(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		c, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
+		send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
+		_, _, e2 := d.Content("home.html", "en")
 
 		// Then ...
-		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(c).To(BeNil())
+		g.Expect(e1).NotTo(HaveOccurred())
+		g.Expect(send).To(BeFalse())
+
+		g.Expect(e2).NotTo(HaveOccurred())
 		g.Expect(w.Code).To(Equal(304))
 		g.Expect(w.Header()).To(HaveLen(5))
 		g.Expect(w.Header().Get("ETag")).To(Equal(`"hash123"`))
@@ -283,11 +262,14 @@ func TestValue_not_modified_put_request(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		c, err := GetContentAndApplyExtraHeaders(w, req, d, "home.html", "en")
+		send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
+		_, _, e2 := d.Content("home.html", "en")
 
 		// Then ...
-		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(c).NotTo(BeNil())
+		g.Expect(e1).NotTo(HaveOccurred())
+		g.Expect(send).To(BeTrue())
+
+		g.Expect(e2).NotTo(HaveOccurred())
 		g.Expect(w.Code).To(Equal(200))
 		g.Expect(w.Header()).To(HaveLen(4))
 		g.Expect(w.Header().Get("Cache-Control")).To(Equal("no-cache, must-revalidate"))
@@ -305,11 +287,11 @@ func TestGetContentAndApplyExtraHeaders_nil_data(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	d, err := GetContentAndApplyExtraHeaders(w, req, nil, "home.html", "en")
+	send, err := ConditionalRequest(w, req, nil, "home.html", "en")
 
 	// Then ...
 	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(d).To(BeNil())
+	g.Expect(send).To(BeFalse())
 }
 
 func conditional(predicate bool, value interface{}) interface{} {

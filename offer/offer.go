@@ -188,7 +188,11 @@ func (o Offer) Data(lang string) data.Data {
 
 type empty struct{}
 
-func (e empty) Content(string, string, bool) (interface{}, *data.Metadata, error) {
+func (e empty) Meta(template, language string) (meta *data.Metadata, err error) {
+	panic("not reachable")
+}
+
+func (e empty) Content(template, language string) (interface{}, bool, error) {
 	panic("not reachable")
 }
 

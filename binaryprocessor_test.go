@@ -14,12 +14,25 @@ import (
 
 func TestBinaryShouldWriteResponseBody(t *testing.T) {
 	g := NewGomegaWithT(t)
+	names := []string{"Alice\n", "Bob\n", "Charles\n"}
+
 	models := []struct {
 		stuff    data.Data
 		expected string
 	}{
 		{data.Of([]byte("Joe Bloggs")), "Joe Bloggs"},
-		{data.Lazy(func(string, string, bool) (interface{}, *data.Metadata, error) { return []byte("Joe Bloggs"), nil, nil }), "Joe Bloggs"},
+		{data.Lazy(func(string, string) (interface{}, error) { return []byte("Joe Bloggs"), nil }), "Joe Bloggs"},
+		{data.Sequence(
+			func(string, string) (interface{}, error) {
+				if len(names) == 0 {
+					return nil, nil
+				}
+				n := []byte(names[0])
+				names = names[1:]
+				return n, nil
+			}),
+			"Alice\nBob\nCharles\n",
+		},
 		{data.Of(strings.NewReader("Joe Bloggs")), "Joe Bloggs"},
 		{nil, ""},
 	}

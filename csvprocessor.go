@@ -36,17 +36,26 @@ func CSV(comma ...rune) offer.Processor {
 	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
-		d, err := data.GetContentAndApplyExtraHeaders(rw, req, match.Data, template, match.Language)
-		if err != nil || d == nil {
+		sendContent, err := data.ConditionalRequest(rw, req, match.Data, template, match.Language)
+		if !sendContent || err != nil {
 			return err
 		}
 
 		writer := csv.NewWriter(w)
 		writer.Comma = in
 
-		err = writeCSV(writer, d)
-		if err != nil {
-			return err
+		more := true
+		for more {
+			var d interface{}
+			d, more, err = match.Data.Content(template, match.Language)
+			if err != nil {
+				return err
+			}
+
+			err = writeCSV(writer, d)
+			if err != nil {
+				return err
+			}
 		}
 
 		writer.Flush()

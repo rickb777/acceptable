@@ -83,6 +83,10 @@ func (m Match) isTextual() bool {
 			strings.HasSuffix(m.Subtype, "+json")
 	}
 
+	if m.Type == "image" {
+		return strings.HasSuffix(m.Subtype, "+xml")
+	}
+
 	return false
 }
 

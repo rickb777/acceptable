@@ -23,8 +23,11 @@ func Example() {
 	fr := data.Of("Bonjour!").ETag("hash1") // get French content and some metadata
 
 	// 3. this uses a lazy evaluation function, wrapped in a data.Data
-	es := data.Lazy(func(template string, language string, cr bool) (interface{}, *data.Metadata, error) {
-		return "Hola!", nil, nil // get Spanish content - eg from database
+	es := data.Lazy(func(template string, language string) (interface{}, error) {
+		return "Hola!", nil // get Spanish content - eg from database
+	}).ETagUsing(func(template, language string) (string, error) {
+		// allows us to obtain the etag lazily, should we need to
+		return "hash2", nil
 	})
 
 	// We're implementing an HTTP handler, so we are given a request and a response.
@@ -57,7 +60,7 @@ func Example() {
 			offer.Of(acceptable.JSON("  "), "application/json").
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			offer.Of(acceptable.XML("  "), "application/xml").
+			offer.Of(acceptable.XML("xml", "  "), "application/xml").
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
 			offer.Of(acceptable.CSV(), "text/csv").
@@ -77,6 +80,7 @@ func Example() {
 			log.Fatal(err) // replace with suitable error handling
 		}
 
+		// ----- ignore the following, which is needed only for the example test to run -----
 		fmt.Printf("%s %s %d\n", req.Method, req.URL, res.Code)
 		fmt.Printf("%d headers\n", len(res.Header()))
 		var hdrs []string
@@ -93,9 +97,10 @@ func Example() {
 
 	// Output:
 	// GET /request1 200
-	// 3 headers
+	// 4 headers
 	// Content-Language: es
 	// Content-Type: text/plain;charset=utf-8
+	// Etag: "hash2"
 	// Vary: Accept, Accept-Language
 	//
 	// Hola!

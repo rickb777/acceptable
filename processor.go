@@ -21,8 +21,8 @@ var (
 	// DefaultTXTOffer is an Offer for text/plain content using the TXT() processor.
 	DefaultTXTOffer = offer.Of(TXT(), contenttype.TextPlain)
 
-	// DefaultXMLOffer is an Offer for application/xml content using the XML() processor without indentation.
-	DefaultXMLOffer = offer.Of(XML(), contenttype.ApplicationXML)
+	// DefaultXMLOffer is an Offer for application/xml content using the XML("") processor without indentation.
+	DefaultXMLOffer = offer.Of(XML("xml"), contenttype.ApplicationXML)
 )
 
 // TextHtmlOffer is an Offer for text/html content using the Template() processor.

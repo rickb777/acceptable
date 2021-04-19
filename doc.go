@@ -30,7 +30,7 @@
 //    // short-hand construction of an XML offer
 //    offer2 := acceptable.DefaultXMLOffer.With(en, "en").With(fr, "fr")
 //    // equivalent to
-//    //offer2 := offer.Of(acceptable.XML(), contenttype.ApplicationXML).With(en, "en").With(fr, "fr")
+//    //offer2 := offer.Of(acceptable.XML("xml"), contenttype.ApplicationXML).With(en, "en").With(fr, "fr")
 //
 //    // a catch-all offer is optional
 //    catchAll := offer.Of(acceptable.TXT(), contenttype.Any).With(en, "en").With(fr, "fr")

@@ -17,6 +17,7 @@ import (
 func TestTXTShouldWriteResponseBody(t *testing.T) {
 	g := NewGomegaWithT(t)
 	req := &http.Request{}
+	names := []string{"Alice\n", "Bob\n", "Charles\n"}
 
 	models := []struct {
 		stuff    data.Data
@@ -24,7 +25,18 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 	}{
 		{data.Of("Joe Bloggs"), "Joe Bloggs\n"},
 		{data.Of("Joe Bloggs\n"), "Joe Bloggs\n"},
-		{data.Lazy(func(string, string, bool) (interface{}, *data.Metadata, error) { return "Joe Bloggs", nil, nil }), "Joe Bloggs\n"},
+		{data.Lazy(func(string, string) (interface{}, error) { return "Joe Bloggs", nil }), "Joe Bloggs\n"},
+		{data.Sequence(
+			func(string, string) (interface{}, error) {
+				if len(names) == 0 {
+					return nil, nil
+				}
+				n := names[0]
+				names = names[1:]
+				return n, nil
+			}),
+			"Alice\nBob\nCharles\n",
+		},
 		{data.Of(hidden{tt(2001, 10, 31)}), "(2001-10-31)\n"},
 		{data.Of(tm{"Joe Bloggs"}), "Joe Bloggs\n"},
 	}

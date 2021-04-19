@@ -14,13 +14,18 @@ import (
 const DefaultPage = "_index.html"
 
 func productionProcessor(root *template.Template) offer.Processor {
-	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
+	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) error {
 		w := match.ApplyHeaders(rw)
 
 		p := &internal.WriterProxy{W: w}
 
-		d, err := data.GetContentAndApplyExtraHeaders(rw, req, match.Data, template, match.Language)
-		if err != nil || d == nil {
+		sendContent, err := data.ConditionalRequest(rw, req, match.Data, template, match.Language)
+		if !sendContent || err != nil {
+			return err
+		}
+
+		d, _, err := match.Data.Content(template, match.Language)
+		if err != nil {
 			return err
 		}
 
@@ -42,8 +47,13 @@ func debugProcessor(root *template.Template, rootDir, suffix string, files map[s
 
 		w := match.ApplyHeaders(rw)
 
-		d, err := data.GetContentAndApplyExtraHeaders(rw, req, match.Data, template, match.Language)
-		if err != nil || d == nil {
+		sendContent, err := data.ConditionalRequest(rw, req, match.Data, template, match.Language)
+		if !sendContent || err != nil {
+			return err
+		}
+
+		d, _, err := match.Data.Content(template, match.Language)
+		if err != nil {
 			return err
 		}
 

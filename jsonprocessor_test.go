@@ -12,7 +12,7 @@ import (
 	"github.com/rickb777/acceptable/offer"
 )
 
-func TestJSONShouldWriteResponseBody(t *testing.T) {
+func TestJSONShouldWriteResponseBody_lazy(t *testing.T) {
 	g := NewGomegaWithT(t)
 	req := &http.Request{}
 	w := httptest.NewRecorder()
@@ -28,16 +28,51 @@ func TestJSONShouldWriteResponseBody(t *testing.T) {
 		Subtype:  "json",
 		Language: "en",
 		Charset:  "utf-8",
-		Data:     data.Lazy(func(string, string, bool) (interface{}, *data.Metadata, error) { return model, nil, nil }),
+		Data:     data.Lazy(func(string, string) (interface{}, error) { return model, nil }),
 	}
 
 	p := acceptable.JSON()
 
-	p(w, req, match, "template")
+	err := p(w, req, match, "template")
 
+	g.Expect(err).NotTo(HaveOccurred())
 	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
 	g.Expect(w.Header().Get("Content-Language")).To(Equal("en"))
 	g.Expect(w.Body.String()).To(Equal("{\"Name\":\"Joe Bloggs\"}\n"))
+}
+
+func TestJSONShouldWriteResponseBody_chunked(t *testing.T) {
+	g := NewGomegaWithT(t)
+	req := &http.Request{}
+	w := httptest.NewRecorder()
+
+	model := []interface{}{User{Name: "Ann Bollin"}, User{Name: "Joe Bloggs"}, User{Name: "Jane Hays"}}
+
+	match := offer.Match{
+		Type:     "application",
+		Subtype:  "json",
+		Language: "en",
+		Charset:  "utf-8",
+		Data: data.Sequence(func(string, string) (interface{}, error) {
+			if len(model) == 0 {
+				return nil, nil
+			}
+			m := model[0]
+			model = model[1:]
+			return m, nil
+		}),
+	}
+
+	p := acceptable.JSON("  ")
+
+	err := p(w, req, match, "template")
+
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
+	g.Expect(w.Header().Get("Content-Language")).To(Equal("en"))
+	g.Expect(w.Body.String()).To(Equal(
+		"[\n{\n    \"Name\": \"Ann Bollin\"\n  }\n,\n{\n    \"Name\": \"Joe Bloggs\"\n  }\n,\n{\n    \"Name\": \"Jane Hays\"\n  }\n\n]\n",
+	))
 }
 
 func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {

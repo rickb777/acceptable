@@ -13,7 +13,7 @@ import (
 	"github.com/rickb777/acceptable/offer"
 )
 
-func TestXMLShouldWriteResponseBody(t *testing.T) {
+func TestXMLShouldWriteLazyResponseBody(t *testing.T) {
 	g := NewGomegaWithT(t)
 	req := &http.Request{}
 	w := httptest.NewRecorder()
@@ -27,16 +27,68 @@ func TestXMLShouldWriteResponseBody(t *testing.T) {
 		Subtype:  "json",
 		Language: "en",
 		Charset:  "utf-8",
-		Data:     data.Lazy(func(string, string, bool) (interface{}, *data.Metadata, error) { return model, nil, nil }),
+		Data:     data.Lazy(func(string, string) (interface{}, error) { return model, nil }),
 	}
 
-	p := acceptable.XML()
+	p := acceptable.XML("xml")
 
 	p(w, req, match, "template")
 
 	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
 	g.Expect(w.Header().Get("Content-Language")).To(Equal("en"))
 	g.Expect(w.Body.String()).To(Equal("<ValidXMLUser><Name>Joe Bloggs</Name></ValidXMLUser>\n"))
+}
+
+func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
+	g := NewGomegaWithT(t)
+	req := &http.Request{}
+	w := httptest.NewRecorder()
+
+	model := []interface{}{
+		&ValidXMLUser{
+			"Ann Bollin",
+		},
+		&ValidXMLUser{
+			"Bob Peel",
+		},
+		&ValidXMLUser{
+			"Charles Dickens",
+		},
+	}
+
+	match := offer.Match{
+		Type:     "application",
+		Subtype:  "json",
+		Language: "en",
+		Charset:  "utf-8",
+		Data: data.Sequence(func(string, string) (interface{}, error) {
+			if len(model) == 0 {
+				return nil, nil
+			}
+			m := model[0]
+			model = model[1:]
+			return m, nil
+		}),
+	}
+
+	p := acceptable.XML("xml", "  ")
+
+	p(w, req, match, "template")
+
+	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
+	g.Expect(w.Header().Get("Content-Language")).To(Equal("en"))
+	g.Expect(w.Body.String()).To(Equal(
+		"<xml>\n"+
+			"  <ValidXMLUser>\n"+
+			"    <Name>Ann Bollin</Name>\n"+
+			"  </ValidXMLUser>\n\n"+
+			"  <ValidXMLUser>\n"+
+			"    <Name>Bob Peel</Name>\n"+
+			"  </ValidXMLUser>\n\n"+
+			"  <ValidXMLUser>\n"+
+			"    <Name>Charles Dickens</Name>\n"+
+			"  </ValidXMLUser>\n"+
+			"</xml>\n"), w.Body.String())
 }
 
 func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
@@ -55,7 +107,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 			Data:     data.Of(model),
 		}
 
-		p := acceptable.XML("  ")
+		p := acceptable.XML("xml", "  ")
 		w := httptest.NewRecorder()
 
 		p(w, req, match, "template")
@@ -87,7 +139,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 			Data:     data.Of(model),
 		}
 
-		p := acceptable.XML("  ")
+		p := acceptable.XML("xml", "  ")
 		w := httptest.NewRecorder()
 
 		p(w, req, match, "template")
@@ -111,7 +163,7 @@ func TestXMLShouldRPanicOnError(t *testing.T) {
 	model := &XMLUser{Name: "Joe Bloggs"}
 	match := offer.Match{Data: data.Of(model)}
 
-	p := acceptable.XML("  ")
+	p := acceptable.XML("xml", "  ")
 
 	err := p(w, req, match, "template")
 

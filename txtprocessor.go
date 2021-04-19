@@ -22,31 +22,38 @@ func TXT() offer.Processor {
 	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
 
-		d, err := data.GetContentAndApplyExtraHeaders(rw, req, match.Data, template, match.Language)
-		if err != nil || d == nil {
+		sendContent, err := data.ConditionalRequest(rw, req, match.Data, template, match.Language)
+		if !sendContent || err != nil {
 			return err
 		}
 
-		s, ok := d.(string)
-		if ok {
-			return writeWithNewline(w, []byte(s))
-		}
-
-		st, ok := d.(fmt.Stringer)
-		if ok {
-			return writeWithNewline(w, []byte(st.String()))
-		}
-
-		tm, ok := d.(encoding.TextMarshaler)
-		if ok {
-			b, e2 := tm.MarshalText()
-			if e2 != nil {
-				return e2
+		more := true
+		for more {
+			var d interface{}
+			d, more, err = match.Data.Content(template, match.Language)
+			if err != nil {
+				return err
 			}
-			return writeWithNewline(w, b)
-		}
 
-		_, err = fmt.Fprintf(w, "%v\n", d)
+			switch s := d.(type) {
+			case string:
+				err = writeWithNewline(w, []byte(s))
+
+			case fmt.Stringer:
+				err = writeWithNewline(w, []byte(s.String()))
+
+			case encoding.TextMarshaler:
+				b, e2 := s.MarshalText()
+				if e2 != nil {
+					return e2
+				}
+				err = writeWithNewline(w, b)
+			}
+
+			if err != nil {
+				return err
+			}
+		}
 		return err
 	}
 }
