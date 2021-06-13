@@ -15,7 +15,8 @@ func IsAjax(req *http.Request) bool {
 }
 
 // RenderBestMatch uses BestRequestMatch to find the best matching offer for the request,
-// and then renders the response.
+// and then renders the response. The returned error, if any, will have arisen from either
+// the content provider (see data.Content) or the response processor (see offer.Processor).
 func RenderBestMatch(w http.ResponseWriter, req *http.Request, template string, available ...offer.Offer) error {
 	best := BestRequestMatch(req, available...)
 
