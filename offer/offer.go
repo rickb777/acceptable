@@ -177,19 +177,23 @@ func (o Offer) resolvedType(acceptedCT header.MediaRange) (string, string) {
 }
 
 func (o Offer) Data(lang string) data.Data {
-	d := o.data[lang]
-	if d == emptyValue {
-		d = nil
-	}
+	d := emptyToNil(o.data[lang])
 
 	// When the only data matches the wildcard "*", that should be the
 	// result for all languages.
 	if d == nil && len(o.data) == 1 {
-		if _, exists := o.data["*"]; exists {
-			return o.Data("*")
+		if d2, exists := o.data["*"]; exists {
+			return emptyToNil(d2)
 		}
 	}
 
+	return d
+}
+
+func emptyToNil(d data.Data) data.Data {
+	if d == emptyValue {
+		return nil
+	}
 	return d
 }
 
