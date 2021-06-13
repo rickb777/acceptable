@@ -181,6 +181,15 @@ func (o Offer) Data(lang string) data.Data {
 	if d == emptyValue {
 		d = nil
 	}
+
+	// When the only data matches the wildcard "*", that should be the
+	// result for all languages.
+	if d == nil && len(o.data) == 1 {
+		if _, exists := o.data["*"]; exists {
+			return o.Data("*")
+		}
+	}
+
 	return d
 }
 

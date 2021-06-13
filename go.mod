@@ -3,6 +3,8 @@ module github.com/rickb777/acceptable
 go 1.16
 
 require (
+	github.com/benmoss/matchers v0.0.0-20181101202349-c279145bd967 // indirect
+	github.com/juju/testing v0.0.0-20210324180055-18c50b0c2098 // indirect
 	github.com/labstack/echo/v4 v4.3.0
 	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/onsi/gomega v1.13.0

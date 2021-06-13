@@ -7,6 +7,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/benmoss/matchers"
+	"github.com/rickb777/acceptable/data"
+
 	"github.com/rickb777/acceptable/offer"
 
 	"github.com/onsi/gomega"
@@ -199,6 +202,37 @@ func Test_should_negotiate_using_media_and_language(t *testing.T) {
 	g.Expect(w.Header().Get("Vary")).To(gomega.Equal("Accept, Accept-Language"))
 }
 
+func Test_should_return_wildcard_data_for_any_language(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	// Given ...
+	a := offer.Of(acceptable.TXT(), "text/test").With(someSliceData, "*")
+
+	for _, lang := range []string{"en", "de"} {
+		req, _ := http.NewRequest("GET", "/", nil)
+		// this header means "anything but text/test"
+		req.Header.Add("Accept", "text/test, */*")
+		req.Header.Add("Accept-Language", lang)
+
+		// When ...
+		best := acceptable.BestRequestMatch(req, a)
+
+		// Then ...
+		g.Expect(best.Render).NotTo(gomega.BeNil(), lang)
+		best.Render = nil
+
+		g.Expect(best).To(matchers.DeepEqual(&offer.Match{
+			Type:     "text",
+			Subtype:  "test",
+			Language: lang,
+			Charset:  "utf-8",
+			Vary:     []string{"Accept", "Accept-Language"},
+			Data:     data.Of(someSliceData),
+			Render:   nil,
+		}), lang)
+	}
+}
+
 func Test_should_match_subtype_wildcard1(t *testing.T) {
 	g := gomega.NewWithT(t)
 
@@ -212,7 +246,7 @@ func Test_should_match_subtype_wildcard1(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&offer.Match{
+	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
 		Type:     "text",
 		Subtype:  "test",
 		Language: "*",
@@ -234,7 +268,7 @@ func Test_should_match_subtype_wildcard2(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&offer.Match{
+	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
 		Type:     "text",
 		Subtype:  "test",
 		Language: "*",
@@ -283,7 +317,7 @@ func Test_should_match_language_when_offer_language_is_not_specified(t *testing.
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&offer.Match{
+	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
 		Type:     "text",
 		Subtype:  "html",
 		Language: "en",
@@ -306,7 +340,7 @@ func Test_should_match_language_wildcard_and_return_selected_language(t *testing
 	best := acceptable.BestRequestMatch(req, a, b)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&offer.Match{
+	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
 		Type:     "application",
 		Subtype:  "octet-stream",
 		Language: "en",
@@ -319,9 +353,9 @@ func Test_should_select_language_of_first_matched_offer_when_no_language_matches
 	g := gomega.NewWithT(t)
 
 	// Given ...
-	a := offer.Of(nil, "text/csv").With(nil, "es")
-	b := offer.Of(nil, "text/html").With(nil, "en")
-	c := offer.Of(nil, "text/html").With(nil, "de")
+	a := offer.Of(nil, "text/csv").With(someSliceData, "es")
+	b := offer.Of(nil, "text/html").With(someMapData, "en")
+	c := offer.Of(nil, "text/html").With(someMapData, "de")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add("Accept", "text/html")
@@ -331,12 +365,14 @@ func Test_should_select_language_of_first_matched_offer_when_no_language_matches
 	best := acceptable.BestRequestMatch(req, a, b, c)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&offer.Match{
+	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
 		Type:     "text",
 		Subtype:  "html",
 		Language: "en",
 		Charset:  "utf-8",
 		Vary:     []string{"Accept", "Accept-Language"},
+		Data:     data.Of(someMapData),
+		Render:   nil,
 	}))
 }
 
@@ -386,7 +422,7 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, wildcard)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&offer.Match{
+	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
 		Type:     "text",
 		Subtype:  "plain",
 		Language: "*",
@@ -398,7 +434,7 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 	best = acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&offer.Match{
+	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
 		Type:     "text",
 		Subtype:  "test",
 		Language: "*",
@@ -421,7 +457,7 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&offer.Match{
+	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
 		Type:     "text",
 		Subtype:  "a",
 		Language: "*",
@@ -433,7 +469,7 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 	best = acceptable.BestRequestMatch(req, b)
 
 	// Then ...
-	g.Expect(best).To(gomega.Equal(&offer.Match{
+	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
 		Type:     "text",
 		Subtype:  "b",
 		Language: "*",
@@ -448,4 +484,14 @@ func TestMain(m *testing.M) {
 	//	acceptable.Debug = func(m string, a ...interface{}) { fmt.Printf(m, a...) }
 	//}
 	os.Exit(m.Run())
+}
+
+var someMapData = map[string]string{
+	"hay":  "horses",
+	"beef": "or mutton",
+}
+
+var someSliceData = []string{
+	"hay is for horses",
+	"beef or mutton",
 }
