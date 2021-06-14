@@ -31,6 +31,15 @@ type ContentType struct {
 	Extensions []KV
 }
 
+// AsMediaRange converts this ContentType to a MediaRange.
+// The default quality should be 1.
+func (ct ContentType) AsMediaRange(quality float64) MediaRange {
+	return MediaRange{
+		ContentType: ct,
+		Quality:     quality,
+	}
+}
+
 func (ct ContentType) String() string {
 	buf := &strings.Builder{}
 	fmt.Fprintf(buf, "%s/%s", ct.Type, ct.Subtype)

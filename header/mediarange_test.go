@@ -30,10 +30,7 @@ func TestContentType_Wildcards(t *testing.T) {
 func TestMediaRange_String(t *testing.T) {
 	g := gomega.NewWithT(t)
 
-	ct := MediaRange{
-		ContentType: ContentTypeOf("text", "html", "charset=utf-8"),
-		Quality:     0.5,
-	}
+	ct := ContentTypeOf("text", "html", "charset=utf-8").AsMediaRange(0.5)
 	ct.Extensions = append(ct.Extensions, KV{"level", "1"})
 
 	g.Expect(ct.String()).To(gomega.Equal("text/html;charset=utf-8;q=0.5;level=1"))

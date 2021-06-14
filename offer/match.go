@@ -25,7 +25,7 @@ type Match struct {
 //-------------------------------------------------------------------------------------------------
 
 // ApplyHeaders sets response headers so that the user agent is notified of the content
-// negotiation decisons made. Four headers may be set, depending on context.
+// negotiation decisions made. Four headers may be set, depending on context.
 //
 //   * Content-Type is always set.
 //   * Content-Language is set when a language was selected.
