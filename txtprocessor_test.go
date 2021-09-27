@@ -17,7 +17,8 @@ import (
 func TestTXTShouldWriteResponseBody(t *testing.T) {
 	g := NewGomegaWithT(t)
 	req := &http.Request{}
-	names := []string{"Alice\n", "Bob\n", "Charles\n"}
+	names1 := []string{"Alice\n", "Bob\n", "Charles\n"}
+	names2 := []string{"Alice ", "Bob ", "Charles"}
 
 	models := []struct {
 		stuff    data.Data
@@ -25,17 +26,15 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 	}{
 		{data.Of("Joe Bloggs"), "Joe Bloggs\n"},
 		{data.Of("Joe Bloggs\n"), "Joe Bloggs\n"},
+		{data.Of([]byte("Joe Bloggs")), "Joe Bloggs\n"},
 		{data.Lazy(func(string, string) (interface{}, error) { return "Joe Bloggs", nil }), "Joe Bloggs\n"},
 		{data.Sequence(
-			func(string, string) (interface{}, error) {
-				if len(names) == 0 {
-					return nil, nil
-				}
-				n := names[0]
-				names = names[1:]
-				return n, nil
-			}),
+			stringSequence(names1)),
 			"Alice\nBob\nCharles\n",
+		},
+		{data.Sequence(
+			stringSequence(names2)),
+			"Alice Bob Charles\n",
 		},
 		{data.Of(hidden{tt(2001, 10, 31)}), "(2001-10-31)\n"},
 		{data.Of(tm{"Joe Bloggs"}), "Joe Bloggs\n"},
@@ -47,6 +46,17 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 		w := httptest.NewRecorder()
 		p(w, req, offer.Match{Data: m.stuff}, "")
 		g.Expect(w.Body.String()).To(Equal(m.expected))
+	}
+}
+
+func stringSequence(names []string) func(string, string) (interface{}, error) {
+	return func(string, string) (interface{}, error) {
+		if len(names) == 0 {
+			return nil, nil
+		}
+		n := names[0]
+		names = names[1:]
+		return n, nil
 	}
 }
 

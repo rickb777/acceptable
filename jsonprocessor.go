@@ -9,7 +9,13 @@ import (
 	"github.com/rickb777/acceptable/offer"
 )
 
-// JSON creates a new processor for JSON with a specified indentation.
+// JSON creates a new processor for JSON with a specified indentation. This converts
+// a data item (or a sequence of data items) into JSON using the standard Go encoder.
+//
+// When writing a sequence of items, the overall result is a JSON array starting with "["
+// and ending with "]", including commas where necessary.
+//
+// The optional indent argument is a string usually of zero or more space characters.
 func JSON(indent ...string) offer.Processor {
 	in := ""
 	if len(indent) > 0 {

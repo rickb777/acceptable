@@ -3,21 +3,26 @@ package acceptable
 import (
 	"encoding"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/internal"
 	"github.com/rickb777/acceptable/offer"
 )
 
-// TXT creates an output processor that serialises strings in a form suitable for text/plain responses.
+// TXT creates an output processor that serialises strings in a form suitable for text/* responses (especially
+// text/plain and text/html). It is also useful for JSON, XML etc that is already encoded.
+//
+// As required by IETF RFC, the response will always be sent with a trailing newline, even if the supplied
+// content doesn't end with a newline.
+//
 // Model values should be one of the following:
 //
 // * string
-//
+// * []byte
 // * fmt.Stringer
-//
 // * encoding.TextMarshaler
+// * nil
 func TXT() offer.Processor {
 	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
 		w := match.ApplyHeaders(rw)
@@ -26,6 +31,8 @@ func TXT() offer.Processor {
 		if !sendContent || err != nil {
 			return err
 		}
+
+		p := &internal.WriterProxy{W: w}
 
 		more := true
 		for more {
@@ -36,39 +43,38 @@ func TXT() offer.Processor {
 			}
 
 			switch s := d.(type) {
+			case []byte:
+				_, err = p.Write(s)
+
 			case string:
-				err = writeWithNewline(w, []byte(s))
+				_, err = p.Write([]byte(s))
 
 			case fmt.Stringer:
-				err = writeWithNewline(w, []byte(s.String()))
+				_, err = p.Write([]byte(s.String()))
 
 			case encoding.TextMarshaler:
 				b, e2 := s.MarshalText()
 				if e2 != nil {
 					return e2
 				}
-				err = writeWithNewline(w, b)
+				_, err = p.Write(b)
+
+			case nil:
+				// no-op
+
+			default:
+				info := fmt.Sprintf("%T: unsupported text data", d)
+				panic(info)
 			}
 
 			if err != nil {
 				return err
 			}
 		}
-		return err
-	}
-}
 
-// writeWithNewline is a helper function that writes some bytes to a Writer. If the
-// byte slice is empty or if the last byte is *not* newline, an extra newline is
-// also written, as required for HTTP responses.
-func writeWithNewline(w io.Writer, x []byte) error {
-	_, err := w.Write(x)
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+		return p.FinalNewline()
 	}
-
-	if len(x) == 0 || x[len(x)-1] != '\n' {
-		_, err = w.Write([]byte{'\n'})
-	}
-	return err
 }

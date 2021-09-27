@@ -10,8 +10,13 @@ import (
 	"github.com/rickb777/acceptable/offer"
 )
 
-// XML creates a new processor for XML with root element and optional indentation.
-// The root element is used only when processing content that is a sequence of data items.
+// XML creates a new processor for XML with root element and optional indentation. This converts
+// a data item (or a sequence of data items) into XML using the standard Go encoder.
+//
+// The root element is used only when processing content that is a sequence of data items. It
+// can be a name such as "root" or an XML element such as "<html lang='en'>".
+//
+// The optional indent argument is a string usually of zero or more space characters.
 func XML(root string, indent ...string) offer.Processor {
 	if root == "" {
 		root = "<xml>"
