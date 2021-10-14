@@ -7,6 +7,7 @@ const (
 	TextAny   = "text/*"
 
 	ApplicationJSON  = "application/json"
+	ApplicationPDF   = "application/pdf"
 	ApplicationXML   = "application/xml"
 	ApplicationXHTML = "application/xhtml+xml"
 	ApplicationAny   = "application/*"
