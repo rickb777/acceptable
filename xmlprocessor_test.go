@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/acceptable/offer"
 )
 
@@ -23,11 +24,10 @@ func TestXMLShouldWriteLazyResponseBody(t *testing.T) {
 	}
 
 	match := offer.Match{
-		Type:     "application",
-		Subtype:  "json",
-		Language: "en",
-		Charset:  "utf-8",
-		Data:     data.Lazy(func(string, string) (interface{}, error) { return model, nil }),
+		ContentType: header.ContentType{Type: "application", Subtype: "json"},
+		Language:    "en",
+		Charset:     "utf-8",
+		Data:        data.Lazy(func(string, string) (interface{}, error) { return model, nil }),
 	}
 
 	p := acceptable.XML("xml")
@@ -59,10 +59,9 @@ func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
 	}
 
 	match := offer.Match{
-		Type:     "application",
-		Subtype:  "json",
-		Language: "en",
-		Charset:  "utf-8",
+		ContentType: header.ContentType{Type: "application", Subtype: "json"},
+		Language:    "en",
+		Charset:     "utf-8",
 		Data: data.Sequence(func(string, string) (interface{}, error) {
 			if len(model) == 0 {
 				return nil, nil
@@ -104,11 +103,10 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 
 	for _, enc := range cases {
 		match := offer.Match{
-			Type:     "application",
-			Subtype:  "json",
-			Language: "cn",
-			Charset:  enc,
-			Data:     data.Of(model),
+			ContentType: header.ContentType{Type: "application", Subtype: "json"},
+			Language:    "cn",
+			Charset:     enc,
+			Data:        data.Of(model),
 		}
 
 		p := acceptable.XML("xml", "  ")
@@ -138,11 +136,10 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 
 	for _, enc := range cases {
 		match := offer.Match{
-			Type:     "application",
-			Subtype:  "json",
-			Language: "cn",
-			Charset:  enc,
-			Data:     data.Of(model),
+			ContentType: header.ContentType{Type: "application", Subtype: "json"},
+			Language:    "cn",
+			Charset:     enc,
+			Data:        data.Of(model),
 		}
 
 		p := acceptable.XML("xml", "  ")

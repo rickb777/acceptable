@@ -244,5 +244,5 @@ func ConditionalRequest(rw http.ResponseWriter, req *http.Request, d Data, templ
 		}
 	}
 
-	return sendContent, err
+	return sendContent, nil
 }

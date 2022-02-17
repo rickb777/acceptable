@@ -140,19 +140,19 @@ func (o Offer) String() string {
 //-------------------------------------------------------------------------------------------------
 
 // BuildMatch implements the transition between a selected Offer and the resulting Match.
-func (o Offer) BuildMatch(lang string, acceptedCT header.MediaRange) *Match {
-	t, s := o.resolvedType(acceptedCT)
+// The result is based on the best-matched media type and language.
+func (o Offer) BuildMatch(acceptedCT header.MediaRange, lang string) *Match {
+	resolved := o.resolvedType(acceptedCT)
 
 	return &Match{
-		Type:     t,
-		Subtype:  s,
-		Language: lang,
-		Data:     o.Data(lang),
-		Render:   o.processor,
+		ContentType: resolved,
+		Language:    lang,
+		Data:        o.Data(lang),
+		Render:      o.processor,
 	}
 }
 
-func (o Offer) resolvedType(acceptedCT header.MediaRange) (string, string) {
+func (o Offer) resolvedType(acceptedCT header.MediaRange) header.ContentType {
 	t := o.Type
 	s := o.Subtype
 
@@ -174,7 +174,7 @@ func (o Offer) resolvedType(acceptedCT header.MediaRange) (string, string) {
 		// first 512 bytes but there is no attempt to do that here.
 	}
 
-	return t, s
+	return header.ContentType{Type: t, Subtype: s}
 }
 
 func (o Offer) Data(lang string) data.Data {

@@ -221,13 +221,12 @@ func Test_should_return_wildcard_data_for_any_language(t *testing.T) {
 		best.Render = nil
 
 		g.Expect(best).To(matchers.DeepEqual(&offer.Match{
-			Type:     "text",
-			Subtype:  "test",
-			Language: lang,
-			Charset:  "utf-8",
-			Vary:     []string{"Accept", "Accept-Language"},
-			Data:     data.Of(someSliceData),
-			Render:   nil,
+			ContentType: header.ContentType{Type: "text", Subtype: "test"},
+			Language:    lang,
+			Charset:     "utf-8",
+			Vary:        []string{"Accept", "Accept-Language"},
+			Data:        data.Of(someSliceData),
+			Render:      nil,
 		}), lang)
 	}
 }
@@ -246,11 +245,10 @@ func Test_should_match_subtype_wildcard1(t *testing.T) {
 
 	// Then ...
 	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
-		Type:     "text",
-		Subtype:  "test",
-		Language: "*",
-		Charset:  "utf-8",
-		Vary:     []string{"Accept"},
+		ContentType: header.ContentType{Type: "text", Subtype: "test"},
+		Language:    "*",
+		Charset:     "utf-8",
+		Vary:        []string{"Accept"},
 	}))
 }
 
@@ -268,11 +266,10 @@ func Test_should_match_subtype_wildcard2(t *testing.T) {
 
 	// Then ...
 	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
-		Type:     "text",
-		Subtype:  "test",
-		Language: "*",
-		Charset:  "utf-8",
-		Vary:     []string{"Accept"},
+		ContentType: header.ContentType{Type: "text", Subtype: "test"},
+		Language:    "*",
+		Charset:     "utf-8",
+		Vary:        []string{"Accept"},
 	}))
 }
 
@@ -317,11 +314,10 @@ func Test_should_match_language_when_offer_language_is_not_specified(t *testing.
 
 	// Then ...
 	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
-		Type:     "text",
-		Subtype:  "html",
-		Language: "en",
-		Charset:  "utf-8",
-		Vary:     []string{"Accept", "Accept-Language"},
+		ContentType: header.ContentType{Type: "text", Subtype: "html"},
+		Language:    "en",
+		Charset:     "utf-8",
+		Vary:        []string{"Accept", "Accept-Language"},
 	}))
 }
 
@@ -340,11 +336,10 @@ func Test_should_match_language_wildcard_and_return_selected_language(t *testing
 
 	// Then ...
 	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
-		Type:     "application",
-		Subtype:  "octet-stream",
-		Language: "en",
-		Charset:  "utf-8",
-		Vary:     []string{"Accept-Language"},
+		ContentType: header.ContentType{Type: "application", Subtype: "octet-stream"},
+		Language:    "en",
+		Charset:     "utf-8",
+		Vary:        []string{"Accept-Language"},
 	}))
 }
 
@@ -365,13 +360,12 @@ func Test_should_select_language_of_first_matched_offer_when_no_language_matches
 
 	// Then ...
 	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
-		Type:     "text",
-		Subtype:  "html",
-		Language: "en",
-		Charset:  "utf-8",
-		Vary:     []string{"Accept", "Accept-Language"},
-		Data:     data.Of(someMapData),
-		Render:   nil,
+		ContentType: header.ContentType{Type: "text", Subtype: "html"},
+		Language:    "en",
+		Charset:     "utf-8",
+		Vary:        []string{"Accept", "Accept-Language"},
+		Data:        data.Of(someMapData),
+		Render:      nil,
 	}))
 }
 
@@ -422,11 +416,10 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 
 	// Then ...
 	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
-		Type:     "text",
-		Subtype:  "plain",
-		Language: "*",
-		Charset:  "utf-8",
-		Vary:     []string{"Accept"},
+		ContentType: header.ContentType{Type: "text", Subtype: "plain"},
+		Language:    "*",
+		Charset:     "utf-8",
+		Vary:        []string{"Accept"},
 	}))
 
 	// And when ...
@@ -434,11 +427,10 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 
 	// Then ...
 	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
-		Type:     "text",
-		Subtype:  "test",
-		Language: "*",
-		Charset:  "utf-8",
-		Vary:     []string{"Accept"},
+		ContentType: header.ContentType{Type: "text", Subtype: "test"},
+		Language:    "*",
+		Charset:     "utf-8",
+		Vary:        []string{"Accept"},
 	}))
 }
 
@@ -457,11 +449,10 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 
 	// Then ...
 	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
-		Type:     "text",
-		Subtype:  "a",
-		Language: "*",
-		Charset:  "utf-8",
-		Vary:     []string{"Accept"},
+		ContentType: header.ContentType{Type: "text", Subtype: "a"},
+		Language:    "*",
+		Charset:     "utf-8",
+		Vary:        []string{"Accept"},
 	}))
 
 	// And when ...
@@ -469,11 +460,10 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 
 	// Then ...
 	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
-		Type:     "text",
-		Subtype:  "b",
-		Language: "*",
-		Charset:  "utf-8",
-		Vary:     []string{"Accept"},
+		ContentType: header.ContentType{Type: "text", Subtype: "b"},
+		Language:    "*",
+		Charset:     "utf-8",
+		Vary:        []string{"Accept"},
 	}))
 }
 

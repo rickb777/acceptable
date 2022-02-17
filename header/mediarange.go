@@ -40,6 +40,26 @@ func (ct ContentType) AsMediaRange(quality float64) MediaRange {
 	}
 }
 
+// IsTextual returns true if the content represents a textual entity; false otherwise.
+func (ct ContentType) IsTextual() bool {
+	if ct.Type == "text" {
+		return true
+	}
+
+	if ct.Type == "application" {
+		return ct.Subtype == "json" ||
+			ct.Subtype == "xml" ||
+			strings.HasSuffix(ct.Subtype, "+xml") ||
+			strings.HasSuffix(ct.Subtype, "+json")
+	}
+
+	if ct.Type == "image" {
+		return strings.HasSuffix(ct.Subtype, "+xml")
+	}
+
+	return false
+}
+
 func (ct ContentType) String() string {
 	buf := &strings.Builder{}
 	fmt.Fprintf(buf, "%s/%s", ct.Type, ct.Subtype)

@@ -7,14 +7,14 @@ import (
 	"strings"
 
 	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/header"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/htmlindex"
 )
 
 // Match holds the best-matched offer after content negotiation and is used for response rendering.
 type Match struct {
-	Type     string
-	Subtype  string
+	header.ContentType
 	Language string
 	Charset  string
 	Vary     []string
@@ -48,7 +48,7 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) io.Writer {
 		}
 	}
 
-	if m.isTextual() {
+	if m.IsTextual() {
 		ct := fmt.Sprintf("%s/%s;charset=%s", m.Type, m.Subtype, charset)
 		rw.Header().Set("Content-Type", ct)
 
@@ -69,25 +69,6 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) io.Writer {
 	}
 
 	return rw
-}
-
-func (m Match) isTextual() bool {
-	if m.Type == "text" {
-		return true
-	}
-
-	if m.Type == "application" {
-		return m.Subtype == "json" ||
-			m.Subtype == "xml" ||
-			strings.HasSuffix(m.Subtype, "+xml") ||
-			strings.HasSuffix(m.Subtype, "+json")
-	}
-
-	if m.Type == "image" {
-		return strings.HasSuffix(m.Subtype, "+xml")
-	}
-
-	return false
 }
 
 func (m Match) String() string {

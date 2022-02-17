@@ -194,7 +194,7 @@ func (c context) findBestMatch(mrs header.MediaRanges, languages header.Preceden
 							if offeredLang == "*" && prefLang.Value != "*" {
 								offeredLang = prefLang.Value
 							}
-							m := offer.BuildMatch(offeredLang, acceptedCT)
+							m := offer.BuildMatch(acceptedCT, offeredLang)
 							m.Vary = vary
 							return m, true
 						}

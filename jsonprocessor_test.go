@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
 	datapkg "github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/acceptable/offer"
 )
 
@@ -24,11 +25,10 @@ func TestJSONShouldWriteResponseBody_lazy(t *testing.T) {
 	}
 
 	match := offer.Match{
-		Type:     "application",
-		Subtype:  "json",
-		Language: "en",
-		Charset:  "utf-8",
-		Data:     datapkg.Lazy(func(string, string) (interface{}, error) { return model, nil }),
+		ContentType: header.ContentType{Type: "application", Subtype: "json"},
+		Language:    "en",
+		Charset:     "utf-8",
+		Data:        datapkg.Lazy(func(string, string) (interface{}, error) { return model, nil }),
 	}
 
 	p := acceptable.JSON()
@@ -50,10 +50,9 @@ func TestJSONShouldWriteResponseBody_sequence(t *testing.T) {
 	model := []interface{}{User{Name: "Ann Bollin"}, User{Name: "Joe Bloggs"}, User{Name: "Jane Hays"}}
 
 	match := offer.Match{
-		Type:     "application",
-		Subtype:  "json",
-		Language: "en",
-		Charset:  "utf-8",
+		ContentType: header.ContentType{Type: "application", Subtype: "json"},
+		Language:    "en",
+		Charset:     "utf-8",
 		Data: datapkg.Sequence(func(string, string) (interface{}, error) {
 			if len(model) == 0 {
 				return nil, nil
@@ -91,11 +90,10 @@ func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 
 	for _, enc := range cases {
 		match := offer.Match{
-			Type:     "application",
-			Subtype:  "json",
-			Language: "cn",
-			Charset:  enc,
-			Data:     datapkg.Of(model),
+			ContentType: header.ContentType{Type: "application", Subtype: "json"},
+			Language:    "cn",
+			Charset:     enc,
+			Data:        datapkg.Of(model),
 		}
 
 		p := acceptable.JSON("")
