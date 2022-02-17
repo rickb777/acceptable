@@ -2,6 +2,7 @@ package offer
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -11,7 +12,7 @@ import (
 )
 
 // Processor is a function that renders content according to the matched result.
-type Processor func(w http.ResponseWriter, req *http.Request, match Match, template string) error
+type Processor func(w io.Writer, req *http.Request, d data.Data, template, language string) error
 
 // Offer holds information about one particular resource representation that can potentially
 // provide an acceptable response.

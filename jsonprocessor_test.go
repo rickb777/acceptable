@@ -8,14 +8,14 @@ import (
 
 	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
-	"github.com/rickb777/acceptable/data"
+	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/offer"
 )
 
 func TestJSONShouldWriteResponseBody_lazy(t *testing.T) {
 	g := NewGomegaWithT(t)
 	req := &http.Request{}
-	w := httptest.NewRecorder()
+	rw := httptest.NewRecorder()
 
 	model := struct {
 		Name string
@@ -28,23 +28,24 @@ func TestJSONShouldWriteResponseBody_lazy(t *testing.T) {
 		Subtype:  "json",
 		Language: "en",
 		Charset:  "utf-8",
-		Data:     data.Lazy(func(string, string) (interface{}, error) { return model, nil }),
+		Data:     datapkg.Lazy(func(string, string) (interface{}, error) { return model, nil }),
 	}
 
 	p := acceptable.JSON()
 
-	err := p(w, req, match, "template")
+	w := match.ApplyHeaders(rw)
+	err := p(w, req, match.Data, "template", match.Language)
 
 	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
-	g.Expect(w.Header().Get("Content-Language")).To(Equal("en"))
-	g.Expect(w.Body.String()).To(Equal("{\"Name\":\"Joe Bloggs\"}\n"))
+	g.Expect(rw.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
+	g.Expect(rw.Header().Get("Content-Language")).To(Equal("en"))
+	g.Expect(rw.Body.String()).To(Equal("{\"Name\":\"Joe Bloggs\"}\n"))
 }
 
-func TestJSONShouldWriteResponseBody_chunked(t *testing.T) {
+func TestJSONShouldWriteResponseBody_sequence(t *testing.T) {
 	g := NewGomegaWithT(t)
 	req := &http.Request{}
-	w := httptest.NewRecorder()
+	rw := httptest.NewRecorder()
 
 	model := []interface{}{User{Name: "Ann Bollin"}, User{Name: "Joe Bloggs"}, User{Name: "Jane Hays"}}
 
@@ -53,7 +54,7 @@ func TestJSONShouldWriteResponseBody_chunked(t *testing.T) {
 		Subtype:  "json",
 		Language: "en",
 		Charset:  "utf-8",
-		Data: data.Sequence(func(string, string) (interface{}, error) {
+		Data: datapkg.Sequence(func(string, string) (interface{}, error) {
 			if len(model) == 0 {
 				return nil, nil
 			}
@@ -65,12 +66,13 @@ func TestJSONShouldWriteResponseBody_chunked(t *testing.T) {
 
 	p := acceptable.JSON("  ")
 
-	err := p(w, req, match, "template")
+	w := match.ApplyHeaders(rw)
+	err := p(w, req, match.Data, "template", match.Language)
 
 	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
-	g.Expect(w.Header().Get("Content-Language")).To(Equal("en"))
-	g.Expect(w.Body.String()).To(Equal(
+	g.Expect(rw.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
+	g.Expect(rw.Header().Get("Content-Language")).To(Equal("en"))
+	g.Expect(rw.Body.String()).To(Equal(
 		"[\n{\n    \"Name\": \"Ann Bollin\"\n  }\n,\n{\n    \"Name\": \"Joe Bloggs\"\n  }\n,\n{\n    \"Name\": \"Jane Hays\"\n  }\n\n]\n",
 	))
 }
@@ -93,17 +95,19 @@ func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 			Subtype:  "json",
 			Language: "cn",
 			Charset:  enc,
-			Data:     data.Of(model),
+			Data:     datapkg.Of(model),
 		}
 
 		p := acceptable.JSON("")
-		w := httptest.NewRecorder()
+		rw := httptest.NewRecorder()
+		w := match.ApplyHeaders(rw)
 
-		p(w, req, match, "template")
+		err := p(w, req, match.Data, "template", "cn")
 
-		g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16le"))
-		g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"))
-		g.Expect(w.Body.Bytes()).To(Equal([]byte{
+		g.Expect(err).NotTo(HaveOccurred())
+		g.Expect(rw.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16le"))
+		g.Expect(rw.Header().Get("Content-Language")).To(Equal("cn"))
+		g.Expect(rw.Body.Bytes()).To(Equal([]byte{
 			'{', 0, '"', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '"', 0,
 			':', 0, '"', 0, 13, 84, 240, 121, '"', 0, '}', 0, '\n', 0}))
 	}
@@ -115,11 +119,10 @@ func TestJSONShouldReturnError(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	model := &User{"Joe Bloggs"}
-	match := offer.Match{Data: data.Of(model)}
 
 	p := acceptable.JSON()
 
-	err := p(w, req, match, "template")
+	err := p(w, req, datapkg.Of(model), "template", "en")
 
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("error calling MarshalJSON for type"))

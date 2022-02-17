@@ -6,11 +6,12 @@ const (
 	TextPlain = "text/plain"
 	TextAny   = "text/*"
 
-	ApplicationJSON  = "application/json"
-	ApplicationPDF   = "application/pdf"
-	ApplicationXML   = "application/xml"
-	ApplicationXHTML = "application/xhtml+xml"
-	ApplicationAny   = "application/*"
+	ApplicationJSON   = "application/json"
+	ApplicationPDF    = "application/pdf"
+	ApplicationXML    = "application/xml"
+	ApplicationXHTML  = "application/xhtml+xml"
+	ApplicationBinary = "application/octet-stream"
+	ApplicationAny    = "application/*"
 
 	ImageJPEG = "image/jpeg"
 	ImageGIF  = "image/gif"

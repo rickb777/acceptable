@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/rickb777/acceptable/data"
+	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/offer"
 )
 
@@ -18,18 +18,12 @@ import (
 // * io.WriterTo
 // * nil
 func Binary() offer.Processor {
-	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
-		w := match.ApplyHeaders(rw)
+	return func(w io.Writer, _ *http.Request, data datapkg.Data, template, language string) (err error) {
+		more := data != nil
 
-		sendContent, err := data.ConditionalRequest(rw, req, match.Data, template, match.Language)
-		if !sendContent || err != nil {
-			return err
-		}
-
-		more := true
 		for more {
 			var d interface{}
-			d, more, err = match.Data.Content(template, match.Language)
+			d, more, err = data.Content(template, language)
 			if err != nil {
 				return err
 			}

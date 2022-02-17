@@ -2,29 +2,22 @@ package templates
 
 import (
 	"html/template"
+	"io"
 	"net/http"
 	"time"
 
-	"github.com/rickb777/acceptable/offer"
-
-	"github.com/rickb777/acceptable/data"
+	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
+	"github.com/rickb777/acceptable/offer"
 )
 
 const DefaultPage = "_index.html"
 
 func productionProcessor(root *template.Template) offer.Processor {
-	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) error {
-		w := match.ApplyHeaders(rw)
-
+	return func(w io.Writer, req *http.Request, data datapkg.Data, template, language string) (err error) {
 		p := &internal.WriterProxy{W: w}
 
-		sendContent, err := data.ConditionalRequest(rw, req, match.Data, template, match.Language)
-		if !sendContent || err != nil {
-			return err
-		}
-
-		d, _, err := match.Data.Content(template, match.Language)
+		d, _, err := data.Content(template, language)
 		if err != nil {
 			return err
 		}
@@ -39,20 +32,13 @@ func productionProcessor(root *template.Template) offer.Processor {
 //-------------------------------------------------------------------------------------------------
 
 func debugProcessor(root *template.Template, rootDir, suffix string, files map[string]time.Time, funcMap template.FuncMap) offer.Processor {
-	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
+	return func(w io.Writer, req *http.Request, data datapkg.Data, template, language string) (err error) {
 		path := rootDir + "/" + template
 		if _, exists := files[path]; !exists {
 			files = findTemplates(rootDir, suffix)
 		}
 
-		w := match.ApplyHeaders(rw)
-
-		sendContent, err := data.ConditionalRequest(rw, req, match.Data, template, match.Language)
-		if !sendContent || err != nil {
-			return err
-		}
-
-		d, _, err := match.Data.Content(template, match.Language)
+		d, _, err := data.Content(template, language)
 		if err != nil {
 			return err
 		}

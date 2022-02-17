@@ -3,29 +3,35 @@ package acceptable
 import (
 	"encoding/csv"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 
-	"github.com/rickb777/acceptable/data"
+	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/offer"
 )
 
 // CSV creates an output processor that serialises a dataModel in CSV form. With no arguments, the default
-// format is comma-separated; you can supply any rune to be used as an alternative separator.
+// format is comma-separated; you can supply any rune to be used as an alternative separator. The underlying
+// encoder is provided by the standard library and so correctly handles quote marks etc.
 //
 // Model values should be one of the following:
 //
-// * string or []string, or [][]string
+// * string or []string, written as a single row
 //
-// * fmt.Stringer or []fmt.Stringer, or [][]fmt.Stringer
+//* [][]string or [][]fmt.Stringer, written as many rows
 //
-// * []int or similar (bool, int8, int16, int32, int64, uint8, uint16, uint32, uint63, float32, float64, complex)
+// * fmt.Stringer or []fmt.Stringer, written as a single row
 //
-// * [][]int or similar (bool, int8, int16, int32, int64, uint8, uint16, uint32, uint63, float32, float64, complex)
+// * []int or similar (bool, int8, int16, int32, int64, uint8, uint16, uint32, uint63, float32, float64, complex),
+// written as a single row
 //
-// * struct for some struct in which all the fields are exported and of simple types (as above).
+// * [][]int or similar (bool, int8, int16, int32, int64, uint8, uint16, uint32, uint63, float32, float64, complex),
+// written as many rows
 //
-// * []struct for some struct in which all the fields are exported and of simple types (as above).
+// * struct for which all the fields are exported and of simple types (as above), written as a single row
+//
+// * []struct for some struct in which all the fields are exported and of simple types (as above), written as many rows
 func CSV(comma ...rune) offer.Processor {
 
 	in := ','
@@ -33,21 +39,15 @@ func CSV(comma ...rune) offer.Processor {
 		in = comma[0]
 	}
 
-	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
-		w := match.ApplyHeaders(rw)
-
-		sendContent, err := data.ConditionalRequest(rw, req, match.Data, template, match.Language)
-		if !sendContent || err != nil {
-			return err
-		}
-
+	return func(w io.Writer, _ *http.Request, data datapkg.Data, template, language string) (err error) {
 		writer := csv.NewWriter(w)
 		writer.Comma = in
 
-		more := true
+		more := data != nil
+
 		for more {
 			var d interface{}
-			d, more, err = match.Data.Content(template, match.Language)
+			d, more, err = data.Content(template, language)
 			if err != nil {
 				return err
 			}

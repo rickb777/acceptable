@@ -16,7 +16,7 @@ import (
 func TestXMLShouldWriteLazyResponseBody(t *testing.T) {
 	g := NewGomegaWithT(t)
 	req := &http.Request{}
-	w := httptest.NewRecorder()
+	rw := httptest.NewRecorder()
 
 	model := &ValidXMLUser{
 		"Joe Bloggs",
@@ -32,17 +32,19 @@ func TestXMLShouldWriteLazyResponseBody(t *testing.T) {
 
 	p := acceptable.XML("xml")
 
-	p(w, req, match, "template")
+	w := match.ApplyHeaders(rw)
+	err := p(w, req, match.Data, "template", match.Language)
 
-	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
-	g.Expect(w.Header().Get("Content-Language")).To(Equal("en"))
-	g.Expect(w.Body.String()).To(Equal("<ValidXMLUser><Name>Joe Bloggs</Name></ValidXMLUser>\n"))
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(rw.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
+	g.Expect(rw.Header().Get("Content-Language")).To(Equal("en"))
+	g.Expect(rw.Body.String()).To(Equal("<ValidXMLUser><Name>Joe Bloggs</Name></ValidXMLUser>\n"))
 }
 
 func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
 	g := NewGomegaWithT(t)
 	req := &http.Request{}
-	w := httptest.NewRecorder()
+	rw := httptest.NewRecorder()
 
 	model := []interface{}{
 		&ValidXMLUser{
@@ -73,11 +75,13 @@ func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
 
 	p := acceptable.XML("xml", "  ")
 
-	p(w, req, match, "template")
+	w := match.ApplyHeaders(rw)
+	err := p(w, req, match.Data, "template", match.Language)
 
-	g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
-	g.Expect(w.Header().Get("Content-Language")).To(Equal("en"))
-	g.Expect(w.Body.String()).To(Equal(
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(rw.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
+	g.Expect(rw.Header().Get("Content-Language")).To(Equal("en"))
+	g.Expect(rw.Body.String()).To(Equal(
 		"<xml>\n"+
 			"  <ValidXMLUser>\n"+
 			"    <Name>Ann Bollin</Name>\n"+
@@ -88,7 +92,7 @@ func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
 			"  <ValidXMLUser>\n"+
 			"    <Name>Charles Dickens</Name>\n"+
 			"  </ValidXMLUser>\n"+
-			"</xml>\n"), w.Body.String())
+			"</xml>\n"), rw.Body.String())
 }
 
 func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
@@ -108,18 +112,20 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 		}
 
 		p := acceptable.XML("xml", "  ")
-		w := httptest.NewRecorder()
+		rw := httptest.NewRecorder()
 
-		p(w, req, match, "template")
+		w := match.ApplyHeaders(rw)
+		err := p(w, req, match.Data, "template", match.Language)
 
-		g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16be"), enc)
-		g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"), enc)
-		g.Expect(w.Body.Bytes()).To(Equal([]byte{
+		g.Expect(err).NotTo(HaveOccurred())
+		g.Expect(rw.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16be"), enc)
+		g.Expect(rw.Header().Get("Content-Language")).To(Equal("cn"), enc)
+		g.Expect(rw.Body.Bytes()).To(Equal([]byte{
 			0, '<', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n',
 			0, ' ', 0, ' ', 0, '<', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '>', 84, 13, 121, 240,
 			0, '<', 0, '/', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '>', 0, '\n', 0,
 			'<', 0, '/', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n',
-		}), w.Body.String(), enc)
+		}), rw.Body.String(), enc)
 	}
 }
 
@@ -140,32 +146,33 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 		}
 
 		p := acceptable.XML("xml", "  ")
-		w := httptest.NewRecorder()
+		rw := httptest.NewRecorder()
 
-		p(w, req, match, "template")
+		w := match.ApplyHeaders(rw)
+		err := p(w, req, match.Data, "template", match.Language)
 
-		g.Expect(w.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16le"), enc)
-		g.Expect(w.Header().Get("Content-Language")).To(Equal("cn"), enc)
-		g.Expect(w.Body.Bytes()).To(Equal([]byte{
+		g.Expect(err).NotTo(HaveOccurred())
+		g.Expect(rw.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16le"), enc)
+		g.Expect(rw.Header().Get("Content-Language")).To(Equal("cn"), enc)
+		g.Expect(rw.Body.Bytes()).To(Equal([]byte{
 			'<', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n', 0,
 			' ', 0, ' ', 0, '<', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '>', 0, 13, 84, 240, 121,
 			'<', 0, '/', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '>', 0, '\n', 0,
 			'<', 0, '/', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n', 0,
-		}), w.Body.String(), enc)
+		}), rw.Body.String(), enc)
 	}
 }
 
-func TestXMLShouldRPanicOnError(t *testing.T) {
+func TestXMLShouldReturnError(t *testing.T) {
 	g := NewGomegaWithT(t)
 	req := &http.Request{}
 	w := httptest.NewRecorder()
 
-	model := &XMLUser{Name: "Joe Bloggs"}
-	match := offer.Match{Data: data.Of(model)}
+	model := &ErrXMLUser{Msg: "oops"}
 
 	p := acceptable.XML("xml", "  ")
 
-	err := p(w, req, match, "template")
+	err := p(w, req, data.Of(model), "template", "en")
 
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("oops"))
@@ -175,12 +182,12 @@ type ValidXMLUser struct {
 	Name string
 }
 
-type XMLUser struct {
-	Name string
+type ErrXMLUser struct {
+	Msg string
 }
 
-func (u *XMLUser) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	return errors.New("oops")
+func (u *ErrXMLUser) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	return errors.New(u.Msg)
 }
 
 //func xmltestErrorHandler(w http.ResponseWriter, err error) {

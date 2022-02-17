@@ -1,13 +1,14 @@
 package header_test
 
 import (
+	"io"
 	"net/http"
 	"testing"
 
-	"github.com/rickb777/acceptable/offer"
-
 	"github.com/onsi/gomega"
+	"github.com/rickb777/acceptable/data"
 	. "github.com/rickb777/acceptable/header"
+	"github.com/rickb777/acceptable/offer"
 )
 
 func TestContentType_String(t *testing.T) {
@@ -47,7 +48,7 @@ func TestPrecedenceValues_String(t *testing.T) {
 func TestOffer_String(t *testing.T) {
 	g := gomega.NewWithT(t)
 
-	p := func(w http.ResponseWriter, req *http.Request, match offer.Match, template string) error {
+	p := func(_ io.Writer, _ *http.Request, _ data.Data, _, _ string) error {
 		return nil
 	}
 	o := offer.Of(p, "text/html").With(nil, "en")

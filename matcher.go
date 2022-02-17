@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"strings"
 
+	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
-	"github.com/rickb777/acceptable/offer"
+	offerpkg "github.com/rickb777/acceptable/offer"
 )
 
 // IsAjax tests whether a request has the Ajax header sent by browsers for XHR requests.
@@ -17,11 +18,11 @@ func IsAjax(req *http.Request) bool {
 // RenderBestMatch uses BestRequestMatch to find the best matching offer for the request,
 // and then renders the response. The returned error, if any, will have arisen from either
 // the content provider (see data.Content) or the response processor (see offer.Processor).
-func RenderBestMatch(w http.ResponseWriter, req *http.Request, template string, available ...offer.Offer) error {
+func RenderBestMatch(rw http.ResponseWriter, req *http.Request, template string, available ...offerpkg.Offer) error {
 	best := BestRequestMatch(req, available...)
 
 	if best == nil {
-		w.WriteHeader(http.StatusNotAcceptable)
+		rw.WriteHeader(http.StatusNotAcceptable)
 		return nil
 	}
 
@@ -29,7 +30,14 @@ func RenderBestMatch(w http.ResponseWriter, req *http.Request, template string, 
 		panic(fmt.Sprintf("misconfigured offers for %s/%s;charset=%s;lang=%s", best.Type, best.Subtype, best.Charset, best.Language))
 	}
 
-	return best.Render(w, req, *best, template)
+	w := best.ApplyHeaders(rw)
+
+	sendContent, err := datapkg.ConditionalRequest(rw, req, best.Data, template, best.Language)
+	if !sendContent || err != nil {
+		return err
+	}
+
+	return best.Render(w, req, best.Data, template, best.Language)
 }
 
 // BestRequestMatch finds the content type and language that best matches the accepted media
@@ -50,14 +58,14 @@ func RenderBestMatch(w http.ResponseWriter, req *http.Request, template string, 
 // If no available offers are provided, the response will always be nil. Note too that
 // Ajax requests will result in nil being returned if no offer is capable of handling
 // them, even if other offers are provided.
-func BestRequestMatch(req *http.Request, available ...offer.Offer) *offer.Match {
+func BestRequestMatch(req *http.Request, available ...offerpkg.Offer) *offerpkg.Match {
 	accept, accLang, vary := readHeaders(req)
 
 	mrs := header.ParseMediaRanges(accept).WithDefault()
 	languages := header.ParsePrecedenceValues(accLang).WithDefault()
 
 	if IsAjax(req) {
-		available = offer.Offers(available).Filter("application", "json")
+		available = offerpkg.Offers(available).Filter("application", "json")
 	}
 
 	c := context(fmt.Sprintf("%s %s", req.Method, req.URL))
@@ -101,7 +109,7 @@ type context string
 //
 // Whenever the result is nil, the response should be 406-Not Acceptable.
 // If no available offers are provided, the response will always be nil.
-func (c context) bestMatch(mrs header.MediaRanges, languages header.PrecedenceValues, available offer.Offers, vary []string) (best *offer.Match) {
+func (c context) bestMatch(mrs header.MediaRanges, languages header.PrecedenceValues, available offerpkg.Offers, vary []string) (best *offerpkg.Match) {
 	// first pass - remove offers that match exclusions
 	// (this doesn't apply to language exclusions because we always allow at least one language match)
 	remaining := c.removeExcludedOffers(mrs, available)
@@ -140,7 +148,7 @@ func (c context) bestMatch(mrs header.MediaRanges, languages header.PrecedenceVa
 	return nil // 406 - Not Acceptable
 }
 
-func (c context) removeExcludedOffers(mrs header.MediaRanges, available []offer.Offer) []offer.Offer {
+func (c context) removeExcludedOffers(mrs header.MediaRanges, available []offerpkg.Offer) []offerpkg.Offer {
 	excluded := make([]bool, len(available))
 	for i, offer := range available {
 		for _, accepted := range mrs {
@@ -153,22 +161,22 @@ func (c context) removeExcludedOffers(mrs header.MediaRanges, available []offer.
 		}
 	}
 
-	remaining := make([]offer.Offer, 0, len(available))
+	remaining := make([]offerpkg.Offer, 0, len(available))
 	for i, offer := range available {
 		if !excluded[i] {
 			remaining = append(remaining, offer)
 		} else {
-			Debug("%s excluding offer %s\n", c, offer)
+			Debug("%s excluding offerpkg %s\n", c, offer)
 		}
 	}
 
 	return remaining
 }
 
-func (c context) findBestMatch(mrs header.MediaRanges, languages header.PrecedenceValues, offer offer.Offer, vary []string,
-	ctMatch func(header.MediaRange, offer.Offer) bool,
+func (c context) findBestMatch(mrs header.MediaRanges, languages header.PrecedenceValues, offer offerpkg.Offer, vary []string,
+	ctMatch func(header.MediaRange, offerpkg.Offer) bool,
 	langMatch func(acceptedLang, offeredLang string) bool,
-	kind string) (*offer.Match, bool) {
+	kind string) (*offerpkg.Match, bool) {
 
 	foundCtMatch := false
 
@@ -196,18 +204,18 @@ func (c context) findBestMatch(mrs header.MediaRanges, languages header.Preceden
 		}
 	}
 
-	Debug("%s no %s match for offer %s\n", c, kind, offer)
+	Debug("%s no %s match for offerpkg %s\n", c, kind, offer)
 	return nil, foundCtMatch
 }
 
 //-------------------------------------------------------------------------------------------------
 
-func exactMatch(accepted header.MediaRange, offer offer.Offer) bool {
+func exactMatch(accepted header.MediaRange, offer offerpkg.Offer) bool {
 	return accepted.Type == offer.Type &&
 		accepted.Subtype == offer.Subtype
 }
 
-func nearMatch(accepted header.MediaRange, offer offer.Offer) bool {
+func nearMatch(accepted header.MediaRange, offer offerpkg.Offer) bool {
 	return equalOrWildcard(accepted.Type, offer.Type) &&
 		equalOrWildcard(accepted.Subtype, offer.Subtype)
 }

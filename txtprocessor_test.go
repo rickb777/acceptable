@@ -6,11 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rickb777/acceptable"
-
-	"github.com/rickb777/acceptable/offer"
-
 	. "github.com/onsi/gomega"
+	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
 )
 
@@ -38,14 +35,15 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 		},
 		{data.Of(hidden{tt(2001, 10, 31)}), "(2001-10-31)\n"},
 		{data.Of(tm{"Joe Bloggs"}), "Joe Bloggs\n"},
+		{data.Of(nil), "\n"},
 	}
 
 	p := acceptable.TXT()
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		p(w, req, offer.Match{Data: m.stuff}, "")
-		g.Expect(w.Body.String()).To(Equal(m.expected))
+		err := p(w, req, m.stuff, "", "")
+		g.Expect(w.Body.String(), err).To(Equal(m.expected))
 	}
 }
 
@@ -67,7 +65,7 @@ func TestTXTShouldNotReturnError(t *testing.T) {
 
 	p := acceptable.TXT()
 
-	err := p(w, req, offer.Match{}, "")
+	err := p(w, req, nil, "", "")
 
 	g.Expect(err).NotTo(HaveOccurred())
 }

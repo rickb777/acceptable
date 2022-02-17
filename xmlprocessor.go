@@ -2,10 +2,11 @@ package acceptable
 
 import (
 	"encoding/xml"
+	"io"
 	"net/http"
 	"strings"
 
-	"github.com/rickb777/acceptable/data"
+	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
 	"github.com/rickb777/acceptable/offer"
 )
@@ -33,19 +34,16 @@ func XML(root string, indent ...string) offer.Processor {
 		in = indent[0]
 	}
 
-	return func(rw http.ResponseWriter, req *http.Request, match offer.Match, template string) (err error) {
-		w := match.ApplyHeaders(rw)
-
-		sendContent, err := data.ConditionalRequest(rw, req, match.Data, template, match.Language)
-		if !sendContent || err != nil {
-			return err
+	return func(w io.Writer, _ *http.Request, data datapkg.Data, template, language string) (err error) {
+		if data == nil {
+			return nil
 		}
 
 		p := &internal.WriterProxy{W: w}
 
 		enc := xml.NewEncoder(p)
 
-		d, more, err := match.Data.Content(template, match.Language)
+		d, more, err := data.Content(template, language)
 		if err != nil {
 			return err
 		}
@@ -73,7 +71,7 @@ func XML(root string, indent ...string) offer.Processor {
 		for stillMore {
 			p.Write(newline)
 
-			d, stillMore, err = match.Data.Content(template, match.Language)
+			d, stillMore, err = data.Content(template, language)
 			if err != nil {
 				return err
 			}

@@ -1,6 +1,7 @@
 package acceptable_test
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -9,7 +10,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
-	"github.com/rickb777/acceptable/offer"
 )
 
 func TestBinaryShouldWriteResponseBody(t *testing.T) {
@@ -34,6 +34,8 @@ func TestBinaryShouldWriteResponseBody(t *testing.T) {
 			"Alice\nBob\nCharles\n",
 		},
 		{data.Of(strings.NewReader("Joe Bloggs")), "Joe Bloggs"},
+		{data.Of(&simpleReader{s: "Joe Bloggs"}), "Joe Bloggs"},
+		{data.Of(nil), ""},
 		{nil, ""},
 	}
 
@@ -42,8 +44,8 @@ func TestBinaryShouldWriteResponseBody(t *testing.T) {
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		p(w, req, offer.Match{Data: m.stuff}, "")
-		g.Expect(w.Body.String()).To(Equal(m.expected))
+		err := p(w, req, m.stuff, "", "")
+		g.Expect(w.Body.String(), err).To(Equal(m.expected))
 	}
 }
 
@@ -54,7 +56,28 @@ func TestBinaryShouldNotReturnError(t *testing.T) {
 	req := &http.Request{}
 	p := acceptable.Binary()
 
-	err := p(w, req, offer.Match{}, "")
+	err := p(w, req, nil, "", "")
 
 	g.Expect(err).NotTo(HaveOccurred())
+}
+
+type simpleReader struct {
+	s string
+}
+
+func (s *simpleReader) Read(p []byte) (n int, err error) {
+	l := len(s.s)
+	if l == 0 {
+		return 0, io.EOF
+	}
+
+	if l > len(p) {
+		copy(p, s.s[:len(p)])
+		s.s = s.s[len(p):]
+		return len(p), nil
+	}
+
+	copy(p, s.s)
+	s.s = ""
+	return l, nil
 }

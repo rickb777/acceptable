@@ -8,7 +8,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
-	"github.com/rickb777/acceptable/offer"
 )
 
 func TestCSVShouldWriteResponseBody(t *testing.T) {
@@ -40,7 +39,7 @@ func TestCSVShouldWriteResponseBody(t *testing.T) {
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		p(w, req, offer.Match{Data: m.stuff}, "")
+		p(w, req, m.stuff, "", "")
 		g.Expect(w.Body.String()).To(Equal(m.expected))
 	}
 }
@@ -69,7 +68,7 @@ func TestCSVShouldWriteResponseBodyWithTabs(t *testing.T) {
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		p(w, req, offer.Match{Data: m.stuff}, "")
+		p(w, req, m.stuff, "", "")
 		g.Expect(w.Body.String()).To(Equal(m.expected))
 	}
 }
