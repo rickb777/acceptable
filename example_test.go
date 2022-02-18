@@ -7,12 +7,12 @@ import (
 	"net/http/httptest"
 	"sort"
 
-	"github.com/rickb777/acceptable/contenttype"
-
 	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/contenttype"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
+	"github.com/rickb777/acceptable/templates"
 )
 
 func Example() {
@@ -60,22 +60,22 @@ func Example() {
 		// Ajax requests.
 
 		err := acceptable.RenderBestMatch(res, req, "home.html",
-			offer.Of(acceptable.JSON("  "), contenttype.ApplicationJSON).
+			offer.JSON("  ").
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			offer.Of(acceptable.XML("xml", "  "), contenttype.ApplicationXML).
+			offer.XML("xml", "  ").
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			offer.Of(acceptable.CSV(), contenttype.TextCSV).
+			offer.CSV().
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			offer.Of(acceptable.TXT(), contenttype.TextPlain).
+			offer.Of(offer.TXTProcessor(), contenttype.TextPlain).
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			acceptable.TextHtmlOffer("example/templates/en", ".html", nil).
+			templates.TextHtmlOffer("example/templates/en", ".html", nil).
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			acceptable.ApplicationXhtmlOffer("example/templates/en", ".html", nil).
+			templates.ApplicationXhtmlOffer("example/templates/en", ".html", nil).
 				With(en, "en").With(fr, "fr").With(es, "es"),
 		)
 

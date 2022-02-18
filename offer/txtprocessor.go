@@ -1,4 +1,4 @@
-package acceptable
+package offer
 
 import (
 	"encoding"
@@ -6,12 +6,17 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/rickb777/acceptable/contenttype"
 	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
-	"github.com/rickb777/acceptable/offer"
 )
 
-// TXT creates an output processor that serialises strings in a form suitable for text/* responses (especially
+// TextPlain returns an Offer for text/plain content using TXTProcessor.
+func TextPlain() Offer { return textPlainOffer }
+
+var textPlainOffer = Of(TXTProcessor(), contenttype.TextPlain)
+
+// TXTProcessor creates an output processor that serialises strings in a form suitable for text/* responses (especially
 // text/plain and text/html). It is also useful for JSON, XML etc that is already encoded.
 //
 // As required by IETF RFC, the response will always be sent with a trailing newline, even if the supplied
@@ -27,9 +32,9 @@ import (
 // * io.Reader
 // * nil
 //
-// Because it handles io.Reader and io.WriterTo, TXT can be used to stream large responses (without any
+// Because it handles io.Reader and io.WriterTo, TXTProcessor can be used to stream large responses (without any
 // further encoding).
-func TXT() offer.Processor {
+func TXTProcessor() Processor {
 	return func(w io.Writer, _ *http.Request, data datapkg.Data, template, language string) (err error) {
 		p := &internal.WriterProxy{W: w}
 

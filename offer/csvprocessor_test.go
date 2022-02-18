@@ -1,4 +1,4 @@
-package acceptable_test
+package offer_test
 
 import (
 	"net/http"
@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	. "github.com/onsi/gomega"
-	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/offer"
 )
 
 func TestCSVShouldWriteResponseBody(t *testing.T) {
@@ -35,7 +35,7 @@ func TestCSVShouldWriteResponseBody(t *testing.T) {
 	}
 
 	req := &http.Request{}
-	p := acceptable.CSV()
+	p := offer.CSVProcessor()
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
@@ -64,7 +64,7 @@ func TestCSVShouldWriteResponseBodyWithTabs(t *testing.T) {
 	}
 
 	req := &http.Request{}
-	p := acceptable.CSV('\t')
+	p := offer.CSVProcessor('\t')
 
 	for _, m := range models {
 		w := httptest.NewRecorder()

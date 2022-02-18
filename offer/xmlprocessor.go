@@ -1,4 +1,4 @@
-package acceptable
+package offer
 
 import (
 	"encoding/xml"
@@ -6,19 +6,24 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rickb777/acceptable/contenttype"
 	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
-	"github.com/rickb777/acceptable/offer"
 )
 
-// XML creates a new processor for XML with root element and optional indentation. This converts
-// a data item (or a sequence of data items) into XML using the standard Go encoder.
+// XML constructs an XML Offer easily.
+func XML(root string, indent ...string) Offer {
+	return Of(XMLProcessor(root, indent...), contenttype.ApplicationXML)
+}
+
+// XMLProcessor creates a new processor for XML with root element and optional indentation. This
+// converts a data item (or a sequence of data items) into XML using the standard Go encoder.
 //
 // The root element is used only when processing content that is a sequence of data items. It
 // can be a name such as "root" or an XML element such as "<html lang='en'>".
 //
 // The optional indent argument is a string usually of zero or more space characters.
-func XML(root string, indent ...string) offer.Processor {
+func XMLProcessor(root string, indent ...string) Processor {
 	if root == "" {
 		root = "<xml>"
 	}

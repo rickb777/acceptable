@@ -1,4 +1,4 @@
-package acceptable_test
+package offer_test
 
 import (
 	"errors"
@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	. "github.com/onsi/gomega"
-	"github.com/rickb777/acceptable"
 	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	. "github.com/rickb777/acceptable/headername"
@@ -32,7 +31,7 @@ func TestJSONShouldWriteResponseBody_lazy_indented(t *testing.T) {
 		Data:        datapkg.Lazy(func(string, string) (interface{}, error) { return model, nil }),
 	}
 
-	p := acceptable.JSON("  ")
+	p := offer.JSONProcessor("  ")
 
 	w := match.ApplyHeaders(rw)
 	err := p(w, req, match.Data, "template", match.Language)
@@ -64,7 +63,7 @@ func TestJSONShouldWriteResponseBody_sequence(t *testing.T) {
 		}),
 	}
 
-	p := acceptable.JSON("  ")
+	p := offer.JSONProcessor("  ")
 
 	w := match.ApplyHeaders(rw)
 	err := p(w, req, match.Data, "template", match.Language)
@@ -97,7 +96,7 @@ func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 			Data:        datapkg.Of(model),
 		}
 
-		p := acceptable.JSON("")
+		p := offer.JSONProcessor("")
 		rw := httptest.NewRecorder()
 		w := match.ApplyHeaders(rw)
 
@@ -119,7 +118,7 @@ func TestJSONShouldReturnError(t *testing.T) {
 
 	model := &User{"Joe Bloggs"}
 
-	p := acceptable.JSON()
+	p := offer.JSONProcessor()
 
 	err := p(w, req, datapkg.Of(model), "template", "en")
 

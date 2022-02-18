@@ -1,4 +1,4 @@
-package acceptable_test
+package offer_test
 
 import (
 	"encoding/xml"
@@ -7,12 +7,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/rickb777/acceptable/headername"
-
 	. "github.com/onsi/gomega"
-	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
+	"github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
 )
 
@@ -32,7 +30,7 @@ func TestXMLShouldWriteLazyResponseBody(t *testing.T) {
 		Data:        data.Lazy(func(string, string) (interface{}, error) { return model, nil }),
 	}
 
-	p := acceptable.XML("xml")
+	p := offer.XMLProcessor("xml")
 
 	w := match.ApplyHeaders(rw)
 	err := p(w, req, match.Data, "template", match.Language)
@@ -74,7 +72,7 @@ func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
 		}),
 	}
 
-	p := acceptable.XML("xml", "  ")
+	p := offer.XMLProcessor("xml", "  ")
 
 	w := match.ApplyHeaders(rw)
 	err := p(w, req, match.Data, "template", match.Language)
@@ -111,7 +109,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 			Data:        data.Of(model),
 		}
 
-		p := acceptable.XML("xml", "  ")
+		p := offer.XMLProcessor("xml", "  ")
 		rw := httptest.NewRecorder()
 
 		w := match.ApplyHeaders(rw)
@@ -144,7 +142,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 			Data:        data.Of(model),
 		}
 
-		p := acceptable.XML("xml", "  ")
+		p := offer.XMLProcessor("xml", "  ")
 		rw := httptest.NewRecorder()
 
 		w := match.ApplyHeaders(rw)
@@ -169,7 +167,7 @@ func TestXMLShouldReturnError(t *testing.T) {
 
 	model := &ErrXMLUser{Msg: "oops"}
 
-	p := acceptable.XML("xml", "  ")
+	p := offer.XMLProcessor("xml", "  ")
 
 	err := p(w, req, data.Of(model), "template", "en")
 

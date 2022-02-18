@@ -1,23 +1,28 @@
-package acceptable
+package offer
 
 import (
 	"encoding/json"
 	"io"
 	"net/http"
 
+	"github.com/rickb777/acceptable/contenttype"
 	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
-	"github.com/rickb777/acceptable/offer"
 )
 
-// JSON creates a new processor for JSON with a specified indentation. This converts
+// JSON constructs a JSON Offer easily.
+func JSON(indent ...string) Offer {
+	return Of(JSONProcessor(indent...), contenttype.ApplicationJSON)
+}
+
+// JSONProcessor creates a new processor for JSON with a specified indentation. This converts
 // a data item (or a sequence of data items) into JSON using the standard Go encoder.
 //
 // When writing a sequence of items, the overall result is a JSON array starting with "["
 // and ending with "]", including commas where necessary.
 //
 // The optional indent argument is a string usually of zero or more space characters.
-func JSON(indent ...string) offer.Processor {
+func JSONProcessor(indent ...string) Processor {
 	in := ""
 	if len(indent) > 0 {
 		in = indent[0]

@@ -5,13 +5,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	. "github.com/rickb777/acceptable/contenttype"
-	. "github.com/rickb777/acceptable/headername"
-
 	"github.com/labstack/echo/v4"
 	. "github.com/onsi/gomega"
+	. "github.com/rickb777/acceptable/contenttype"
 	"github.com/rickb777/acceptable/echo4"
 	"github.com/rickb777/acceptable/header"
+	. "github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
 )
 
@@ -19,11 +18,11 @@ func TestBestRequestMatch_should_match_best_offer(t *testing.T) {
 	g := NewWithT(t)
 
 	// Given ...
-	oa := offer.Of(echo4.TXT(), TextPlain).With("foo", "en")
-	ob := offer.Of(echo4.CSV(), TextCSV).With("bar", "en")
-	oc := offer.Of(echo4.JSON(), ApplicationJSON).With("hello", "en")
-	od := offer.Of(echo4.XML("x"), ApplicationXML).With("zzz", "en")
-	oe := offer.Of(echo4.Binary(), ApplicationBinary).With("10101", "en")
+	oa := offer.Of(offer.TXTProcessor(), TextPlain).With("foo", "en")
+	ob := offer.Of(offer.CSVProcessor(), TextCSV).With("bar", "en")
+	oc := offer.Of(offer.JSONProcessor(), ApplicationJSON).With("hello", "en")
+	od := offer.Of(offer.XMLProcessor("x"), ApplicationXML).With("zzz", "en")
+	oe := offer.Of(offer.BinaryProcessor(), ApplicationBinary).With("10101", "en")
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -43,11 +42,11 @@ func TestRenderBestMatch_should_use_default_processor_if_no_accept_header(t *tes
 	g := NewWithT(t)
 
 	// Given ...
-	oa := offer.Of(echo4.TXT(), "text/test")
-	ob := offer.Of(echo4.TXT(), TextPlain)
-	oc := offer.Of(echo4.CSV(), TextCSV)
-	od := offer.Of(echo4.XML("x"), ApplicationXML)
-	oe := offer.Of(echo4.Binary(), ApplicationBinary)
+	oa := offer.Of(offer.TXTProcessor(), "text/test")
+	ob := offer.Of(offer.TXTProcessor(), TextPlain)
+	oc := offer.Of(offer.CSVProcessor(), TextCSV)
+	od := offer.Of(offer.XMLProcessor("x"), ApplicationXML)
+	oe := offer.Of(offer.BinaryProcessor(), ApplicationBinary)
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -70,7 +69,7 @@ func TestRenderBestMatch_should_give_JSON_response_for_ajax_requests(t *testing.
 	g := NewWithT(t)
 
 	// Given ...
-	oa := offer.Of(echo4.JSON(), "application/json").With("foo", "en")
+	oa := offer.JSON().With("foo", "en")
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)

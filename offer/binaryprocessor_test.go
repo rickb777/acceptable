@@ -1,4 +1,4 @@
-package acceptable_test
+package offer_test
 
 import (
 	"io"
@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	. "github.com/onsi/gomega"
-	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/offer"
 )
 
 func TestBinaryShouldWriteResponseBody(t *testing.T) {
@@ -40,7 +40,7 @@ func TestBinaryShouldWriteResponseBody(t *testing.T) {
 	}
 
 	req := &http.Request{}
-	p := acceptable.Binary()
+	p := offer.BinaryProcessor()
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
@@ -54,7 +54,7 @@ func TestBinaryShouldNotReturnError(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	req := &http.Request{}
-	p := acceptable.Binary()
+	p := offer.BinaryProcessor()
 
 	err := p(w, req, nil, "", "")
 

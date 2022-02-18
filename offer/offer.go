@@ -33,14 +33,16 @@ type Offer struct {
 }
 
 // Of constructs an Offer easily, given a content type.
-// If the content type is blank, it is assumed to be the full wildcard "*/*".
-// Also, contentType can be a partial wildcard "type/*".
+// The contentType can be a partial wildcard "type/*".
+//
+// Also, if the content type is blank, it is assumed to be the full wildcard "*/*".
+// However, in this catch-all situation, the best matching MIME type will be determined from
+// the Accept header and the response Content-Type will be set to this value, even if it is
+// inappropriate for the actual content. Therefore this should be used sparingly or not at all.
+// The correct behaviour is a 406 when no match can be made.
 func Of(processor Processor, contentType string) Offer {
-	t, s := internal.Split1(contentType, '/')
-	ct := header.ContentTypeOf(t, s)
-
 	return Offer{
-		ContentType: ct,
+		ContentType: header.ContentTypeOf(internal.Split1(contentType, '/')),
 		processor:   processor,
 		Langs:       []string{"*"},
 		data:        make(map[string]data.Data),
@@ -202,11 +204,11 @@ func emptyToNil(d data.Data) data.Data {
 
 type empty struct{}
 
-func (e empty) Meta(template, language string) (meta *data.Metadata, err error) {
+func (e empty) Meta(_, _ string) (*data.Metadata, error) {
 	panic("not reachable")
 }
 
-func (e empty) Content(template, language string) (interface{}, bool, error) {
+func (e empty) Content(_, _ string) (interface{}, bool, error) {
 	panic("not reachable")
 }
 

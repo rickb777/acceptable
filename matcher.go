@@ -183,14 +183,14 @@ func (c context) removeExcludedOffers(mrs header.MediaRanges, available []offerp
 }
 
 func (c context) findBestMatch(mrs header.MediaRanges, languages header.PrecedenceValues, offer offerpkg.Offer, vary []string,
-	ctMatch func(header.MediaRange, offerpkg.Offer) bool,
+	contentTypeMatch func(header.MediaRange, offerpkg.Offer) bool,
 	langMatch func(acceptedLang, offeredLang string) bool,
 	kind string) (*offerpkg.Match, bool) {
 
 	foundCtMatch := false
 
 	for _, acceptedCT := range mrs {
-		if ctMatch(acceptedCT, offer) {
+		if contentTypeMatch(acceptedCT, offer) {
 			foundCtMatch = true
 
 			for _, prefLang := range languages {

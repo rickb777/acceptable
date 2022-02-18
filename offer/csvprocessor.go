@@ -1,4 +1,4 @@
-package acceptable
+package offer
 
 import (
 	"encoding/csv"
@@ -7,11 +7,16 @@ import (
 	"net/http"
 	"reflect"
 
+	"github.com/rickb777/acceptable/contenttype"
 	datapkg "github.com/rickb777/acceptable/data"
-	"github.com/rickb777/acceptable/offer"
 )
 
-// CSV creates an output processor that serialises a dataModel in CSV form. With no arguments, the default
+// CSV constructs a CSV Offer easily.
+func CSV(comma ...rune) Offer {
+	return Of(CSVProcessor(comma...), contenttype.TextCSV)
+}
+
+// CSVProcessor creates an output processor that serialises a dataModel in CSV form. With no arguments, the default
 // format is comma-separated; you can supply any rune to be used as an alternative separator. The underlying
 // encoder is provided by the standard library and so correctly handles quote marks etc.
 //
@@ -32,7 +37,7 @@ import (
 // * struct for which all the fields are exported and of simple types (as above), written as a single row
 //
 // * []struct for some struct in which all the fields are exported and of simple types (as above), written as many rows
-func CSV(comma ...rune) offer.Processor {
+func CSVProcessor(comma ...rune) Processor {
 
 	in := ','
 	if len(comma) > 0 {

@@ -1,4 +1,4 @@
-package acceptable_test
+package offer_test
 
 import (
 	"net/http"
@@ -7,8 +7,8 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
-	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/offer"
 )
 
 func TestTXTShouldWriteResponseBody(t *testing.T) {
@@ -38,7 +38,7 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 		{data.Of(nil), "\n"},
 	}
 
-	p := acceptable.TXT()
+	p := offer.TXTProcessor()
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
@@ -63,7 +63,7 @@ func TestTXTShouldNotReturnError(t *testing.T) {
 	req := &http.Request{}
 	w := httptest.NewRecorder()
 
-	p := acceptable.TXT()
+	p := offer.TXTProcessor()
 
 	err := p(w, req, nil, "", "")
 

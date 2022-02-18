@@ -1,4 +1,4 @@
-package acceptable
+package offer
 
 import (
 	"bytes"
@@ -6,11 +6,17 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/rickb777/acceptable/contenttype"
 	datapkg "github.com/rickb777/acceptable/data"
-	"github.com/rickb777/acceptable/offer"
 )
 
-// Binary creates an output processor that outputs binary data in a form suitable for image/* and similar responses.
+// ImageJPEGPNG is an Offer for image/jpeg content using BinaryProcessor.
+func ImageJPEG() Offer { return Of(BinaryProcessor(), contenttype.ImageJPEG) }
+
+// ImagePNG is an Offer for image/png content using BinaryProcessor.
+func ImagePNG() Offer { return Of(BinaryProcessor(), contenttype.ImagePNG) }
+
+// BinaryProcessor creates an output processor that outputs binary data in a form suitable for image/* and similar responses.
 // Model values should be one of the following:
 //
 // * []byte
@@ -18,9 +24,9 @@ import (
 // * io.Reader
 // * nil
 //
-// Because it handles io.Reader and io.WriterTo, Binary can be used to stream large responses (without any
+// Because it handles io.Reader and io.WriterTo, BinaryProcessor can be used to stream large responses (without any
 // further encoding).
-func Binary() offer.Processor {
+func BinaryProcessor() Processor {
 	return func(w io.Writer, _ *http.Request, data datapkg.Data, template, language string) (err error) {
 		more := data != nil
 
