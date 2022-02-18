@@ -10,7 +10,7 @@ import (
 	"github.com/rickb777/acceptable"
 	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
-	. "github.com/rickb777/acceptable/header/headername"
+	. "github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
 )
 

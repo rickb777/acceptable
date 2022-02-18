@@ -7,9 +7,11 @@ import (
 	"net/http/httptest"
 	"sort"
 
+	"github.com/rickb777/acceptable/contenttype"
+
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
-	"github.com/rickb777/acceptable/header/headername"
+	"github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
 )
 
@@ -58,16 +60,16 @@ func Example() {
 		// Ajax requests.
 
 		err := acceptable.RenderBestMatch(res, req, "home.html",
-			offer.Of(acceptable.JSON("  "), "application/json").
+			offer.Of(acceptable.JSON("  "), contenttype.ApplicationJSON).
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			offer.Of(acceptable.XML("xml", "  "), "application/xml").
+			offer.Of(acceptable.XML("xml", "  "), contenttype.ApplicationXML).
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			offer.Of(acceptable.CSV(), "text/csv").
+			offer.Of(acceptable.CSV(), contenttype.TextCSV).
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
-			offer.Of(acceptable.TXT(), "text/plain").
+			offer.Of(acceptable.TXT(), contenttype.TextPlain).
 				With(en, "en").With(fr, "fr").With(es, "es"),
 
 			acceptable.TextHtmlOffer("example/templates/en", ".html", nil).

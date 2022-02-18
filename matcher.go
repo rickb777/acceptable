@@ -8,7 +8,7 @@ import (
 	"github.com/rickb777/acceptable/contenttype"
 	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
-	"github.com/rickb777/acceptable/header/headername"
+	"github.com/rickb777/acceptable/headername"
 	offerpkg "github.com/rickb777/acceptable/offer"
 )
 

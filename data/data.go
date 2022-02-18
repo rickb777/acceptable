@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/rickb777/acceptable/header"
-	"github.com/rickb777/acceptable/header/headername"
+	"github.com/rickb777/acceptable/headername"
 )
 
 // Data provides a source for response content. It is optimised for lazy evaluation, avoiding

@@ -8,7 +8,7 @@ import (
 
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
-	"github.com/rickb777/acceptable/header/headername"
+	"github.com/rickb777/acceptable/headername"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/htmlindex"
 )

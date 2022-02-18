@@ -9,7 +9,7 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
-	. "github.com/rickb777/acceptable/header/headername"
+	. "github.com/rickb777/acceptable/headername"
 )
 
 var t1 = time.Date(2020, 1, 1, 1, 1, 1, 0, time.UTC)

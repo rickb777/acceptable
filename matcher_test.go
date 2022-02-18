@@ -12,7 +12,7 @@ import (
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
-	. "github.com/rickb777/acceptable/header/headername"
+	. "github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
 	"github.com/rickb777/acceptable/templates"
 )

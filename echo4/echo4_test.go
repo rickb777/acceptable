@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	. "github.com/rickb777/acceptable/contenttype"
-	. "github.com/rickb777/acceptable/header/headername"
+	. "github.com/rickb777/acceptable/headername"
 
 	"github.com/labstack/echo/v4"
 	. "github.com/onsi/gomega"

@@ -6,7 +6,7 @@ import (
 
 	"github.com/onsi/gomega"
 	"github.com/rickb777/acceptable/header"
-	. "github.com/rickb777/acceptable/header/headername"
+	. "github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
 )
 
