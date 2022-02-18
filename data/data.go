@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rickb777/acceptable/header"
+	"github.com/rickb777/acceptable/header/headername"
 )
 
 // Data provides a source for response content. It is optimised for lazy evaluation, avoiding
@@ -223,7 +224,7 @@ func ConditionalRequest(rw http.ResponseWriter, req *http.Request, d Data, templ
 	if meta.Hash != "" {
 		rw.Header().Set("ETag", fmt.Sprintf("%q", meta.Hash))
 
-		ifNoneMatch := header.ETagsOf(req.Header.Get(header.IfNoneMatch))
+		ifNoneMatch := header.ETagsOf(req.Header.Get(headername.IfNoneMatch))
 		if ifNoneMatch.WeaklyMatches(meta.Hash) {
 			rw.WriteHeader(http.StatusNotModified)
 			sendContent = false
@@ -234,7 +235,7 @@ func ConditionalRequest(rw http.ResponseWriter, req *http.Request, d Data, templ
 		rw.Header().Set("Last-Modified", meta.LastModified.Format(time.RFC1123))
 
 		if sendContent {
-			ifModifiedSince, e2 := time.Parse(time.RFC1123, req.Header.Get(header.IfModifiedSince))
+			ifModifiedSince, e2 := time.Parse(time.RFC1123, req.Header.Get(headername.IfModifiedSince))
 			if e2 == nil {
 				if meta.LastModified.After(ifModifiedSince) {
 					rw.WriteHeader(http.StatusNotModified)

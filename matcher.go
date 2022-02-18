@@ -5,14 +5,23 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rickb777/acceptable/contenttype"
 	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
+	"github.com/rickb777/acceptable/header/headername"
 	offerpkg "github.com/rickb777/acceptable/offer"
 )
 
 // IsAjax tests whether a request has the Ajax header sent by browsers for XHR requests.
 func IsAjax(req *http.Request) bool {
-	return strings.ToLower(req.Header.Get(header.XRequestedWith)) == header.XMLHttpRequest
+	return strings.ToLower(req.Header.Get(headername.XRequestedWith)) == header.XMLHttpRequest
+}
+
+// NoMatchAccepted is a function used by RenderBestMatch when no match has been found.
+var NoMatchAccepted = func(rw http.ResponseWriter, _ *http.Request) {
+	rw.Header().Set(headername.ContentType, contenttype.TextPlain+";"+contenttype.CharsetUTF8)
+	rw.WriteHeader(http.StatusNotAcceptable)
+	rw.Write([]byte(http.StatusText(http.StatusNotAcceptable)))
 }
 
 // RenderBestMatch uses BestRequestMatch to find the best matching offer for the request,
@@ -22,7 +31,7 @@ func RenderBestMatch(rw http.ResponseWriter, req *http.Request, template string,
 	best := BestRequestMatch(req, available...)
 
 	if best == nil {
-		rw.WriteHeader(http.StatusNotAcceptable)
+		NoMatchAccepted(rw, req)
 		return nil
 	}
 
@@ -72,14 +81,14 @@ func BestRequestMatch(req *http.Request, available ...offerpkg.Offer) *offerpkg.
 	best := c.bestMatch(mrs, languages, available, vary)
 
 	if best != nil {
-		charsets := header.ParsePrecedenceValues(req.Header.Get(header.AcceptCharset))
+		charsets := header.ParsePrecedenceValues(req.Header.Get(headername.AcceptCharset))
 		best.Charset = "utf-8"
-		// If at all possible, stick with utf-8 because (a) it is recommended; (b) no trancoding is necessary.
+		// If at all possible, stick with utf-8 because (a) it is recommended; (b) no transcoding is necessary.
 		// If other charsets are listed, choose one only if utf-8 is not included.
 		if len(charsets) > 0 && !(charsets.Contains("utf-8") || charsets.Contains("utf8")) {
 			// something other than utf-8 is legacy and deprecated, but supported anyway
 			best.Charset = charsets[0].Value
-			best.Vary = append(best.Vary, header.AcceptCharset)
+			best.Vary = append(best.Vary, headername.AcceptCharset)
 		}
 	}
 
@@ -87,13 +96,13 @@ func BestRequestMatch(req *http.Request, available ...offerpkg.Offer) *offerpkg.
 }
 
 func readHeaders(req *http.Request) (accept, accLang string, vary []string) {
-	accept = req.Header.Get(header.Accept)
-	accLang = req.Header.Get(header.AcceptLanguage)
+	accept = req.Header.Get(headername.Accept)
+	accLang = req.Header.Get(headername.AcceptLanguage)
 	if accept != "" {
-		vary = []string{header.Accept}
+		vary = []string{headername.Accept}
 	}
 	if accLang != "" {
-		vary = append(vary, header.AcceptLanguage)
+		vary = append(vary, headername.AcceptLanguage)
 	}
 	return accept, accLang, vary
 }

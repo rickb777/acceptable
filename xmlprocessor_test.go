@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/rickb777/acceptable/header/headername"
+
 	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
@@ -36,8 +38,8 @@ func TestXMLShouldWriteLazyResponseBody(t *testing.T) {
 	err := p(w, req, match.Data, "template", match.Language)
 
 	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(rw.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
-	g.Expect(rw.Header().Get("Content-Language")).To(Equal("en"))
+	g.Expect(rw.Header().Get(headername.ContentType)).To(Equal("application/json;charset=utf-8"))
+	g.Expect(rw.Header().Get(headername.ContentLanguage)).To(Equal("en"))
 	g.Expect(rw.Body.String()).To(Equal("<ValidXMLUser><Name>Joe Bloggs</Name></ValidXMLUser>\n"))
 }
 
@@ -78,8 +80,8 @@ func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
 	err := p(w, req, match.Data, "template", match.Language)
 
 	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(rw.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-8"))
-	g.Expect(rw.Header().Get("Content-Language")).To(Equal("en"))
+	g.Expect(rw.Header().Get(headername.ContentType)).To(Equal("application/json;charset=utf-8"))
+	g.Expect(rw.Header().Get(headername.ContentLanguage)).To(Equal("en"))
 	g.Expect(rw.Body.String()).To(Equal(
 		"<xml>\n"+
 			"  <ValidXMLUser>\n"+
@@ -116,8 +118,8 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 		err := p(w, req, match.Data, "template", match.Language)
 
 		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(rw.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16be"), enc)
-		g.Expect(rw.Header().Get("Content-Language")).To(Equal("cn"), enc)
+		g.Expect(rw.Header().Get(headername.ContentType)).To(Equal("application/json;charset=utf-16be"), enc)
+		g.Expect(rw.Header().Get(headername.ContentLanguage)).To(Equal("cn"), enc)
 		g.Expect(rw.Body.Bytes()).To(Equal([]byte{
 			0, '<', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n',
 			0, ' ', 0, ' ', 0, '<', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '>', 84, 13, 121, 240,
@@ -149,8 +151,8 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 		err := p(w, req, match.Data, "template", match.Language)
 
 		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(rw.Header().Get("Content-Type")).To(Equal("application/json;charset=utf-16le"), enc)
-		g.Expect(rw.Header().Get("Content-Language")).To(Equal("cn"), enc)
+		g.Expect(rw.Header().Get(headername.ContentType)).To(Equal("application/json;charset=utf-16le"), enc)
+		g.Expect(rw.Header().Get(headername.ContentLanguage)).To(Equal("cn"), enc)
 		g.Expect(rw.Body.Bytes()).To(Equal([]byte{
 			'<', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n', 0,
 			' ', 0, ' ', 0, '<', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '>', 0, 13, 84, 240, 121,

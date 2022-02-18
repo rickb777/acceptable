@@ -20,4 +20,6 @@ const (
 	ImageAny  = "image/*"
 
 	Any = "*/*"
+
+	CharsetUTF8 = "charset=utf-8"
 )

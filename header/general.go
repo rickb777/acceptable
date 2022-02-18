@@ -9,16 +9,7 @@ import (
 )
 
 const (
-	Accept         = "Accept"
-	AcceptLanguage = "Accept-Language"
-	AcceptCharset  = "Accept-Charset"
-	// AcceptEncoding is handled effectively by net/http and can be disregarded here
-
-	IfNoneMatch     = "If-None-Match"
-	IfModifiedSince = "If-Modified-Since"
-
-	// XRequestedWith defines the header strings used for XHR.
-	XRequestedWith = "X-Requested-With"
+	// XMLHttpRequest is the value used always with XRequestedWith for XHR.
 	XMLHttpRequest = "xmlhttprequest"
 )
 

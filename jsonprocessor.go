@@ -30,9 +30,9 @@ func JSON(indent ...string) offer.Processor {
 
 		p := &internal.WriterProxy{W: w}
 
-		enc := json.NewEncoder(p)
+		enc := NewJSONEncoder(p)
 
-		d, more, err := data.Content(template, language)
+		item, more, err := data.Content(template, language)
 		if err != nil {
 			return err
 		}
@@ -52,7 +52,7 @@ func JSON(indent ...string) offer.Processor {
 
 		enc.SetIndent(prefix, in)
 
-		err = enc.Encode(d)
+		err = enc.Encode(item)
 		if err != nil {
 			return err
 		}
@@ -62,12 +62,12 @@ func JSON(indent ...string) offer.Processor {
 			p.Write(comma)
 			p.Write(newline)
 
-			d, stillMore, err = data.Content(template, language)
+			item, stillMore, err = data.Content(template, language)
 			if err != nil {
 				return err
 			}
 
-			err = enc.Encode(d)
+			err = enc.Encode(item)
 			if err != nil {
 				return err
 			}
@@ -81,3 +81,12 @@ func JSON(indent ...string) offer.Processor {
 		return p.FinalNewline()
 	}
 }
+
+// JSONEncoder summarises the key methods of the standard JSON encoder.
+type JSONEncoder interface {
+	SetIndent(string, string)
+	Encode(interface{}) error
+}
+
+// NewJSONEncoder is a pluggable JSON encoder, initialised with the standard library implementation.
+var NewJSONEncoder = func(w io.Writer) JSONEncoder { return json.NewEncoder(w) }

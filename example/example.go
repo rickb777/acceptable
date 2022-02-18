@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rickb777/acceptable"
+	"github.com/rickb777/acceptable/contenttype"
 	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/echo4"
 	"github.com/rickb777/acceptable/offer"
 	"github.com/rickb777/acceptable/templates"
 )
@@ -53,18 +54,21 @@ func main() {
 
 // Handler
 func hello(c echo.Context) error {
+	// example lazy data source (although this one just returns a fixed value)
 	lazyEn := data.Lazy(func(string, string) (interface{}, error) {
 		return en, nil
-	}).MaxAge(10 * time.Second).ETag("hash123")
+	}).MaxAge(10 * time.Second).ETag("hash123") // replace "hash123" appropriately
 
-	best := acceptable.BestRequestMatch(c.Request(),
-		offer.Of(acceptable.JSON("  "), "application/json").
+	template := c.Request().URL.String()[1:]
+
+	return echo4.RenderBestMatch(c, template,
+		offer.Of(acceptable.JSON("  "), contenttype.ApplicationJSON).
 			With(lazyEn, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 
-		offer.Of(acceptable.XML("xml", "  "), "application/xml").
+		offer.Of(acceptable.XML("xml", "  "), contenttype.ApplicationXML).
 			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 
-		offer.Of(acceptable.TXT(), "text/plain").
+		offer.Of(acceptable.TXT(), contenttype.TextPlain).
 			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 
 		acceptable.TextHtmlOffer("example/templates/en", ".html", nil).
@@ -73,10 +77,4 @@ func hello(c echo.Context) error {
 		acceptable.ApplicationXhtmlOffer("example/templates/en", ".html", nil).
 			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 	)
-
-	if best == nil {
-		return c.String(http.StatusNotAcceptable, http.StatusText(http.StatusNotAcceptable))
-	}
-
-	return best.Render(c.Response(), c.Request(), best.Data, c.Request().URL.String()[1:], best.Language)
 }

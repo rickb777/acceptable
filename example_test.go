@@ -9,6 +9,7 @@ import (
 
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/header/headername"
 	"github.com/rickb777/acceptable/offer"
 )
 
@@ -33,17 +34,17 @@ func Example() {
 	// We're implementing an HTTP handler, so we are given a request and a response.
 
 	req1, _ := http.NewRequest("GET", "/request1", nil) // some incoming request
-	req1.Header.Set("Accept", "text/plain, text/html")
-	req1.Header.Set("Accept-Language", "es, fr;q=0.8, en;q=0.6")
+	req1.Header.Set(headername.Accept, "text/plain, text/html")
+	req1.Header.Set(headername.AcceptLanguage, "es, fr;q=0.8, en;q=0.6")
 
 	req2, _ := http.NewRequest("GET", "/request2", nil) // some incoming request
-	req2.Header.Set("Accept", "application/json")
-	req2.Header.Set("Accept-Language", "fr")
+	req2.Header.Set(headername.Accept, "application/json")
+	req2.Header.Set(headername.AcceptLanguage, "fr")
 
 	req3, _ := http.NewRequest("GET", "/request3", nil) // some incoming request
-	req3.Header.Set("Accept", "text/html")
-	req3.Header.Set("Accept-Language", "fr")
-	req3.Header.Set("If-None-Match", `"hash1"`)
+	req3.Header.Set(headername.Accept, "text/html")
+	req3.Header.Set(headername.AcceptLanguage, "fr")
+	req3.Header.Set(headername.IfNoneMatch, `"hash1"`)
 
 	requests := []*http.Request{req1, req2, req3}
 

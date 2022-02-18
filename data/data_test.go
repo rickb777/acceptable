@@ -9,7 +9,7 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
-	"github.com/rickb777/acceptable/header"
+	. "github.com/rickb777/acceptable/header/headername"
 )
 
 var t1 = time.Date(2020, 1, 1, 1, 1, 1, 0, time.UTC)
@@ -73,8 +73,8 @@ func TestLazyValue_attaching_eager_metadata(t *testing.T) {
 
 	g.Expect(e2).NotTo(HaveOccurred())
 	g.Expect(w.Header()).To(HaveLen(2))
-	g.Expect(w.Header().Get("Last-Modified")).To(Equal("Wed, 01 Jan 2020 01:01:01 UTC"))
-	g.Expect(w.Header().Get("ETag")).To(Equal(`"abcdef"`))
+	g.Expect(w.Header().Get(LastModified)).To(Equal("Wed, 01 Jan 2020 01:01:01 UTC"))
+	g.Expect(w.Header().Get(ETag)).To(Equal(`"abcdef"`))
 }
 
 func TestLazyValue_attaching_lazy_metadata(t *testing.T) {
@@ -104,8 +104,8 @@ func TestLazyValue_attaching_lazy_metadata(t *testing.T) {
 
 	g.Expect(e2).NotTo(HaveOccurred())
 	g.Expect(w.Header()).To(HaveLen(2))
-	g.Expect(w.Header().Get("Last-Modified")).To(Equal("Wed, 01 Jan 2020 01:01:01 UTC"))
-	g.Expect(w.Header().Get("ETag")).To(Equal(`"abcdef"`))
+	g.Expect(w.Header().Get(LastModified)).To(Equal("Wed, 01 Jan 2020 01:01:01 UTC"))
+	g.Expect(w.Header().Get(ETag)).To(Equal(`"abcdef"`))
 }
 
 func TestLazyValue_returning_error(t *testing.T) {
@@ -156,10 +156,10 @@ func TestValue_future_expiry(t *testing.T) {
 
 	g.Expect(e2).NotTo(HaveOccurred())
 	g.Expect(w.Header()).To(HaveLen(4))
-	g.Expect(w.Header().Get("Cache-Control")).To(Equal("max-age=10"))
-	g.Expect(w.Header().Get("Expires")).To(Equal("Thu, 02 Jan 2020 03:04:05 UTC"))
-	g.Expect(w.Header().Get("Last-Modified")).To(Equal("Wed, 01 Jan 2020 01:01:01 UTC"))
-	g.Expect(w.Header().Get("ETag")).To(Equal(`"abcdef"`))
+	g.Expect(w.Header().Get(CacheControl)).To(Equal("max-age=10"))
+	g.Expect(w.Header().Get(Expires)).To(Equal("Thu, 02 Jan 2020 03:04:05 UTC"))
+	g.Expect(w.Header().Get(LastModified)).To(Equal("Wed, 01 Jan 2020 01:01:01 UTC"))
+	g.Expect(w.Header().Get(ETag)).To(Equal(`"abcdef"`))
 }
 
 func TestValue_no_cache_and_additional_headers(t *testing.T) {
@@ -181,8 +181,8 @@ func TestValue_no_cache_and_additional_headers(t *testing.T) {
 
 	g.Expect(e2).NotTo(HaveOccurred())
 	g.Expect(w.Header()).To(HaveLen(4))
-	g.Expect(w.Header().Get("Cache-Control")).To(Equal("no-cache, must-revalidate"))
-	g.Expect(w.Header().Get("Pragma")).To(Equal("no-cache"))
+	g.Expect(w.Header().Get(CacheControl)).To(Equal("no-cache, must-revalidate"))
+	g.Expect(w.Header().Get(Pragma)).To(Equal("no-cache"))
 	g.Expect(w.Header().Get("Abc")).To(Equal("1"))
 	g.Expect(w.Header().Get("Def")).To(Equal("true"))
 }
@@ -197,7 +197,7 @@ func TestValue_if_none_match_not_modified_get_request(t *testing.T) {
 
 	for _, method := range []string{"GET", "HEAD"} {
 		req, _ := http.NewRequest(method, "/", nil)
-		req.Header.Set(header.IfNoneMatch, `"foo", "hash123", "bar"`)
+		req.Header.Set(IfNoneMatch, `"foo", "hash123", "bar"`)
 		w := httptest.NewRecorder()
 
 		// When ...
@@ -211,9 +211,9 @@ func TestValue_if_none_match_not_modified_get_request(t *testing.T) {
 		g.Expect(e2).NotTo(HaveOccurred())
 		g.Expect(w.Code).To(Equal(304))
 		g.Expect(w.Header()).To(HaveLen(5))
-		g.Expect(w.Header().Get("ETag")).To(Equal(`"hash123"`))
-		g.Expect(w.Header().Get("Last-Modified")).To(Equal(`Thu, 02 Jan 2020 03:04:05 UTC`))
-		g.Expect(w.Header().Get("Cache-Control")).To(Equal("max-age=10"))
+		g.Expect(w.Header().Get(ETag)).To(Equal(`"hash123"`))
+		g.Expect(w.Header().Get(LastModified)).To(Equal(`Thu, 02 Jan 2020 03:04:05 UTC`))
+		g.Expect(w.Header().Get(CacheControl)).To(Equal("max-age=10"))
 		g.Expect(w.Header().Get("Abc")).To(Equal("1"))
 		g.Expect(w.Header().Get("Def")).To(Equal("true"))
 	}
@@ -228,7 +228,7 @@ func TestValue_if_modified_since_not_modified_get_request(t *testing.T) {
 
 	for _, method := range []string{"GET", "HEAD"} {
 		req, _ := http.NewRequest(method, "/", nil)
-		req.Header.Set(header.IfModifiedSince, `Wed, 01 Jan 2020 00:00:00 UTC`)
+		req.Header.Set(IfModifiedSince, `Wed, 01 Jan 2020 00:00:00 UTC`)
 		w := httptest.NewRecorder()
 
 		// When ...
@@ -242,9 +242,9 @@ func TestValue_if_modified_since_not_modified_get_request(t *testing.T) {
 		g.Expect(e2).NotTo(HaveOccurred())
 		g.Expect(w.Code).To(Equal(304))
 		g.Expect(w.Header()).To(HaveLen(5))
-		g.Expect(w.Header().Get("ETag")).To(Equal(`"hash123"`))
-		g.Expect(w.Header().Get("Last-Modified")).To(Equal(`Thu, 02 Jan 2020 03:04:05 UTC`))
-		g.Expect(w.Header().Get("Cache-Control")).To(Equal("max-age=10"))
+		g.Expect(w.Header().Get(ETag)).To(Equal(`"hash123"`))
+		g.Expect(w.Header().Get(LastModified)).To(Equal(`Thu, 02 Jan 2020 03:04:05 UTC`))
+		g.Expect(w.Header().Get(CacheControl)).To(Equal("max-age=10"))
 		g.Expect(w.Header().Get("Abc")).To(Equal("1"))
 		g.Expect(w.Header().Get("Def")).To(Equal("true"))
 	}
@@ -258,7 +258,7 @@ func TestValue_not_modified_put_request(t *testing.T) {
 
 	for _, method := range []string{"PUT", "POST", "DELETE"} {
 		req, _ := http.NewRequest(method, "/", nil)
-		req.Header.Set(header.IfNoneMatch, `"foo", "hash123", "bar"`)
+		req.Header.Set(IfNoneMatch, `"foo", "hash123", "bar"`)
 		w := httptest.NewRecorder()
 
 		// When ...
@@ -272,8 +272,8 @@ func TestValue_not_modified_put_request(t *testing.T) {
 		g.Expect(e2).NotTo(HaveOccurred())
 		g.Expect(w.Code).To(Equal(200))
 		g.Expect(w.Header()).To(HaveLen(4))
-		g.Expect(w.Header().Get("Cache-Control")).To(Equal("no-cache, must-revalidate"))
-		g.Expect(w.Header().Get("Pragma")).To(Equal("no-cache"))
+		g.Expect(w.Header().Get(CacheControl)).To(Equal("no-cache, must-revalidate"))
+		g.Expect(w.Header().Get(Pragma)).To(Equal("no-cache"))
 		g.Expect(w.Header().Get("Abc")).To(Equal("1"))
 		g.Expect(w.Header().Get("Def")).To(Equal("true"))
 	}

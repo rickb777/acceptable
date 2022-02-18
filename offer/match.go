@@ -8,6 +8,7 @@ import (
 
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
+	"github.com/rickb777/acceptable/header/headername"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/htmlindex"
 )
@@ -50,18 +51,18 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) io.Writer {
 
 	if m.IsTextual() {
 		ct := fmt.Sprintf("%s/%s;charset=%s", m.Type, m.Subtype, charset)
-		rw.Header().Set("Content-Type", ct)
+		rw.Header().Set(headername.ContentType, ct)
 
 		if m.Language != "" && m.Language != "*" {
-			rw.Header().Set("Content-Language", m.Language)
+			rw.Header().Set(headername.ContentLanguage, m.Language)
 		}
 	} else {
 		ct := fmt.Sprintf("%s/%s", m.Type, m.Subtype)
-		rw.Header().Set("Content-Type", ct)
+		rw.Header().Set(headername.ContentType, ct)
 	}
 
 	if len(m.Vary) > 0 {
-		rw.Header().Set("Vary", strings.Join(m.Vary, ", "))
+		rw.Header().Set(headername.Vary, strings.Join(m.Vary, ", "))
 	}
 
 	if enc != nil {

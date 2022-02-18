@@ -14,9 +14,12 @@ import (
 // Model values should be one of the following:
 //
 // * []byte
-// * io.Reader
 // * io.WriterTo
+// * io.Reader
 // * nil
+//
+// Because it handles io.Reader and io.WriterTo, Binary can be used to stream large responses (without any
+// further encoding).
 func Binary() offer.Processor {
 	return func(w io.Writer, _ *http.Request, data datapkg.Data, template, language string) (err error) {
 		more := data != nil
@@ -29,13 +32,12 @@ func Binary() offer.Processor {
 			}
 
 			switch v := d.(type) {
+			case []byte:
+				_, err = io.Copy(w, bytes.NewBuffer(v))
 			case io.WriterTo:
 				_, err = v.WriteTo(w)
 			case io.Reader:
 				_, err = io.Copy(w, v)
-			case []byte:
-				//rw.Header().Set("Content-Length", strconv.Itoa(len(v)))
-				_, err = io.Copy(w, bytes.NewBuffer(v))
 			case nil:
 				// no-op
 			default:

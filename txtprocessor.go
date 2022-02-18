@@ -23,7 +23,12 @@ import (
 // * []byte
 // * fmt.Stringer
 // * encoding.TextMarshaler
+// * io.WriterTo
+// * io.Reader
 // * nil
+//
+// Because it handles io.Reader and io.WriterTo, TXT can be used to stream large responses (without any
+// further encoding).
 func TXT() offer.Processor {
 	return func(w io.Writer, _ *http.Request, data datapkg.Data, template, language string) (err error) {
 		p := &internal.WriterProxy{W: w}
@@ -53,6 +58,12 @@ func TXT() offer.Processor {
 					return e2
 				}
 				_, err = p.Write(b)
+
+			case io.WriterTo:
+				_, err = s.WriteTo(w)
+
+			case io.Reader:
+				_, err = io.Copy(w, s)
 
 			case nil:
 				// no-op

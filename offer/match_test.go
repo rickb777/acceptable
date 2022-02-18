@@ -6,6 +6,7 @@ import (
 
 	"github.com/onsi/gomega"
 	"github.com/rickb777/acceptable/header"
+	. "github.com/rickb777/acceptable/header/headername"
 	"github.com/rickb777/acceptable/offer"
 )
 
@@ -23,12 +24,12 @@ func TestApplyHeaders(t *testing.T) {
 				ContentType: header.ContentType{Type: "text", Subtype: "test"},
 				Language:    "en",
 				Charset:     "windows-1252",
-				Vary:        []string{"Accept", "Accept-Language"},
+				Vary:        []string{Accept, AcceptLanguage},
 			},
 			hdrs: map[string]string{
-				"Content-Type":     "text/test;charset=windows-1252",
-				"Content-Language": "en",
-				"Vary":             "Accept, Accept-Language",
+				ContentType:     "text/test;charset=windows-1252",
+				ContentLanguage: "en",
+				Vary:            "Accept, Accept-Language",
 			},
 			utf8: false,
 		},
@@ -37,12 +38,12 @@ func TestApplyHeaders(t *testing.T) {
 				ContentType: header.ContentType{Type: "application", Subtype: "xhtml+xml"},
 				Language:    "fr",
 				Charset:     "utf-8",
-				Vary:        []string{"Accept", "Accept-Language"},
+				Vary:        []string{Accept, AcceptLanguage},
 			},
 			hdrs: map[string]string{
-				"Content-Type":     "application/xhtml+xml;charset=utf-8",
-				"Content-Language": "fr",
-				"Vary":             "Accept, Accept-Language",
+				ContentType:     "application/xhtml+xml;charset=utf-8",
+				ContentLanguage: "fr",
+				Vary:            "Accept, Accept-Language",
 			},
 			utf8: true,
 		},
@@ -51,11 +52,11 @@ func TestApplyHeaders(t *testing.T) {
 				ContentType: header.ContentType{Type: "image", Subtype: "png"},
 				Language:    "fr",
 				Charset:     "utf-8",
-				Vary:        []string{"Accept"},
+				Vary:        []string{Accept},
 			},
 			hdrs: map[string]string{
-				"Content-Type": "image/png",
-				"Vary":         "Accept",
+				ContentType: "image/png",
+				Vary:        Accept,
 			},
 			utf8: true,
 		},
@@ -67,8 +68,8 @@ func TestApplyHeaders(t *testing.T) {
 				Vary:        nil,
 			},
 			hdrs: map[string]string{
-				"Content-Type":     "text/plain;charset=utf-8",
-				"Content-Language": "fr",
+				ContentType:     "text/plain;charset=utf-8",
+				ContentLanguage: "fr",
 			},
 			utf8: true,
 		},
@@ -80,7 +81,7 @@ func TestApplyHeaders(t *testing.T) {
 				Vary:        nil,
 			},
 			hdrs: map[string]string{
-				"Content-Type": "application/octet-stream",
+				ContentType: "application/octet-stream",
 			},
 			utf8: true,
 		},

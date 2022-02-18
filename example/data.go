@@ -1,5 +1,9 @@
 package main
 
+// Universal Declaration of Human Rights
+// https://www.un.org/en/about-us/universal-declaration-of-human-rights
+// Only the first five articles are included here.
+
 type Declaration struct {
 	Proclamation string
 	Articles     []Article
