@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rickb777/acceptable/data"
+	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/acceptable/internal"
 )
 
 // Processor is a function that renders content according to the matched result.
-type Processor func(w io.Writer, req *http.Request, d data.Data, template, language string) error
+type Processor func(w io.Writer, req *http.Request, data datapkg.Data, template, language string) error
 
 // Offer holds information about one particular resource representation that can potentially
 // provide an acceptable response.
@@ -28,8 +28,15 @@ type Offer struct {
 	// Langs lists the language(s) provided by this offer.
 	Langs []string
 
-	// data is an optional response to be rendered if this offer is selected.
-	data map[string]data.Data
+	// data has optional responses, keyed by language, to be rendered if this offer is selected.
+	data map[string]datapkg.Data
+
+	// Handle406As enables this offer to be a handler for any 406-not-acceptable case that arises.
+	// Normally, this field will be left zero. However, if non-zero, the offer can be rendered
+	// even when no acceptable match has been found. This overrides the acceptable.NoMatchAccepted
+	// handler, providing a means to supply bespoke error responses.
+	// The value will be the required status code (e.g. 400 for Bad Request).
+	Handle406As int
 }
 
 // Of constructs an Offer easily, given a content type.
@@ -45,7 +52,7 @@ func Of(processor Processor, contentType string) Offer {
 		ContentType: header.ContentTypeOf(internal.Split1(contentType, '/')),
 		processor:   processor,
 		Langs:       []string{"*"},
-		data:        make(map[string]data.Data),
+		data:        make(map[string]datapkg.Data),
 	}
 }
 
@@ -66,33 +73,30 @@ func (o Offer) clone() Offer {
 }
 
 // With attaches response data to an offer.
-// The language parameter specifies what language (or language group) the offer
-// will match. It can be "*" to match any. The method panics if it is blank.
-// Other languages can also be specified, but these must not be "*" (or blank).
+// The returned offer is a clone of the original offer, which is unchanged. This
+// allows base offers to be derived from.
 //
 // The data can be a value (struct, slice, etc) or a data.Data. It may also be
 // nil, which means the method merely serves to add the language to the Offer's
 // supported languages.
 //
-// The original offer is unchanged.
-func (o Offer) With(d interface{}, language string, otherLanguages ...string) Offer {
-	if language == "" {
-		panic("language must not be blank")
-	}
-	for i, l := range otherLanguages {
-		if l == "" {
-			panic(fmt.Sprintf("other language %d must not be blank", i))
-		}
-		if l == "*" {
-			panic(fmt.Sprintf("other language %d must not be * wildcard", i))
-		}
-	}
+// The language parameter specifies what language (or language group such as "en-GB")
+// the data represents and that the offer will therefore match. It can be "*" to
+// match every language.
+//
+// The method panics if language is blank. Other languages can also be specified, but these
+// must not be "*" (or blank). Duplicates are not allowed.
+//
+// Language matching is described further in IETF BCP 47.
+func (o Offer) With(data interface{}, language string, otherLanguages ...string) Offer {
+	o.checkForBlanks(language, otherLanguages)
+	o.checkForDuplicates(language, otherLanguages)
 
-	if d == nil {
+	if data == nil {
 		if language == "*" {
-			return o
+			return o // no-op
 		}
-		d = emptyValue
+		data = emptyValue
 	}
 
 	c := o.clone()
@@ -104,22 +108,56 @@ func (o Offer) With(d interface{}, language string, otherLanguages ...string) Of
 
 	c.Langs = append(c.Langs, language)
 
-	if s, ok := d.(data.Data); ok {
+	if s, ok := data.(datapkg.Data); ok {
 		c.data[language] = s
 	} else {
-		c.data[language] = data.Of(d)
+		c.data[language] = datapkg.Of(data)
 	}
 
 	for _, l := range otherLanguages {
 		c.Langs = append(c.Langs, l)
 
-		if s, ok := d.(data.Data); ok {
+		if s, ok := data.(datapkg.Data); ok {
 			c.data[l] = s
 		} else {
-			c.data[l] = data.Of(d)
+			c.data[l] = datapkg.Of(data)
 		}
 	}
 	return c
+}
+
+// 'With' parameters must be reasonable
+func (o Offer) checkForBlanks(language string, otherLanguages []string) {
+	if language == "" {
+		panic("language must not be blank")
+	}
+	for i, l := range otherLanguages {
+		if l == "" {
+			panic(fmt.Sprintf("other language %d must not be blank", i))
+		}
+		if l == "*" {
+			panic(fmt.Sprintf("other language %d must not be * wildcard", i))
+		}
+	}
+}
+
+// 'With' languages cannot duplicate earlier ones because that would break the
+// invariant that o.Langs is in the order they were added
+func (o Offer) checkForDuplicates(language string, otherLanguages []string) {
+	if _, existsAlready := o.data[language]; existsAlready {
+		panic(fmt.Sprintf("language %s is a duplicate", language))
+	}
+	for _, l := range otherLanguages {
+		if _, existsAlready := o.data[l]; existsAlready {
+			panic(fmt.Sprintf("other language %s is a duplicate", l))
+		}
+	}
+}
+
+// CanHandle406As sets the Handle406As status code.
+func (o Offer) CanHandle406As(statusCode int) Offer {
+	o.Handle406As = statusCode
+	return o
 }
 
 // String is merely for information purposes.
@@ -143,18 +181,23 @@ func (o Offer) String() string {
 
 // BuildMatch implements the transition between a selected Offer and the resulting Match.
 // The result is based on the best-matched media type and language.
-func (o Offer) BuildMatch(acceptedCT header.MediaRange, lang string) *Match {
+func (o Offer) BuildMatch(acceptedCT header.ContentType, lang string, statusCodeOverride int) *Match {
 	resolved := o.resolvedType(acceptedCT)
 
 	return &Match{
-		ContentType: resolved,
-		Language:    lang,
-		Data:        o.Data(lang),
-		Render:      o.processor,
+		ContentType:        resolved,
+		Language:           lang,
+		Data:               o.Data(lang),
+		Render:             o.processor,
+		StatusCodeOverride: statusCodeOverride,
 	}
 }
 
-func (o Offer) resolvedType(acceptedCT header.MediaRange) header.ContentType {
+func (o Offer) BuildFallbackMatch() *Match {
+	return o.BuildMatch(o.ContentType, o.Langs[0], o.Handle406As)
+}
+
+func (o Offer) resolvedType(acceptedCT header.ContentType) header.ContentType {
 	t := o.Type
 	s := o.Subtype
 
@@ -179,7 +222,7 @@ func (o Offer) resolvedType(acceptedCT header.MediaRange) header.ContentType {
 	return header.ContentType{Type: t, Subtype: s}
 }
 
-func (o Offer) Data(lang string) data.Data {
+func (o Offer) Data(lang string) datapkg.Data {
 	d := emptyToNil(o.data[lang])
 
 	// When the only data matches the wildcard "*", that should be the
@@ -193,7 +236,7 @@ func (o Offer) Data(lang string) data.Data {
 	return d
 }
 
-func emptyToNil(d data.Data) data.Data {
+func emptyToNil(d datapkg.Data) datapkg.Data {
 	if d == emptyValue {
 		return nil
 	}
@@ -204,7 +247,7 @@ func emptyToNil(d data.Data) data.Data {
 
 type empty struct{}
 
-func (e empty) Meta(_, _ string) (*data.Metadata, error) {
+func (e empty) Meta(_, _ string) (*datapkg.Metadata, error) {
 	panic("not reachable")
 }
 
@@ -224,6 +267,7 @@ var emptyValue = empty{}
 type Offers []Offer
 
 // Filter returns only the offers that match specified type and subtype.
+// The type and subtype parameters can be a wildcard, "*".
 func (offers Offers) Filter(typ, subtype string) Offers {
 	if len(offers) == 0 {
 		return nil
@@ -232,6 +276,30 @@ func (offers Offers) Filter(typ, subtype string) Offers {
 	allowed := make(Offers, 0, len(offers))
 	for _, mr := range offers {
 		if internal.EqualOrWildcard(mr.Type, typ) && internal.EqualOrWildcard(mr.Subtype, subtype) {
+			allowed = append(allowed, mr)
+		}
+	}
+
+	return allowed
+}
+
+// CanHandle406 filters offers to retunr only those with non-zero status codes in the
+// Handle406As field.
+func (offers Offers) CanHandle406() Offers {
+	if len(offers) == 0 {
+		return nil
+	}
+
+	n := 0
+	for _, mr := range offers {
+		if mr.Handle406As != 0 {
+			n++
+		}
+	}
+
+	allowed := make(Offers, 0, n)
+	for _, mr := range offers {
+		if mr.Handle406As != 0 {
 			allowed = append(allowed, mr)
 		}
 	}

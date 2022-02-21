@@ -1,30 +1,36 @@
 package offer_test
 
 import (
+	"fmt"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/onsi/gomega"
+	. "github.com/onsi/gomega"
+	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	. "github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
 )
 
 func TestApplyHeaders(t *testing.T) {
-	g := gomega.NewWithT(t)
+	g := NewWithT(t)
 
 	// Given ...
 	cases := []struct {
+		str  string
 		m    offer.Match
 		hdrs map[string]string
 		utf8 bool
 	}{
 		{
+			str: "text/test; charset=windows-1252; lang=en vary=[Accept Accept-Language]",
 			m: offer.Match{
 				ContentType: header.ContentType{Type: "text", Subtype: "test"},
 				Language:    "en",
 				Charset:     "windows-1252",
+				Data:        data.Of("data"),
 				Vary:        []string{Accept, AcceptLanguage},
+				Render:      offer.TXTProcessor(),
 			},
 			hdrs: map[string]string{
 				ContentType:     "text/test;charset=windows-1252",
@@ -34,11 +40,13 @@ func TestApplyHeaders(t *testing.T) {
 			utf8: false,
 		},
 		{
+			str: "application/xhtml+xml; charset=utf-8; lang=fr vary=[Accept Accept-Language]; no data; no renderer; not accepted",
 			m: offer.Match{
-				ContentType: header.ContentType{Type: "application", Subtype: "xhtml+xml"},
-				Language:    "fr",
-				Charset:     "utf-8",
-				Vary:        []string{Accept, AcceptLanguage},
+				ContentType:        header.ContentType{Type: "application", Subtype: "xhtml+xml"},
+				Language:           "fr",
+				Charset:            "utf-8",
+				Vary:               []string{Accept, AcceptLanguage},
+				StatusCodeOverride: 400,
 			},
 			hdrs: map[string]string{
 				ContentType:     "application/xhtml+xml;charset=utf-8",
@@ -48,11 +56,13 @@ func TestApplyHeaders(t *testing.T) {
 			utf8: true,
 		},
 		{
+			str: "image/png; charset=utf-8; lang=fr vary=[Accept]; no data; no renderer; not accepted",
 			m: offer.Match{
-				ContentType: header.ContentType{Type: "image", Subtype: "png"},
-				Language:    "fr",
-				Charset:     "utf-8",
-				Vary:        []string{Accept},
+				ContentType:        header.ContentType{Type: "image", Subtype: "png"},
+				Language:           "fr",
+				Charset:            "utf-8",
+				Vary:               []string{Accept},
+				StatusCodeOverride: 400,
 			},
 			hdrs: map[string]string{
 				ContentType: "image/png",
@@ -61,11 +71,13 @@ func TestApplyHeaders(t *testing.T) {
 			utf8: true,
 		},
 		{
+			str: "text/plain; charset=utf-8; lang=fr vary=[]; no data; no renderer; not accepted",
 			m: offer.Match{
-				ContentType: header.ContentType{Type: "text", Subtype: "plain"},
-				Language:    "fr",
-				Charset:     "utf-8",
-				Vary:        nil,
+				ContentType:        header.ContentType{Type: "text", Subtype: "plain"},
+				Language:           "fr",
+				Charset:            "utf-8",
+				Vary:               nil,
+				StatusCodeOverride: 400,
 			},
 			hdrs: map[string]string{
 				ContentType:     "text/plain;charset=utf-8",
@@ -74,6 +86,7 @@ func TestApplyHeaders(t *testing.T) {
 			utf8: true,
 		},
 		{
+			str: "application/octet-stream; charset=utf-8; lang=fr vary=[]; no data; no renderer",
 			m: offer.Match{
 				ContentType: header.ContentType{Type: "application", Subtype: "octet-stream"},
 				Language:    "fr",
@@ -87,20 +100,21 @@ func TestApplyHeaders(t *testing.T) {
 		},
 	}
 
-	for _, c := range cases {
+	for i, c := range cases {
 		rec := httptest.NewRecorder()
 
 		// When ...
 		w := c.m.ApplyHeaders(rec)
 
 		// Then ...
-		info := c.m.String()
+		info := fmt.Sprintf("%d:%s", i, c.m)
+		g.Expect(c.m.String()).To(Equal(c.str), info)
 		if c.utf8 {
-			g.Expect(w).To(gomega.BeIdenticalTo(rec), info)
+			g.Expect(w).To(BeIdenticalTo(rec), info)
 		}
-		g.Expect(rec.HeaderMap).To(gomega.HaveLen(len(c.hdrs)), info)
+		g.Expect(rec.HeaderMap).To(HaveLen(len(c.hdrs)), info)
 		for h, v := range c.hdrs {
-			g.Expect(rec.Header().Get(h)).To(gomega.Equal(v), info)
+			g.Expect(rec.Header().Get(h)).To(Equal(v), info)
 		}
 	}
 }

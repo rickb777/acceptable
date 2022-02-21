@@ -16,11 +16,12 @@ import (
 // Match holds the best-matched offer after content negotiation and is used for response rendering.
 type Match struct {
 	header.ContentType
-	Language string
-	Charset  string
-	Vary     []string
-	Data     data.Data
-	Render   Processor
+	Language           string
+	Charset            string
+	Vary               []string
+	Data               data.Data
+	Render             Processor
+	StatusCodeOverride int
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -73,13 +74,17 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) io.Writer {
 }
 
 func (m Match) String() string {
-	d := "; no data"
-	if m.Data != nil {
-		d = ""
+	d := ""
+	if m.Data == nil {
+		d = "; no data"
 	}
-	r := "; no renderer"
-	if m.Render != nil {
-		r = ""
+	r := ""
+	if m.Render == nil {
+		r = "; no renderer"
 	}
-	return fmt.Sprintf("%s/%s; charset=%s; lang=%s vary=%v%s%s", m.Type, m.Subtype, m.Charset, m.Language, m.Vary, d, r)
+	a := ""
+	if m.StatusCodeOverride != 0 {
+		a = "; not accepted"
+	}
+	return fmt.Sprintf("%s/%s; charset=%s; lang=%s vary=%v%s%s%s", m.Type, m.Subtype, m.Charset, m.Language, m.Vary, d, r, a)
 }
