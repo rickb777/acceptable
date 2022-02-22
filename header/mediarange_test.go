@@ -11,30 +11,12 @@ import (
 	"github.com/rickb777/acceptable/offer"
 )
 
-func TestContentType_String(t *testing.T) {
-	g := gomega.NewWithT(t)
-
-	ct := ContentTypeOf("text", "html", "charset=utf-8")
-	ct.Extensions = append(ct.Extensions, KV{"level", "1"})
-
-	g.Expect(ct.String()).To(gomega.Equal("text/html;charset=utf-8;level=1"))
-}
-
-func TestContentType_Wildcards(t *testing.T) {
-	g := gomega.NewWithT(t)
-
-	ct := ContentTypeOf("", "")
-
-	g.Expect(ct.String()).To(gomega.Equal("*/*"))
-}
-
 func TestMediaRange_String(t *testing.T) {
 	g := gomega.NewWithT(t)
 
-	ct := ContentTypeOf("text", "html", "charset=utf-8").AsMediaRange(0.5)
-	ct.Extensions = append(ct.Extensions, KV{"level", "1"})
+	ct := ParseContentType("text/html;charset=utf-8;level=1").AsMediaRange(0.5)
 
-	g.Expect(ct.String()).To(gomega.Equal("text/html;charset=utf-8;q=0.5;level=1"))
+	g.Expect(ct.String()).To(gomega.Equal("text/html;charset=utf-8;level=1;q=0.5"))
 }
 
 func TestPrecedenceValues_String(t *testing.T) {

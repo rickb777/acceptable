@@ -50,15 +50,11 @@ func handleMediaRangeWithParams(value string, acceptParams []string) MediaRange 
 	wv.Type, wv.Subtype = internal.Split1(value, '/')
 	wv.Quality = DefaultQuality
 
-	hasQ := false
 	for _, ap := range acceptParams {
 		ap = strings.TrimSpace(ap)
 		k, v := internal.Split1(ap, '=')
 		if strings.TrimSpace(k) == qualityParam {
 			wv.Quality = parseQuality(v)
-			hasQ = true
-		} else if hasQ {
-			wv.Extensions = append(wv.Extensions, KV{Key: k, Value: v})
 		} else {
 			wv.Params = append(wv.Params, KV{Key: k, Value: v})
 		}

@@ -52,7 +52,7 @@ func TestParseAcceptHeader_extension_can_omit_value(t *testing.T) {
 	g.Expect(len(mr)).To(Equal(1))
 	g.Expect(mr[0].Type).To(Equal("application"))
 	g.Expect(mr[0].Subtype).To(Equal("json"))
-	g.Expect(mr[0].Extensions).To(ConsistOf(header.KV{Key: "label"}))
+	g.Expect(mr[0].Params).To(ConsistOf(header.KV{Key: "label"}))
 }
 
 func TestParseAcceptHeader_sorts_by_decending_quality(t *testing.T) {
@@ -101,19 +101,19 @@ func TestMediaRanges_should_handle_precedence(t *testing.T) {
 
 		g.Expect(len(mr)).To(Equal(4))
 		g.Expect(mr[0]).To(Equal(header.MediaRange{
-			ContentType: header.ContentTypeOf("text", "plain", "format=flowed"),
+			ContentType: header.ParseContentType("text/plain; format=flowed"),
 			Quality:     header.DefaultQuality,
 		}), c)
 		g.Expect(mr[1]).To(Equal(header.MediaRange{
-			ContentType: header.ContentTypeOf("text", "plain"),
+			ContentType: header.ParseContentType("text/plain"),
 			Quality:     header.DefaultQuality,
 		}), c)
 		g.Expect(mr[2]).To(Equal(header.MediaRange{
-			ContentType: header.ContentTypeOf("text", "*"),
+			ContentType: header.ParseContentType("text/*"),
 			Quality:     header.DefaultQuality,
 		}), c)
 		g.Expect(mr[3]).To(Equal(header.MediaRange{
-			ContentType: header.ContentTypeOf("*", "*"),
+			ContentType: header.ParseContentType("*/*"),
 			Quality:     header.DefaultQuality,
 		}), c)
 	}
@@ -127,15 +127,14 @@ func TestMediaRanges_should_not_remove_accept_extension(t *testing.T) {
 	g.Expect(mr[0].Type).To(Equal("text"))
 	g.Expect(mr[0].Subtype).To(Equal("html"))
 	g.Expect(mr[0].Quality).To(Equal(0.5))
-	g.Expect(mr[0].Params).To(BeEmpty())
-	g.Expect(mr[0].Extensions).To(ConsistOf(header.KV{"a", "1"}, header.KV{"b", "2"}))
+	g.Expect(mr[0].Params).To(ConsistOf(header.KV{"a", "1"}, header.KV{"b", "2"}))
 }
 
 func TestMediaRanges_string(t *testing.T) {
 	g := NewGomegaWithT(t)
-	h := "text/html;level=1;q=0.9;a=1;b=2, text/html;q=0.5, text/*;q=0.3"
+	h := "text/html;level=1;a=1;b=2;q=0.9, text/html;q=0.5, text/*;q=0.3"
 	mr := header.ParseMediaRanges(h)
-	g.Expect(mr[0].Value()).To(Equal("text/html;level=1"))
+	g.Expect(mr[0].Value()).To(Equal("text/html;level=1;a=1;b=2"))
 	g.Expect(mr.String()).To(Equal(h))
 }
 
@@ -153,27 +152,27 @@ func TestMediaRanges_should_handle_quality_precedence(t *testing.T) {
 		g.Expect(5, len(mr))
 
 		g.Expect(mr[0]).To(Equal(header.MediaRange{
-			ContentType: header.ContentTypeOf("text", "html", "level=1"),
+			ContentType: header.ParseContentType("text/html; level=1"),
 			Quality:     header.DefaultQuality,
 		}), c)
 
 		g.Expect(mr[1]).To(Equal(header.MediaRange{
-			ContentType: header.ContentTypeOf("text", "html"),
+			ContentType: header.ParseContentType("text/html"),
 			Quality:     0.7,
 		}), c)
 
 		g.Expect(mr[2]).To(Equal(header.MediaRange{
-			ContentType: header.ContentTypeOf("*", "*"),
+			ContentType: header.ParseContentType("*/*"),
 			Quality:     0.5,
 		}), c)
 
 		g.Expect(mr[3]).To(Equal(header.MediaRange{
-			ContentType: header.ContentTypeOf("text", "html", "level=2"),
+			ContentType: header.ParseContentType("text/html; level=2"),
 			Quality:     0.4,
 		}), c)
 
 		g.Expect(mr[4]).To(Equal(header.MediaRange{
-			ContentType: header.ContentTypeOf("text", "*"),
+			ContentType: header.ParseContentType("text/*"),
 			Quality:     0.3,
 		}), c)
 	}
