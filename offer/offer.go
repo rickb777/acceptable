@@ -160,6 +160,11 @@ func (o Offer) CanHandle406As(statusCode int) Offer {
 	return o
 }
 
+// ToSlice returns the offer as a single-item slice.
+func (o Offer) ToSlice() Offers {
+	return Offers{o}
+}
+
 // String is merely for information purposes.
 func (o Offer) String() string {
 	buf := &strings.Builder{}
