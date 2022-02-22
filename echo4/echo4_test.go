@@ -57,10 +57,11 @@ func TestRenderBestMatch_should_use_default_processor_if_no_accept_header(t *tes
 	//c.SetParamValues("jon@labstack.com")
 
 	// When ...
-	err := echo4.RenderBestMatch(ec, "", oa, ob, oc, od, oe)
+	err := echo4.RenderBestMatch(ec, 200, "", oa, ob, oc, od, oe)
 
 	// Then ...
 	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(w.Code).To(Equal(200))
 	g.Expect(w.Header()).To(HaveLen(1))
 	g.Expect(w.Header().Get(ContentType)).To(Equal("text/test;charset=utf-8"))
 }
@@ -78,10 +79,11 @@ func TestRenderBestMatch_should_give_JSON_response_for_ajax_requests(t *testing.
 	ec := e.NewContext(req, w)
 
 	// When ...
-	err := echo4.RenderBestMatch(ec, "", oa)
+	err := echo4.RenderBestMatch(ec, 201, "", oa)
 
 	// Then ...
 	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(w.Code).To(Equal(201))
 	g.Expect(w.HeaderMap).To(HaveLen(2))
 	g.Expect(w.Header().Get(ContentType)).To(Equal("application/json;charset=utf-8"))
 	g.Expect(w.Header().Get(ContentLanguage)).To(Equal("en"))

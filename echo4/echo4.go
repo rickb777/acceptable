@@ -8,8 +8,9 @@ import (
 
 // RenderBestMatch uses BestRequestMatch to find the best matching offer for the request,
 // and then renders the response.
-func RenderBestMatch(c echo.Context, template string, available ...offer.Offer) error {
-	return acceptable.RenderBestMatch(c.Response(), c.Request(), template, available...)
+// If statusCode is 0, the default (200-status OK) will be used.
+func RenderBestMatch(c echo.Context, statusCode int, template string, available ...offer.Offer) error {
+	return acceptable.RenderBestMatch(c.Response(), c.Request(), statusCode, template, available...)
 }
 
 // BestRequestMatch finds the content type and language that best matches the accepted media

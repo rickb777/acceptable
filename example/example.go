@@ -61,7 +61,7 @@ func hello(c echo.Context) error {
 
 	template := c.Request().URL.String()[1:]
 
-	return echo4.RenderBestMatch(c, template,
+	return echo4.RenderBestMatch(c, 200, template,
 		offer.JSON("  ").
 			With(lazyEn, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
 

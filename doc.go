@@ -37,7 +37,7 @@
 //    // a catch-all offer is optional
 //    catchAll := offer.Of(acceptable.TXTProcessor(), contenttype.Any).With(en, "en").With(fr, "fr")
 //
-//    err := acceptable.RenderBestMatch(request, offer1, offer2, catchAll)
+//    err := acceptable.RenderBestMatch(response, request, 200, "", offer1, offer2, catchAll)
 //
 // The RenderBestMatch function searches for the offer that best matches the request headers. If none match,
 // the response will be 406-Not Acceptable. If you need to have a catch-all case, include

@@ -59,25 +59,13 @@ func Example() {
 		// The first offer is for JSON - this is often the most widely used because it also supports
 		// Ajax requests.
 
-		err := acceptable.RenderBestMatch(res, req, "home.html",
-			offer.JSON("  ").
-				With(en, "en").With(fr, "fr").With(es, "es"),
-
-			offer.XML("xml", "  ").
-				With(en, "en").With(fr, "fr").With(es, "es"),
-
-			offer.CSV().
-				With(en, "en").With(fr, "fr").With(es, "es"),
-
-			offer.Of(offer.TXTProcessor(), contenttype.TextPlain).
-				With(en, "en").With(fr, "fr").With(es, "es"),
-
-			templates.TextHtmlOffer("example/templates/en", ".html", nil).
-				With(en, "en").With(fr, "fr").With(es, "es"),
-
-			templates.ApplicationXhtmlOffer("example/templates/en", ".html", nil).
-				With(en, "en").With(fr, "fr").With(es, "es"),
-		)
+		err := acceptable.RenderBestMatch(res, req, 200, "home.html", offer.JSON("  ").
+			With(en, "en").With(fr, "fr").With(es, "es"), offer.XML("xml", "  ").
+			With(en, "en").With(fr, "fr").With(es, "es"), offer.CSV().
+			With(en, "en").With(fr, "fr").With(es, "es"), offer.Of(offer.TXTProcessor(), contenttype.TextPlain).
+			With(en, "en").With(fr, "fr").With(es, "es"), templates.TextHtmlOffer("example/templates/en", ".html", nil).
+			With(en, "en").With(fr, "fr").With(es, "es"), templates.ApplicationXhtmlOffer("example/templates/en", ".html", nil).
+			With(en, "en").With(fr, "fr").With(es, "es"))
 
 		if err != nil {
 			log.Fatal(err) // replace with suitable error handling

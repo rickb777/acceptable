@@ -23,7 +23,8 @@ var NoMatchAccepted = func(rw http.ResponseWriter, _ *http.Request) {
 // RenderBestMatch uses BestRequestMatch to find the best matching offer for the request,
 // and then renders the response. The returned error, if any, will have arisen from either
 // the content provider (see data.Content) or the response processor (see offer.Processor).
-func RenderBestMatch(rw http.ResponseWriter, req *http.Request, template string, available ...offerpkg.Offer) error {
+// If statusCode is 0, the default (200-status OK) will be used.
+func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, template string, available ...offerpkg.Offer) error {
 	best := BestRequestMatch(req, available...)
 
 	if best == nil {
@@ -35,15 +36,28 @@ func RenderBestMatch(rw http.ResponseWriter, req *http.Request, template string,
 		panic(fmt.Sprintf("misconfigured offers for %s/%s;charset=%s;lang=%s", best.Type, best.Subtype, best.Charset, best.Language))
 	}
 
-	if best.StatusCodeOverride != 0 {
-		rw.WriteHeader(best.StatusCodeOverride)
-	}
-
 	w := best.ApplyHeaders(rw)
 
-	sendContent, err := datapkg.ConditionalRequest(rw, req, best.Data, template, best.Language)
-	if !sendContent || err != nil {
-		return err
+	if best.StatusCodeOverride != 0 {
+		rw.WriteHeader(best.StatusCodeOverride)
+		statusCode = 0 // not needed later
+
+	} else {
+		sendContent, err := datapkg.ConditionalRequest(rw, req, best.Data, template, best.Language)
+		if err != nil {
+			return err
+		}
+
+		if !sendContent {
+			if statusCode > 0 {
+				rw.WriteHeader(statusCode)
+			}
+			return nil
+		}
+	}
+
+	if statusCode > 0 {
+		rw.WriteHeader(statusCode)
 	}
 
 	return best.Render(w, req, best.Data, template, best.Language)
