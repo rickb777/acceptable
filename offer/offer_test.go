@@ -5,12 +5,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/onsi/gomega"
+	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable/data"
+	"github.com/rickb777/acceptable/header"
 )
 
 func Test_offer_construction(t *testing.T) {
-	g := gomega.NewWithT(t)
+	g := NewWithT(t)
 
 	base := Of(nil, "")
 
@@ -42,47 +43,111 @@ func Test_offer_construction(t *testing.T) {
 
 	for s, c := range cases {
 		// invariants
-		g.Expect(base.String()).To(gomega.Equal("Accept: */*"), s)
-		g.Expect(base.Langs).To(gomega.ConsistOf("*"), s)
-		g.Expect(len(base.data)).To(gomega.Equal(0), s)
+		g.Expect(base.String()).To(Equal("Accept: */*"), s)
+		g.Expect(base.Langs).To(ConsistOf("*"), s)
+		g.Expect(len(base.data)).To(Equal(0), s)
 
-		g.Expect(c.o.String()).To(gomega.Equal(s[3:]), s)
-		g.Expect(c.o.Langs).To(gomega.ConsistOf(strings.Split(c.el, ",")), s)
-		g.Expect(len(c.o.data)).To(gomega.Equal(c.nd), s)
+		g.Expect(c.o.String()).To(Equal(s[3:]), s)
+		g.Expect(c.o.Langs).To(ConsistOf(strings.Split(c.el, ",")), s)
+		g.Expect(len(c.o.data)).To(Equal(c.nd), s)
 
 		for l, d := range c.o.data {
 			g.Expect(fmt.Sprintf("%T", d)).To(
-				gomega.Or(
-					gomega.Equal("*data.Value"),
-					gomega.Equal("offer.empty"),
+				Or(
+					Equal("*data.Value"),
+					Equal("offer.empty"),
 				), s+"|"+l)
 		}
 	}
 }
 
 func Test_offer_with(t *testing.T) {
-	g := gomega.NewWithT(t)
+	g := NewWithT(t)
 
 	o1 := Of(nil, "text/plain")
 	o2 := o1.With("foo", "en")
 	o3 := o2.With("bar", "fr")
 	o4 := o3.With("baz", "pt")
 
-	g.Expect(o1.Langs).To(gomega.HaveLen(1))
-	g.Expect(o1.Langs).To(gomega.ConsistOf("*"))
-	g.Expect(o2.Langs).To(gomega.HaveLen(1))
-	g.Expect(o2.Langs).To(gomega.ConsistOf("en"))
-	g.Expect(o3.Langs).To(gomega.HaveLen(2))
-	g.Expect(o3.Langs).To(gomega.ConsistOf("en", "fr"))
-	g.Expect(o4.Langs).To(gomega.HaveLen(3))
-	g.Expect(o4.Langs).To(gomega.ConsistOf("en", "fr", "pt"))
+	g.Expect(o1.Langs).To(HaveLen(1))
+	g.Expect(o1.Langs).To(ConsistOf("*"))
+	g.Expect(o2.Langs).To(HaveLen(1))
+	g.Expect(o2.Langs).To(ConsistOf("en"))
+	g.Expect(o3.Langs).To(HaveLen(2))
+	g.Expect(o3.Langs).To(ConsistOf("en", "fr"))
+	g.Expect(o4.Langs).To(HaveLen(3))
+	g.Expect(o4.Langs).To(ConsistOf("en", "fr", "pt"))
 
-	g.Expect(o1.data).To(gomega.HaveLen(0))
-	g.Expect(o2.data).To(gomega.HaveLen(1))
-	g.Expect(o3.data).To(gomega.HaveLen(2))
-	g.Expect(o4.data).To(gomega.HaveLen(3))
+	g.Expect(o1.data).To(HaveLen(0))
+	g.Expect(o2.data).To(HaveLen(1))
+	g.Expect(o3.data).To(HaveLen(2))
+	g.Expect(o4.data).To(HaveLen(3))
 }
 
 func TestBuildMatch(t *testing.T) {
-	// TODO Test BuildMatch
+	g := NewWithT(t)
+
+	txt := TXTProcessor()
+	cases := []struct {
+		o        Offer
+		accepted header.ContentType
+		m        Match
+	}{
+		{
+			o:        Of(txt, "text/*"),
+			accepted: header.ContentType{Type: "text", Subtype: "plain"},
+			m: Match{
+				ContentType:        header.ContentType{Type: "text", Subtype: "plain"},
+				Language:           "en",
+				Data:               nil,
+				StatusCodeOverride: 0,
+			},
+		},
+		{
+			o:        Of(txt, "*/*"),
+			accepted: header.ContentType{Type: "text", Subtype: "plain"},
+			m: Match{
+				ContentType:        header.ContentType{Type: "text", Subtype: "plain"},
+				Language:           "en",
+				Data:               nil,
+				StatusCodeOverride: 0,
+			},
+		},
+		{
+			o:        Of(txt, "text/*"),
+			accepted: header.ContentType{Type: "text", Subtype: "*"},
+			m: Match{
+				ContentType:        header.ContentType{Type: "text", Subtype: "plain"},
+				Language:           "en",
+				Data:               nil,
+				StatusCodeOverride: 0,
+			},
+		},
+		{
+			o:        Of(txt, "*/*"),
+			accepted: header.ContentType{Type: "*", Subtype: "*"},
+			m: Match{
+				ContentType:        header.ContentType{Type: "application", Subtype: "octet-stream"},
+				Language:           "en",
+				Data:               nil,
+				StatusCodeOverride: 0,
+			},
+		},
+		{
+			o:        Of(txt, "text/plain").With("foo", "fr").With("bar", "en"),
+			accepted: header.ContentType{Type: "text", Subtype: "*"},
+			m: Match{
+				ContentType:        header.ContentType{Type: "text", Subtype: "plain"},
+				Language:           "en",
+				Data:               data.Of("bar"),
+				StatusCodeOverride: 0,
+			},
+		},
+	}
+
+	for _, c := range cases {
+		m := c.o.BuildMatch(c.accepted, "en", 0)
+		m.Render = nil // comparing functions would always fail
+		g.Expect(*m).To(Equal(c.m), c.o.String())
+	}
 }
