@@ -29,11 +29,7 @@ func JSONProcessor(indent ...string) Processor {
 	}
 
 	return func(w io.Writer, _ *http.Request, data datapkg.Data, template, language string) (err error) {
-		if data == nil {
-			return nil
-		}
-
-		p := &internal.WriterProxy{W: w}
+		p := internal.EnsureNewline(w)
 
 		enc := NewJSONEncoder(p)
 

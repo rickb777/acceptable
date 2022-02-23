@@ -35,7 +35,9 @@ type Offer struct {
 	// Normally, this field will be left zero. However, if non-zero, the offer can be rendered
 	// even when no acceptable match has been found. This overrides the acceptable.NoMatchAccepted
 	// handler, providing a means to supply bespoke error responses.
-	// The value will be the required status code (e.g. 400 for Bad Request).
+	//
+	// The value will be the required status code (e.g. 400 for Bad Request, or 406 for Not
+	// Acceptable).
 	Handle406As int
 }
 
@@ -56,11 +58,15 @@ func Of(processor Processor, contentType string) Offer {
 	}
 }
 
-// clone makes a defensive deep copy of the original offer.
+// clone makes a defensive copy of the original offer.
 func (o Offer) clone() Offer {
-	c := Of(o.processor, o.ContentType.String())
+	c := Offer{
+		ContentType: o.ContentType,
+		processor:   o.processor,
+		Langs:       make([]string, len(o.Langs)),
+		data:        make(map[string]datapkg.Data),
+	}
 
-	c.Langs = make([]string, len(o.Langs))
 	for i, s := range o.Langs {
 		c.Langs[i] = s
 	}
@@ -90,7 +96,6 @@ func (o Offer) clone() Offer {
 // Language matching is described further in IETF BCP 47.
 func (o Offer) With(data interface{}, language string, otherLanguages ...string) Offer {
 	o.checkForBlanks(language, otherLanguages)
-	o.checkForDuplicates(language, otherLanguages)
 
 	if data == nil {
 		if language == "*" {
@@ -106,30 +111,32 @@ func (o Offer) With(data interface{}, language string, otherLanguages ...string)
 		c.Langs = nil
 	}
 
-	c.Langs = append(c.Langs, language)
+	c.checkForDuplicates(language, otherLanguages)
 
+	var value datapkg.Data
 	if s, ok := data.(datapkg.Data); ok {
-		c.data[language] = s
+		value = s
 	} else {
-		c.data[language] = datapkg.Of(data)
+		value = datapkg.Of(data)
 	}
 
-	for _, l := range otherLanguages {
-		c.Langs = append(c.Langs, l)
+	c.Langs = append(c.Langs, language)
+	c.data[language] = value
 
-		if s, ok := data.(datapkg.Data); ok {
-			c.data[l] = s
-		} else {
-			c.data[l] = datapkg.Of(data)
-		}
+	for _, ol := range otherLanguages {
+		c.Langs = append(c.Langs, ol)
+		c.data[ol] = value
 	}
 	return c
 }
 
-// 'With' parameters must be reasonable
+// checkForBlanks such that 'With' parameters must be reasonable
 func (o Offer) checkForBlanks(language string, otherLanguages []string) {
 	if language == "" {
 		panic("language must not be blank")
+	}
+	if language == "*" && len(otherLanguages) > 0 {
+		panic(`when language="*", other language must be absent`)
 	}
 	for i, l := range otherLanguages {
 		if l == "" {

@@ -38,7 +38,7 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) io.Writer {
 	charset := "utf-8"
 
 	var enc encoding.Encoding
-	if m.Charset != "" {
+	if m.Charset != "" && m.Charset != "utf-8" {
 		var err error
 		enc, err = htmlindex.Get(m.Charset)
 		if err == nil {

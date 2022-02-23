@@ -35,7 +35,7 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 		},
 		{data.Of(hidden{tt(2001, 10, 31)}), "(2001-10-31)\n"},
 		{data.Of(tm{"Joe Bloggs"}), "Joe Bloggs\n"},
-		{data.Of(nil), "\n"},
+		{data.Of(nil), ""},
 	}
 
 	p := offer.TXTProcessor()

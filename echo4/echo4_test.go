@@ -42,9 +42,9 @@ func TestRenderBestMatch_should_use_default_processor_if_no_accept_header(t *tes
 	g := NewWithT(t)
 
 	// Given ...
-	oa := offer.Of(offer.TXTProcessor(), "text/test")
-	ob := offer.Of(offer.TXTProcessor(), TextPlain)
-	oc := offer.Of(offer.CSVProcessor(), TextCSV)
+	oa := offer.Of(offer.TXTProcessor(), "text/test").With("hello world", "*")
+	ob := offer.Of(offer.TXTProcessor(), TextPlain).With("hello world", "*")
+	oc := offer.Of(offer.CSVProcessor(), TextCSV).With("hello,world", "*")
 	od := offer.Of(offer.XMLProcessor("x"), ApplicationXML)
 	oe := offer.Of(offer.BinaryProcessor(), ApplicationBinary)
 

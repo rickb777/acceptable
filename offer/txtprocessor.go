@@ -36,7 +36,7 @@ var textPlainOffer = Of(TXTProcessor(), contenttype.TextPlain)
 // further encoding).
 func TXTProcessor() Processor {
 	return func(w io.Writer, _ *http.Request, data datapkg.Data, template, language string) (err error) {
-		p := &internal.WriterProxy{W: w}
+		p := internal.EnsureNewline(w)
 
 		more := data != nil
 

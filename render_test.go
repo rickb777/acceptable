@@ -28,17 +28,18 @@ func Test_should_use_default_processor_if_no_accept_header(t *testing.T) {
 
 	// Then ...
 	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(w.Code).To(Equal(200))
+	g.Expect(w.Code).To(Equal(204))
 	g.Expect(w.Header()).To(HaveLen(1))
 	g.Expect(w.Header().Get(ContentType)).To(Equal("text/test;charset=utf-8"))
+	g.Expect(w.Body.String()).To(Equal(""))
 }
 
 func Test_should_use_catch_all_if_no_matching_accept_header(t *testing.T) {
 	g := NewWithT(t)
 
 	// Given ...
-	a := offer.Of(offer.TXTProcessor(), "text/csv")
-	b := offer.Of(offer.TXTProcessor(), "")
+	a := offer.Of(offer.TXTProcessor(), "text/csv").With("foo", "*")
+	b := offer.Of(offer.TXTProcessor(), "").With("bar", "*")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add(Accept, "image/*, application/*")
@@ -53,6 +54,7 @@ func Test_should_use_catch_all_if_no_matching_accept_header(t *testing.T) {
 	g.Expect(w.Header()).To(HaveLen(2))
 	g.Expect(w.Header().Get(ContentType)).To(Equal("application/octet-stream"))
 	g.Expect(w.Header().Get(Vary)).To(Equal("Accept"))
+	g.Expect(w.Body.String()).To(Equal("bar\n"))
 }
 
 func Test_should_return_406_if_no_matching_accept_header(t *testing.T) {

@@ -38,22 +38,25 @@ func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, 
 
 	w := best.ApplyHeaders(rw)
 
+	// StatusCodeOverride is a mechanism for offers to behave as error handlers.
+	// Conditional request handling is disabled in this case.
 	if best.StatusCodeOverride != 0 {
 		rw.WriteHeader(best.StatusCodeOverride)
-		statusCode = 0 // not needed later
+		return best.Render(w, req, best.Data, template, best.Language)
+	}
 
-	} else {
-		sendContent, err := datapkg.ConditionalRequest(rw, req, best.Data, template, best.Language)
-		if err != nil {
-			return err
-		}
+	if best.Data == nil {
+		rw.WriteHeader(http.StatusNoContent)
+		return nil
+	}
 
-		if !sendContent {
-			if statusCode > 0 {
-				rw.WriteHeader(statusCode)
-			}
-			return nil
-		}
+	sendContent, err := datapkg.ConditionalRequest(rw, req, best.Data, template, best.Language)
+	if err != nil {
+		return err
+	}
+
+	if !sendContent {
+		return nil // status will be 304
 	}
 
 	if statusCode > 0 {

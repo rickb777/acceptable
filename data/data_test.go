@@ -278,25 +278,3 @@ func TestValue_not_modified_put_request(t *testing.T) {
 		g.Expect(w.Header().Get("Def")).To(Equal("true"))
 	}
 }
-
-func TestGetContentAndApplyExtraHeaders_nil_data(t *testing.T) {
-	g := NewGomegaWithT(t)
-
-	// Given ...
-	req := &http.Request{}
-	w := httptest.NewRecorder()
-
-	// When ...
-	send, err := ConditionalRequest(w, req, nil, "home.html", "en")
-
-	// Then ...
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(send).To(BeFalse())
-}
-
-func conditional(predicate bool, value interface{}) interface{} {
-	if predicate {
-		return value
-	}
-	return nil
-}

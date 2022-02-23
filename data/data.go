@@ -201,11 +201,9 @@ func (v Value) NoCache() *Value {
 //
 // If the returned result value is false, the response has been set to 304-Not Modified, so the
 // response processor does not need to do anything further.
+//
+// Data d must not be nil.
 func ConditionalRequest(rw http.ResponseWriter, req *http.Request, d Data, template, language string) (sendContent bool, err error) {
-	if d == nil {
-		return false, nil
-	}
-
 	meta, err := d.Meta(template, language)
 	if err != nil {
 		return false, err

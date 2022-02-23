@@ -15,7 +15,7 @@ const DefaultPage = "_index.html"
 
 func productionProcessor(root *template.Template) offer.Processor {
 	return func(w io.Writer, req *http.Request, data datapkg.Data, template, language string) (err error) {
-		p := &internal.WriterProxy{W: w}
+		p := internal.EnsureNewline(w)
 
 		d, _, err := data.Content(template, language)
 		if err != nil {
@@ -47,7 +47,7 @@ func debugProcessor(root *template.Template, rootDir, suffix string, files map[s
 			template = DefaultPage
 		}
 
-		p := &internal.WriterProxy{W: w}
+		p := internal.EnsureNewline(w)
 		root = getCurrentTemplateTree(root, rootDir, suffix, files, funcMap)
 
 		return root.ExecuteTemplate(p, template, d)
