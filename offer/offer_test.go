@@ -84,6 +84,21 @@ func Test_offer_with(t *testing.T) {
 	g.Expect(o4.data).To(HaveLen(3))
 }
 
+func TestOffersAllEmpty(t *testing.T) {
+	g := NewWithT(t)
+
+	o1 := Of(nil, "text/plain")
+	o2 := Of(nil, "image/png")
+
+	e := Offers{o1, o2}.AllEmpty()
+	g.Expect(e).To(BeTrue())
+
+	o3 := Of(nil, "text/plain").With("foo", "*")
+
+	e = Offers{o2, o3}.AllEmpty()
+	g.Expect(e).To(BeFalse())
+}
+
 func TestBuildMatch(t *testing.T) {
 	g := NewWithT(t)
 

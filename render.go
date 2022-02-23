@@ -24,7 +24,16 @@ var NoMatchAccepted = func(rw http.ResponseWriter, _ *http.Request) {
 // and then renders the response. The returned error, if any, will have arisen from either
 // the content provider (see data.Content) or the response processor (see offer.Processor).
 // If statusCode is 0, the default (200-status OK) will be used.
+//
+// If all available offers are empty, the response is simply 204-No Content and the matching
+// algorithm is skipped. Likewise, if the matching algorithm selects an empty offer, the
+// response will also be 204-No Content.
 func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, template string, available ...offerpkg.Offer) error {
+	if offerpkg.Offers(available).AllEmpty() {
+		rw.WriteHeader(http.StatusNoContent)
+		return nil
+	}
+
 	best := BestRequestMatch(req, available...)
 
 	if best == nil {

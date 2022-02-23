@@ -107,7 +107,7 @@ func (o Offer) With(data interface{}, language string, otherLanguages ...string)
 	c := o.clone()
 
 	// clear pre-existing wildcard
-	if len(c.data) == 0 && len(c.Langs) == 1 && c.Langs[0] == "*" {
+	if c.IsEmpty() {
 		c.Langs = nil
 	}
 
@@ -165,6 +165,11 @@ func (o Offer) checkForDuplicates(language string, otherLanguages []string) {
 func (o Offer) CanHandle406As(statusCode int) Offer {
 	o.Handle406As = statusCode
 	return o
+}
+
+// IsEmpty returns true if no data has been attached to this offer.
+func (o Offer) IsEmpty() bool {
+	return len(o.data) == 0 && len(o.Langs) == 1 && o.Langs[0] == "*"
 }
 
 // ToSlice returns the offer as a single-item slice.
@@ -278,6 +283,18 @@ var emptyValue = empty{}
 // Offers holds a slice of Offer.
 type Offers []Offer
 
+// AllEmpty returns true if all offers are empty (see offer.IsEmpty).
+// In other words, it returns false if any offer is non-empty.
+// If they are all empty, this typically represents a 'no content' response.
+func (offers Offers) AllEmpty() bool {
+	for _, o := range offers {
+		if !o.IsEmpty() {
+			return false
+		}
+	}
+	return true
+}
+
 // Filter returns only the offers that match specified type and subtype.
 // The type and subtype parameters can be a wildcard, "*".
 func (offers Offers) Filter(typ, subtype string) Offers {
@@ -286,9 +303,9 @@ func (offers Offers) Filter(typ, subtype string) Offers {
 	}
 
 	allowed := make(Offers, 0, len(offers))
-	for _, mr := range offers {
-		if internal.EqualOrWildcard(mr.Type, typ) && internal.EqualOrWildcard(mr.Subtype, subtype) {
-			allowed = append(allowed, mr)
+	for _, o := range offers {
+		if internal.EqualOrWildcard(o.Type, typ) && internal.EqualOrWildcard(o.Subtype, subtype) {
+			allowed = append(allowed, o)
 		}
 	}
 

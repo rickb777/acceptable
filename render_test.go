@@ -13,7 +13,7 @@ import (
 	"github.com/rickb777/acceptable/templates"
 )
 
-func Test_should_use_default_processor_if_no_accept_header(t *testing.T) {
+func Test_should_return_no_content_if_no_offers_have_data(t *testing.T) {
 	g := NewWithT(t)
 
 	// Given ...
@@ -29,8 +29,29 @@ func Test_should_use_default_processor_if_no_accept_header(t *testing.T) {
 	// Then ...
 	g.Expect(err).NotTo(HaveOccurred())
 	g.Expect(w.Code).To(Equal(204))
-	g.Expect(w.Header()).To(HaveLen(1))
+	g.Expect(w.Header()).To(HaveLen(0))
+	g.Expect(w.Body.String()).To(Equal(""))
+}
+
+func Test_should_use_default_processor_if_no_accept_header(t *testing.T) {
+	g := NewWithT(t)
+
+	// Given ...
+	a := offer.Of(offer.TXTProcessor(), "text/test").With(nil, "en")
+	b := offer.Of(offer.TXTProcessor(), "text/plain").With("foo", "en")
+
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+
+	// When ...
+	err := acceptable.RenderBestMatch(w, req, 0, "", a, b)
+
+	// Then ...
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(w.Code).To(Equal(204))
+	g.Expect(w.Header()).To(HaveLen(2))
 	g.Expect(w.Header().Get(ContentType)).To(Equal("text/test;charset=utf-8"))
+	g.Expect(w.Header().Get(ContentLanguage)).To(Equal("en"))
 	g.Expect(w.Body.String()).To(Equal(""))
 }
 
@@ -67,7 +88,7 @@ func Test_should_return_406_if_no_matching_accept_header(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/", nil)
 		req.Header.Add(Accept, "image/png")
 		w := httptest.NewRecorder()
-		a := offer.Of(offer.JSONProcessor(), c)
+		a := offer.Of(offer.JSONProcessor(), c).With("foo", "en")
 
 		// When ...
 		err := acceptable.RenderBestMatch(w, req, 0, "", a)
@@ -78,7 +99,7 @@ func Test_should_return_406_if_no_matching_accept_header(t *testing.T) {
 	}
 }
 
-func Test_should_return_406_if_there_are_no_offers(t *testing.T) {
+func Test_should_return_204_if_there_are_no_offers(t *testing.T) {
 	g := NewWithT(t)
 
 	// Given ...
@@ -91,14 +112,14 @@ func Test_should_return_406_if_there_are_no_offers(t *testing.T) {
 
 	// Then ...
 	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(w.Code).To(Equal(406))
+	g.Expect(w.Code).To(Equal(204))
 }
 
 func Test_should_give_JSON_response_for_ajax_requests(t *testing.T) {
 	g := NewWithT(t)
 
 	// Given ...
-	a := offer.Of(offer.JSONProcessor(), "application/json")
+	a := offer.Of(offer.JSONProcessor(), "application/json").With(`"foo"`, "en")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add(XRequestedWith, header.XMLHttpRequest)
@@ -109,15 +130,16 @@ func Test_should_give_JSON_response_for_ajax_requests(t *testing.T) {
 
 	// Then ...
 	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(w.HeaderMap).To(HaveLen(1))
+	g.Expect(w.Header()).To(HaveLen(2))
 	g.Expect(w.Header().Get(ContentType)).To(Equal("application/json;charset=utf-8"))
+	g.Expect(w.Header().Get(ContentLanguage)).To(Equal("en"))
 }
 
 func Test_should_give_406_for_unmatched_ajax_requests(t *testing.T) {
 	g := NewWithT(t)
 
 	// Given ...
-	a := offer.Of(offer.JSONProcessor(), "text/plain")
+	a := offer.Of(offer.JSONProcessor(), "text/plain").With("foo", "en")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add(XRequestedWith, header.XMLHttpRequest)
@@ -131,7 +153,7 @@ func Test_should_give_406_for_unmatched_ajax_requests(t *testing.T) {
 	g.Expect(w.Code).To(Equal(406))
 }
 
-func Test_should_return_406_if_there_are_no_offers_for_ajax(t *testing.T) {
+func Test_should_return_204_if_there_are_no_offers_for_ajax(t *testing.T) {
 	g := NewWithT(t)
 
 	// Given ...
@@ -145,7 +167,7 @@ func Test_should_return_406_if_there_are_no_offers_for_ajax(t *testing.T) {
 
 	// Then ...
 	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(w.Code).To(Equal(406))
+	g.Expect(w.Code).To(Equal(204))
 }
 
 func Test_should_return_406_with_fallback_offer(t *testing.T) {
@@ -216,7 +238,7 @@ func Test_should_return_200_even_when_language_is_explicitly_excluded(t *testing
 
 	// Then ...
 	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(w.HeaderMap).To(HaveLen(3))
+	g.Expect(w.Header()).To(HaveLen(3))
 	g.Expect(w.Header().Get(ContentType)).To(Equal("text/test;charset=utf-8"))
 	g.Expect(w.Header().Get(ContentLanguage)).To(Equal("en"))
 	g.Expect(w.Header().Get(Vary)).To(Equal("Accept, Accept-Language"))
@@ -244,7 +266,7 @@ func Test_should_negotiate_using_media_and_language(t *testing.T) {
 	// Then ...
 	g.Expect(err).NotTo(HaveOccurred())
 
-	g.Expect(w.HeaderMap).To(HaveLen(3))
+	g.Expect(w.Header()).To(HaveLen(3))
 	g.Expect(w.Header().Get(ContentType)).To(Equal("text/test;charset=utf-8"))
 	g.Expect(w.Header().Get(ContentLanguage)).To(Equal("en"))
 	g.Expect(w.Header().Get(Vary)).To(Equal("Accept, Accept-Language"))
@@ -269,7 +291,7 @@ func Test_should_render_iso8859_html_using_templates(t *testing.T) {
 	// Then ...
 	g.Expect(err).NotTo(HaveOccurred())
 	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(w.HeaderMap).To(HaveLen(3))
+	g.Expect(w.Header()).To(HaveLen(3))
 	g.Expect(w.Header().Get(ContentType)).To(Equal("text/html;charset=windows-1252"))
 	g.Expect(w.Header().Get(ContentLanguage)).To(Equal("en"))
 	g.Expect(w.Header().Get(Vary)).To(Equal("Accept, Accept-Language, Accept-Charset"))
@@ -279,7 +301,7 @@ func Test_should_match_utf8_charset_when_acceptable(t *testing.T) {
 	g := NewWithT(t)
 
 	// Given ...
-	a := offer.Of(offer.TXTProcessor(), "text/html")
+	a := offer.Of(offer.TXTProcessor(), "text/html").With("foo", "en")
 
 	// all these cases contain utf-8 and another
 	cases := []string{
@@ -301,7 +323,7 @@ func Test_should_match_utf8_charset_when_acceptable(t *testing.T) {
 
 		// Then ...
 		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(w.HeaderMap).To(HaveLen(3))
+		g.Expect(w.Header()).To(HaveLen(3))
 		g.Expect(w.Header().Get(ContentType)).To(Equal("text/html;charset=utf-8"))
 		g.Expect(w.Header().Get(ContentLanguage)).To(Equal("en"))
 		g.Expect(w.Header().Get(Vary)).To(Equal("Accept, Accept-Language"))
