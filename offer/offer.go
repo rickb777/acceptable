@@ -239,6 +239,7 @@ func (o Offer) resolvedType(acceptedCT header.ContentType) header.ContentType {
 	return header.ContentType{Type: t, Subtype: s}
 }
 
+// Data gets the data lodged for a given language (or language group).
 func (o Offer) Data(lang string) datapkg.Data {
 	d := emptyToNil(o.data[lang])
 

@@ -23,11 +23,26 @@ var NoMatchAccepted = func(rw http.ResponseWriter, _ *http.Request) {
 // RenderBestMatch uses BestRequestMatch to find the best matching offer for the request,
 // and then renders the response. The returned error, if any, will have arisen from either
 // the content provider (see data.Content) or the response processor (see offer.Processor).
-// If statusCode is 0, the default (200-status OK) will be used.
 //
-// If all available offers are empty, the response is simply 204-No Content and the matching
-// algorithm is skipped. Likewise, if the matching algorithm selects an empty offer, the
-// response will also be 204-No Content.
+// If there are no available offers, the response is simply 204-No Content and the matching
+// algorithm is skipped.
+//
+// A matching offer is then sought.
+//
+// If no match is found, a fallback match is sought. If a fallback offer is matched, its
+// Handle406As status code will be used, and its data is rendered using its processor; no
+// further processing follows. Otherwise NoMatchAccepted is called and processing ends.
+//
+// If a match is found, the following happens.
+//
+// If the matched offer has empty data, the response will be 204-No Content; no further
+// processing occurs.
+//
+// A check is then made for a conditional request (ETag, If-Modified-Since etc). If this is
+// successful, the response is 304-Not Modified and no response rendering occurs.
+//
+// Finally, if statusCode is non-zero it is applied to the response (200-OK otherwise).
+// Then the matched offer's data is rendered using the offer's processor.
 func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, template string, available ...offerpkg.Offer) error {
 	if offerpkg.Offers(available).AllEmpty() {
 		rw.WriteHeader(http.StatusNoContent)
