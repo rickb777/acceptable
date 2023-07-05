@@ -7,12 +7,12 @@
 //
 // For "If-None-Match" use the ETagsOf function (also useful for "If-Match").
 //
-// Accept
+// # Accept
 //
 // The Accept header is parsed using ParseMediaRanges(hdr), which returns the slice of media ranges, e.g.
 //
-//    // handle Accept-Language
-//    mediaRanges := header.ParseMediaRanges("application/json;q=0.8, application/xml, application/*;q=0.1")
+//	// handle Accept-Language
+//	mediaRanges := header.ParseMediaRanges("application/json;q=0.8, application/xml, application/*;q=0.1")
 //
 // The resulting slice is ready-sorted according to precedence and quality rules, so in this example the order
 // is {"application/xml", "application/json", "application/*"} because the middle item has an implied
@@ -36,15 +36,16 @@
 // by treating the response as if it is not subject to content negotiation.
 //
 // Example header
-//     Accept: audio/*; q=0.2, audio/basic
 //
-// Accept-Language
+//	Accept: audio/*; q=0.2, audio/basic
+//
+// # Accept-Language
 //
 // The other important content-negotiation headers, Accept-Language and Accept-Charset, are handled
 // by the header.Parse method, e.g.
 //
-//    // handle Accept-Language
-//    acceptLanguages := header.ParsePrecedenceValues("en-GB,fr;q=0.5,en;q=0.8")
+//	// handle Accept-Language
+//	acceptLanguages := header.ParsePrecedenceValues("en-GB,fr;q=0.5,en;q=0.8")
 //
 // This will contain {"en-GB", "en", "fr"} in a header.PrecedenceValues slice, sorted according to
 // precedence rules with the most preferred first.
@@ -70,9 +71,10 @@
 // they might be able to use (with translation software, for example).
 //
 // Example header
-//     Accept-Language: da, en-gb;q=0.8, en;q=0.7
 //
-// If-None-Match
+//	Accept-Language: da, en-gb;q=0.8, en;q=0.7
+//
+// # If-None-Match
 //
 // This header is used for conditional requests where large responses can be avoided
 // when they are already present in caches. Its use is closely related to that of
@@ -88,5 +90,6 @@
 // match any of those listed in the field-value.
 //
 // Example header
-//     If-None-Match: "xyzzy", "r2d2xxxx", "c3piozzzz"
+//
+//	If-None-Match: "xyzzy", "r2d2xxxx", "c3piozzzz"
 package header

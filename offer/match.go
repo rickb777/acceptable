@@ -29,11 +29,10 @@ type Match struct {
 // ApplyHeaders sets response headers so that the user agent is notified of the content
 // negotiation decisions made. Four headers may be set, depending on context.
 //
-//   * Content-Type is always set.
-//   * Content-Language is set when a language was selected.
-//   * Content-Encoding is set when the character set is being transcoded
-//   * Vary is set to list the accept headers that led to the three decisions above.
-//
+//   - Content-Type is always set.
+//   - Content-Language is set when a language was selected.
+//   - Content-Encoding is set when the character set is being transcoded
+//   - Vary is set to list the accept headers that led to the three decisions above.
 func (m Match) ApplyHeaders(rw http.ResponseWriter) io.Writer {
 	charset := "utf-8"
 

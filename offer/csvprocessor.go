@@ -24,7 +24,7 @@ func CSV(comma ...rune) Offer {
 //
 // * string or []string, written as a single row
 //
-//* [][]string or [][]fmt.Stringer, written as many rows
+// * [][]string or [][]fmt.Stringer, written as many rows
 //
 // * fmt.Stringer or []fmt.Stringer, written as a single row
 //

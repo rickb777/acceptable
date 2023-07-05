@@ -3,7 +3,7 @@
 // Content negotiation is specified by RFC (http://tools.ietf.org/html/rfc7231) and, less formally, by
 // Ajax (https://en.wikipedia.org/wiki/XMLHttpRequest).
 //
-// Subpackages
+// # Subpackages
 //
 // * contenttype, headername - bundles of useful constants
 //
@@ -15,7 +15,7 @@
 //
 // * templates - for rendering Go templates
 //
-// Easy content negotiation
+// # Easy content negotiation
 //
 // Server-based content negotiation is essentially simple: the user agent sends a request including some preferences
 // (accept headers), then the server selects one of several possible ways of sending the response. Finding the best
@@ -25,19 +25,19 @@
 //
 // For example
 //
-//    en := ... obtain some content in English
-//    fr := ... obtain some content in French
+//	en := ... obtain some content in English
+//	fr := ... obtain some content in French
 //
-//    // a JSON offer with pretty output
-//    offer1 := offer.JSON("  ").With(en, "en").With(fr, "fr")
+//	// a JSON offer with pretty output
+//	offer1 := offer.JSON("  ").With(en, "en").With(fr, "fr")
 //
-//    // an XML offer
-//    offer2 := offer.XML().With(en, "en").With(fr, "fr")
+//	// an XML offer
+//	offer2 := offer.XML().With(en, "en").With(fr, "fr")
 //
-//    // a catch-all offer is optional
-//    catchAll := offer.Of(acceptable.TXTProcessor(), contenttype.Any).With(en, "en").With(fr, "fr")
+//	// a catch-all offer is optional
+//	catchAll := offer.Of(acceptable.TXTProcessor(), contenttype.Any).With(en, "en").With(fr, "fr")
 //
-//    err := acceptable.RenderBestMatch(response, request, 200, "", offer1, offer2, catchAll)
+//	err := acceptable.RenderBestMatch(response, request, 200, "", offer1, offer2, catchAll)
 //
 // The RenderBestMatch function searches for the offer that best matches the request headers. If none match,
 // the response will be 406-Not Acceptable. If you need to have a catch-all case, include
@@ -66,7 +66,7 @@
 // failed; RenderBestMatch will do this by picking the first language listed as a fallback, so the catch-all case
 // is only necessary if its data is different to that of the first case.
 //
-// Providing response data
+// # Providing response data
 //
 // The response data (en and fr above) can be structs, slices, maps, or other values that the rendering processors
 // accept. They will be wrapped as data.Data values, which you can provid explicitly. These allow for lazy
@@ -74,9 +74,9 @@
 // several offers each with their own data model - if these were all to be read from the database before selection
 // of the best match, all but one would be wasted. Lazy evaluation of the selected data easily overcomes this problem.
 //
-//    en := data.Lazy(func(template, language string) (value interface{}, err error) {
-//        return ...
-//    })
+//	en := data.Lazy(func(template, language string) (value interface{}, err error) {
+//	    return ...
+//	})
 //
 // Besides the data and error returned values, some metadata can optionally be returned. This is the basis for easy
 // support for conditional requests (see [RFC-7232](https://tools.ietf.org/html/rfc7232)).
@@ -97,7 +97,7 @@
 // until its result value is nil. All the values will be streamed in the response (how this is done depends on
 // the rendering processor.
 //
-// Character set transcoding
+// # Character set transcoding
 //
 // Most responses will be UTF-8, sometimes UTF-16. All other character sets (e.g. Windows-1252) are now strongly deprecated.
 //
