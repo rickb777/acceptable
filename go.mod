@@ -4,15 +4,15 @@ go 1.17
 
 require (
 	github.com/benmoss/matchers v0.0.0-20181101202349-c279145bd967
-	github.com/juju/testing v1.0.3 // indirect
-	github.com/labstack/echo/v4 v4.10.2
+	github.com/juju/testing v1.0.4 // indirect
+	github.com/labstack/echo/v4 v4.11.1
 	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/onsi/gomega v1.27.8
+	github.com/onsi/gomega v1.27.10
 	github.com/spf13/afero v1.9.5
-	golang.org/x/crypto v0.10.0 // indirect
-	golang.org/x/net v0.11.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.11.0
+	golang.org/x/crypto v0.12.0 // indirect
+	golang.org/x/net v0.14.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/text v0.12.0
 )
 
 require (
