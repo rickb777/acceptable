@@ -23,6 +23,8 @@ var ReloadOnTheFly = false
 // Templates finds all the templates in the directory dir and its subdirectories
 // that have names ending with the given suffix (usually ".html").
 //
+// Optionally, the suffix can be a pipe-separated list, e.g. ".html|.js".
+//
 // The function map can be nil if not required.
 //
 // A processor is returned that handles requests using the templates available.
@@ -54,20 +56,22 @@ func findTemplates(rootDir, suffix string) map[string]time.Time {
 	cleanRoot := filepath.Clean(rootDir)
 	files := make(map[string]time.Time)
 
-	err := afero.Walk(Fs, cleanRoot, func(path string, info os.FileInfo, e1 error) error {
-		if e1 != nil {
-			panic(fmt.Sprintf("Cannot load templates from: %s: %v\n", rootDir, e1))
+	for _, sfx := range strings.Split(suffix, suffixSeparator) {
+		err := afero.Walk(Fs, cleanRoot, func(path string, info os.FileInfo, e1 error) error {
+			if e1 != nil {
+				panic(fmt.Sprintf("Cannot load templates from: %s: %v\n", rootDir, e1))
+			}
+
+			if !info.IsDir() && strings.HasSuffix(path, sfx) {
+				files[path] = time.Time{}
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			panic(fmt.Sprintf("Cannot load templates from: %s: %v\n", rootDir, err))
 		}
-
-		if !info.IsDir() && strings.HasSuffix(path, suffix) {
-			files[path] = time.Time{}
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		panic(fmt.Sprintf("Cannot load templates from: %s: %v\n", rootDir, err))
 	}
 
 	return files
@@ -93,3 +97,5 @@ func parseTemplates(rootDir string, files map[string]time.Time, funcMap template
 
 	return root
 }
+
+const suffixSeparator = "|"

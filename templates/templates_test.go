@@ -51,10 +51,11 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	rec.fs.MkdirAll("foo/bar", 0755)
 	afero.WriteFile(rec.fs, "synthetic/foo/home.html", []byte("<html>{{.Title}}-Home</html>"), 0644)
 	afero.WriteFile(rec.fs, "synthetic/foo/bar/baz.html", []byte("<html>{{.Title}}-Baz</html>"), 0644)
+	afero.WriteFile(rec.fs, "synthetic/foo/bar/util.js", []byte("func {{.Title}}() {}"), 0644)
 
 	templates.ReloadOnTheFly = true
 
-	render := templates.Templates("synthetic", ".html", nil)
+	render := templates.Templates("synthetic", ".html|.js", nil)
 
 	data := datapkg.Of(map[string]string{"Title": "Hello"})
 
@@ -71,7 +72,16 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	g.Expect(w.Body.String()).To(Equal("<html>Hello-Home</html>"))
 	g.Expect(rec.opened).To(ContainElements("synthetic/foo/home.html", "synthetic/foo/bar/baz.html"))
 
-	//---------- request 2: no change so no parsing ----------
+	//---------- request 2: javascript ----------
+	rec.opened = nil
+	w = httptest.NewRecorder()
+
+	err = render(w, req, data, "foo/bar/util.js", "en")
+	g.Expect(err).NotTo(HaveOccurred())
+
+	g.Expect(w.Body.String()).To(Equal("func Hello() {}"))
+
+	//---------- request 3: no change so no parsing ----------
 	rec.opened = nil
 	w = httptest.NewRecorder()
 
@@ -84,7 +94,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	g.Expect(rec.opened).To(BeEmpty())
 	//g.Expect(d2).To(BeNumerically("<", d1)) // it should be faster
 
-	//---------- request 3: a different file ----------
+	//---------- request 4: a different file ----------
 	rec.opened = nil
 	w = httptest.NewRecorder()
 
@@ -94,7 +104,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	g.Expect(w.Body.String()).To(Equal("<html>Hello-Baz</html>"))
 	g.Expect(rec.opened).To(BeEmpty())
 
-	//---------- request 4: an altered file ----------
+	//---------- request 5: an altered file ----------
 	rec.opened = nil
 	w = httptest.NewRecorder()
 	afero.WriteFile(rec.fs, "synthetic/foo/bar/baz.html", []byte("<html>{{.Title}}-Updated</html>"), 0644)
@@ -105,7 +115,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	g.Expect(w.Body.String()).To(Equal("<html>Hello-Updated</html>"))
 	g.Expect(rec.opened).To(ContainElements("synthetic/foo/home.html", "synthetic/foo/bar/baz.html"))
 
-	//---------- request 5: a new file ----------
+	//---------- request 6: a new file ----------
 	rec.opened = nil
 	w = httptest.NewRecorder()
 	afero.WriteFile(rec.fs, "synthetic/foo/bar/new.html", []byte("<html>{{.Title}}-New</html>"), 0644)
@@ -116,7 +126,7 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	g.Expect(w.Body.String()).To(Equal("<html>Hello-New</html>"))
 	g.Expect(rec.opened).To(ContainElements("synthetic/foo/home.html", "synthetic/foo/bar/baz.html", "synthetic/foo/bar/new.html"))
 
-	//---------- request 5: ok after deleting an unrelated file ----------
+	//---------- request 7: ok after deleting an unrelated file ----------
 	rec.opened = nil
 	w = httptest.NewRecorder()
 	rec.fs.Remove("synthetic/foo/bar/baz.html")
