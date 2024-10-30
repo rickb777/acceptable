@@ -13,14 +13,17 @@ function v
 }
 
 if ! type -p goveralls; then
+  v go get     github.com/mattn/goveralls
   v go install github.com/mattn/goveralls
 fi
 
 if ! type -p shadow; then
+  v go get     golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow
   v go install golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow
 fi
 
 if ! type -p goreturns; then
+  v go get     github.com/sqs/goreturns
   v go install github.com/sqs/goreturns
 fi
 
