@@ -2,7 +2,10 @@ package header
 
 import (
 	"io"
+	"net/http"
 	"strings"
+
+	"github.com/rickb777/acceptable/headername"
 
 	"github.com/rickb777/acceptable/internal"
 )
@@ -70,9 +73,19 @@ func (ct ContentType) String() string {
 	return buf.String()
 }
 
+var starStar = ContentType{Type: "*", Subtype: "*"}
+
+func ParseContentTypeFromHeaders(hdrs http.Header) ContentType {
+	cts := hdrs[headername.ContentType]
+	if len(cts) == 0 {
+		return starStar
+	}
+	return ParseContentType(cts[0])
+}
+
 func ParseContentType(ct string) ContentType {
 	if ct == "" {
-		return ContentType{Type: "*", Subtype: "*"}
+		return starStar
 	}
 
 	valueAndParams := internal.Split(ct, ";").TrimSpace()

@@ -1,11 +1,36 @@
 package header_test
 
 import (
+	"net/http"
 	"testing"
+
+	"github.com/rickb777/acceptable/headername"
 
 	"github.com/onsi/gomega"
 	. "github.com/rickb777/acceptable/header"
 )
+
+func TestParseContentTypeFromHeaders(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	hdrs := make(http.Header)
+
+	ct1 := ParseContentTypeFromHeaders(hdrs)
+
+	g.Expect(ct1).To(gomega.Equal(ContentType{
+		Type:    "*",
+		Subtype: "*",
+	}))
+
+	hdrs.Set(headername.ContentType, "text/plain")
+
+	ct2 := ParseContentTypeFromHeaders(hdrs)
+
+	g.Expect(ct2).To(gomega.Equal(ContentType{
+		Type:    "text",
+		Subtype: "plain",
+	}))
+}
 
 func TestParseContentType(t *testing.T) {
 	g := gomega.NewWithT(t)
