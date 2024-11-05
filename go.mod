@@ -9,7 +9,7 @@ require (
 	github.com/juju/testing v1.2.0 // indirect
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/onsi/gomega v1.35.0
+	github.com/onsi/gomega v1.35.1
 	github.com/spf13/afero v1.11.0
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
