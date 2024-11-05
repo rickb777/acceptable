@@ -88,7 +88,7 @@ func ParseContentType(ct string) ContentType {
 		return starStar
 	}
 
-	valueAndParams := internal.Split(ct, ";").TrimSpace()
+	valueAndParams := Split(ct, ";").TrimSpace()
 	t, s := internal.Split1(valueAndParams[0], '/')
 	return contentTypeOf(t, s, valueAndParams[1:])
 }

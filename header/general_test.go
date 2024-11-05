@@ -3,10 +3,33 @@ package header_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	. "github.com/onsi/gomega"
 	. "github.com/rickb777/acceptable/header"
 )
+
+func TestParseDate(t *testing.T) {
+	g := NewGomegaWithT(t)
+	cases := []struct {
+		actual   string
+		expected time.Time
+	}{
+		{actual: "Wed, 01 Jan 2020 01:01:01 UTC", expected: time.Date(2020, 1, 1, 1, 1, 1, 0, time.UTC)},
+		{actual: "Tue, 15 Nov 1994 12:45:26 GMT", expected: time.Date(1994, 11, 15, 12, 45, 26, 0, time.UTC)},
+		{actual: "Sunday, 06-Nov-94 08:49:37 GMT", expected: time.Date(1994, 11, 6, 8, 49, 37, 0, time.UTC)},
+		{actual: "Sun Nov  7 08:49:37 1994", expected: time.Date(1994, 11, 7, 8, 49, 37, 0, time.UTC)},
+	}
+
+	for _, c := range cases {
+		actual, err := ParseHTTPDateTime(c.actual)
+		g.Expect(err).NotTo(HaveOccurred())
+		g.Expect(actual.Equal(c.expected)).To(BeTrue())
+	}
+
+	_, err := ParseHTTPDateTime("")
+	g.Expect(err).To(HaveOccurred())
+}
 
 func TestParseAcceptXyzHeader_with_inverse_string(t *testing.T) {
 	g := NewGomegaWithT(t)

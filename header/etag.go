@@ -3,8 +3,6 @@ package header
 import (
 	"fmt"
 	"strings"
-
-	"github.com/rickb777/acceptable/internal"
 )
 
 // ETag is an entity tag used for content matching comparisons.
@@ -22,7 +20,7 @@ func ETagsOf(s string) ETags {
 	if s == "" {
 		return nil
 	}
-	parts := internal.Split(s, ",").TrimSpace()
+	parts := Split(s, ",").TrimSpace()
 	es := make(ETags, len(parts))
 	for i, p := range parts {
 		es[i] = eTagOf(p)

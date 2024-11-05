@@ -29,11 +29,11 @@ func parseMediaRangeHeader(acceptHeader string) MediaRanges {
 		return nil
 	}
 
-	parts := internal.Split(strings.ToLower(acceptHeader), ",").TrimSpace()
+	parts := Split(strings.ToLower(acceptHeader), ",").TrimSpace()
 	wvs := make(MediaRanges, 0, len(parts))
 
 	for _, part := range parts {
-		valueAndParams := internal.Split(part, ";").TrimSpace()
+		valueAndParams := Split(part, ";").TrimSpace()
 		if len(valueAndParams) == 1 {
 			t, s := internal.Split1(strings.TrimSpace(valueAndParams[0]), '/')
 			wvs = append(wvs, MediaRange{ContentType: ContentType{Type: t, Subtype: s}, Quality: DefaultQuality})

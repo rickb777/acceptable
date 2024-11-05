@@ -182,7 +182,7 @@ func (v Value) LastModifiedUsing(fn func(template, language string) (time.Time, 
 
 // Expires sets the time at which the response becomes stale. MaxAge takes precedence.
 func (v Value) Expires(at time.Time) *Value {
-	return v.With("Expires", at.Format(time.RFC1123))
+	return v.With("Expires", at.Format(header.RFC1123))
 }
 
 // MaxAge sets the max-age header on the response. This is used to allow caches to avoid repeating
@@ -230,11 +230,11 @@ func ConditionalRequest(rw http.ResponseWriter, req *http.Request, d Data, templ
 	}
 
 	if !meta.LastModified.IsZero() {
-		rw.Header().Set("Last-Modified", meta.LastModified.Format(time.RFC1123))
+		rw.Header().Set("Last-Modified", meta.LastModified.Format(header.RFC1123))
 
 		if sendContent {
-			ifModifiedSince, e2 := time.Parse(time.RFC1123, req.Header.Get(headername.IfModifiedSince))
-			if e2 == nil {
+			ifModifiedSince, e2 := header.ParseHTTPDateTime(req.Header.Get(headername.IfModifiedSince))
+			if e2 == nil && !ifModifiedSince.IsZero() {
 				if meta.LastModified.After(ifModifiedSince) {
 					rw.WriteHeader(http.StatusNotModified)
 					sendContent = false
