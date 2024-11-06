@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/rickb777/acceptable/header"
-	"github.com/rickb777/acceptable/headername"
+	. "github.com/rickb777/acceptable/headername"
 )
 
 // Data provides a source for response content. It is optimised for lazy evaluation, avoiding
@@ -182,18 +182,18 @@ func (v Value) LastModifiedUsing(fn func(template, language string) (time.Time, 
 
 // Expires sets the time at which the response becomes stale. MaxAge takes precedence.
 func (v Value) Expires(at time.Time) *Value {
-	return v.With("Expires", at.Format(header.RFC1123))
+	return v.With(Expires, header.FormatHTTPDateTime(at))
 }
 
 // MaxAge sets the max-age header on the response. This is used to allow caches to avoid repeating
 // the request until the max age has expired, after which time the resource is considered stale.
 func (v Value) MaxAge(max time.Duration) *Value {
-	return v.With("Cache-Control", fmt.Sprintf("max-age=%d", max/time.Second))
+	return v.With(CacheControl, fmt.Sprintf("max-age=%d", max/time.Second))
 }
 
 // NoCache sets cache control headers to prevent the response being cached.
 func (v Value) NoCache() *Value {
-	return v.With("Cache-Control", "no-cache, must-revalidate", "Pragma", "no-cache")
+	return v.With(CacheControl, "no-cache, must-revalidate", Pragma, "no-cache")
 }
 
 // ConditionalRequest checks the headers for conditional requests and returns a flag indicating whether
@@ -220,9 +220,9 @@ func ConditionalRequest(rw http.ResponseWriter, req *http.Request, d Data, templ
 	sendContent = true
 
 	if meta.Hash != "" {
-		rw.Header().Set("ETag", fmt.Sprintf("%q", meta.Hash))
+		rw.Header().Set(ETag, fmt.Sprintf("%q", meta.Hash))
 
-		ifNoneMatch := header.ETagsOf(req.Header.Get(headername.IfNoneMatch))
+		ifNoneMatch := header.ETagsOf(req.Header.Get(IfNoneMatch))
 		if ifNoneMatch.WeaklyMatches(meta.Hash) {
 			rw.WriteHeader(http.StatusNotModified)
 			sendContent = false
@@ -230,10 +230,10 @@ func ConditionalRequest(rw http.ResponseWriter, req *http.Request, d Data, templ
 	}
 
 	if !meta.LastModified.IsZero() {
-		rw.Header().Set("Last-Modified", meta.LastModified.Format(header.RFC1123))
+		rw.Header().Set(LastModified, header.FormatHTTPDateTime(meta.LastModified))
 
 		if sendContent {
-			ifModifiedSince, e2 := header.ParseHTTPDateTime(req.Header.Get(headername.IfModifiedSince))
+			ifModifiedSince, e2 := header.ParseHTTPDateTime(req.Header.Get(IfModifiedSince))
 			if e2 == nil && !ifModifiedSince.IsZero() {
 				if meta.LastModified.After(ifModifiedSince) {
 					rw.WriteHeader(http.StatusNotModified)

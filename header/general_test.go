@@ -10,21 +10,73 @@ import (
 )
 
 func TestParseDate(t *testing.T) {
+	//est, _ := time.LoadLocation("America/New_York")
 	g := NewGomegaWithT(t)
 	cases := []struct {
-		actual   string
-		expected time.Time
+		input     string
+		canonical string
+		expected  time.Time
 	}{
-		{actual: "Wed, 01 Jan 2020 01:01:01 UTC", expected: time.Date(2020, 1, 1, 1, 1, 1, 0, time.UTC)},
-		{actual: "Tue, 15 Nov 1994 12:45:26 GMT", expected: time.Date(1994, 11, 15, 12, 45, 26, 0, time.UTC)},
-		{actual: "Sunday, 06-Nov-94 08:49:37 GMT", expected: time.Date(1994, 11, 6, 8, 49, 37, 0, time.UTC)},
-		{actual: "Sun Nov  7 08:49:37 1994", expected: time.Date(1994, 11, 7, 8, 49, 37, 0, time.UTC)},
+		{
+			input:     "Sun, 06 Nov 1994 08:49:37 GMT", // canonical
+			canonical: "Sun, 06 Nov 1994 08:49:37 GMT",
+			expected:  time.Date(1994, 11, 6, 8, 49, 37, 0, time.UTC),
+		},
+		{
+			input:     "Wed, 01 Jan 2020 01:01:01 UTC", // non-standard UTC
+			canonical: "Wed, 01 Jan 2020 01:01:01 GMT",
+			expected:  time.Date(2020, 1, 1, 1, 1, 1, 0, time.UTC),
+		},
+		{
+			input:     "Sunday, 06-Nov-94 08:49:37 GMT", // obsolete RFC-850
+			canonical: "Sun, 06 Nov 1994 08:49:37 GMT",
+			expected:  time.Date(1994, 11, 6, 8, 49, 37, 0, time.UTC),
+		},
+		{
+			input:     "Sun Nov  6 08:49:37 1994", // obsolete ANSI-C
+			canonical: "Sun, 06 Nov 1994 08:49:37 GMT",
+			expected:  time.Date(1994, 11, 6, 8, 49, 37, 0, time.UTC),
+		},
 	}
 
-	for _, c := range cases {
-		actual, err := ParseHTTPDateTime(c.actual)
-		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(actual.Equal(c.expected)).To(BeTrue())
+	for i, c := range cases {
+		actual, err := ParseHTTPDateTime(c.input)
+		g.Expect(err).NotTo(HaveOccurred(), "%d", i)
+		g.Expect(actual.Equal(c.expected)).To(BeTrue(), "%d %s != %s", i, actual, c.expected)
+		g.Expect(FormatHTTPDateTime(actual)).To(Equal(c.canonical), "%d", i)
+	}
+
+	_, err := ParseHTTPDateTime("")
+	g.Expect(err).To(HaveOccurred())
+
+	_, err = ParseHTTPDateTime("not a date")
+	g.Expect(err).To(HaveOccurred())
+}
+
+func TestFormatDate(t *testing.T) {
+	est, _ := time.LoadLocation("America/New_York")
+	g := NewGomegaWithT(t)
+	cases := []struct {
+		dateTime  time.Time
+		canonical string
+	}{
+		{
+			dateTime:  time.Date(2020, 1, 1, 1, 1, 1, 0, time.UTC),
+			canonical: "Wed, 01 Jan 2020 01:01:01 GMT",
+		},
+		{
+			dateTime:  time.Date(1994, 11, 6, 8, 49, 37, 0, time.UTC),
+			canonical: "Sun, 06 Nov 1994 08:49:37 GMT",
+		},
+		{
+			dateTime:  time.Date(1994, 11, 6, 8, 49, 37, 0, est),
+			canonical: "Sun, 06 Nov 1994 08:49:37 GMT",
+		},
+	}
+
+	for i, c := range cases {
+		actual := FormatHTTPDateTime(c.dateTime)
+		g.Expect(actual).To(Equal(c.canonical), "%d", i)
 	}
 
 	_, err := ParseHTTPDateTime("")

@@ -14,17 +14,15 @@ const (
 	// XMLHttpRequest is the value used always with XRequestedWith for XHR.
 	XMLHttpRequest = "xmlhttprequest"
 
-	// RFC1123 is the textual time format required by HTTP.
+	// RFC1123 is similar to the textual time format required by HTTP.
+	// Use DateTimeFormat instead. It is used for parsing because it allows any
+	// three-letter timezone.
 	RFC1123 = time.RFC1123
+
+	// DateTimeFormat is the canonical textual time format required by HTTP (see
+	// RFC-9110 5.6.7). The timezone is always GMT.
+	DateTimeFormat = "Mon, 02 Jan 2006 15:04:05 GMT"
 )
-
-//-------------------------------------------------------------------------------------------------
-
-// ParseQuotedList extracts the comma-separated component parts from quoted headers such as If-None-Match.
-// Surrounding spaces and quotes are removed.
-func ParseQuotedList(listHeader string) Strings {
-	return Split(strings.ToLower(listHeader), ",").TrimSpace().RemoveQuotes()
-}
 
 //-------------------------------------------------------------------------------------------------
 
@@ -92,8 +90,9 @@ func parseQuality(qstring string) float64 {
 // If-Modified-Since, If-Unmodified-Since etc. Also, some headers such as If-Range and
 // Retry-After may optionally contain a date.
 //
-// This first tries the preferred RFC-1123 format before also trying the two obsolete
-// but still supported formats.
+// This first tries the preferred RFC-9110 format, although it allows UTC as well as
+// GMT (i.e. as per RFC-1123), before also trying the two obsolete but still supported
+// formats RFC-850 and ANSI-C.
 //
 // An error is returned if the input is blank or could not be parsed as an HTTP-Date
 // (see RFC-9110 sec 5.6.7).
@@ -103,15 +102,21 @@ func ParseHTTPDateTime(dateString string) (time.Time, error) {
 	}
 	t, err := time.Parse(RFC1123, dateString)
 	if err == nil {
-		return t, nil
+		return t.UTC(), nil
 	}
 	t, err = time.Parse(time.RFC850, dateString)
 	if err == nil {
-		return t, nil
+		return t.UTC(), nil
 	}
 	t, err = time.Parse(time.ANSIC, dateString)
 	if err == nil {
-		return t, nil
+		return t.UTC(), nil
 	}
 	return time.Time{}, fmt.Errorf("cannot parse %q as an HTTP date", dateString)
+}
+
+// FormatHTTPDateTime formats the canonical representation of the date-time
+// (see RFC-9110 section 5.6.7). The timezone GMT is always used.
+func FormatHTTPDateTime(t time.Time) string {
+	return t.Format(DateTimeFormat)
 }

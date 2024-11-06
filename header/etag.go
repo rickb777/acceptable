@@ -16,6 +16,7 @@ type ETag struct {
 type ETags []ETag
 
 // ETagsOf splits an etag header string and parses each part.
+// This can be used with If-Match, If-None-Match etc.
 func ETagsOf(s string) ETags {
 	if s == "" {
 		return nil
@@ -75,6 +76,9 @@ func (etags ETags) String() string {
 }
 
 func (etag ETag) String() string {
+	if etag.Hash == "*" {
+		return "*"
+	}
 	if etag.Weak {
 		return fmt.Sprintf("W/%q", etag.Hash)
 	}

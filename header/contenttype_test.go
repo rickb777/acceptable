@@ -78,6 +78,7 @@ func TestContentType_IsTextual(t *testing.T) {
 	for _, c := range cases {
 		g.Expect(c.IsTextual()).To(gomega.BeTrue(), c.String())
 	}
+	g.Expect(ContentType{Type: "video", Subtype: "mp4"}.IsTextual()).To(gomega.BeFalse())
 }
 
 func TestContentType_String(t *testing.T) {
