@@ -14,7 +14,7 @@ const (
 	ContentLanguage     = "Content-Language"
 	ContentLength       = "Content-Length"
 	ContentType         = "Content-Type"
-	Cookie              = "Cookie"
+	Cookie              = "Cookie" // Cookie and Set-Cookie are handled effectively by the standard library APIs
 	ETag                = "ETag"
 	Expires             = "Expires"
 	IfModifiedSince     = "If-Modified-Since"
