@@ -75,6 +75,8 @@ func (ct ContentType) String() string {
 
 var starStar = ContentType{Type: "*", Subtype: "*"}
 
+// ParseContentTypeFromHeaders gets the "Content-Type" header and returns
+// its parsed value.
 func ParseContentTypeFromHeaders(hdrs http.Header) ContentType {
 	cts := hdrs[headername.ContentType]
 	if len(cts) == 0 {
@@ -83,6 +85,7 @@ func ParseContentTypeFromHeaders(hdrs http.Header) ContentType {
 	return ParseContentType(cts[0])
 }
 
+// ParseContentType parses a content type value.
 func ParseContentType(ct string) ContentType {
 	if ct == "" {
 		return starStar
@@ -96,6 +99,10 @@ func ParseContentType(ct string) ContentType {
 // contentTypeOf builds a content type value with optional parameters.
 // The parameters are passed in as literal strings, e.g. "charset=utf-8".
 func contentTypeOf(typ, subtype string, paramKV []string) ContentType {
+	if typ == "" {
+		return starStar
+	}
+
 	if subtype == "" {
 		subtype = "*"
 	}

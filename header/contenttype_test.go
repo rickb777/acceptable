@@ -35,7 +35,20 @@ func TestParseContentTypeFromHeaders(t *testing.T) {
 func TestParseContentType(t *testing.T) {
 	g := gomega.NewWithT(t)
 
+	// blank value is treated as star-star
 	g.Expect(ParseContentType("")).To(gomega.Equal(ContentType{
+		Type:    "*",
+		Subtype: "*",
+	}))
+
+	// illegal value is treated as star-star
+	g.Expect(ParseContentType("/")).To(gomega.Equal(ContentType{
+		Type:    "*",
+		Subtype: "*",
+	}))
+
+	// illegal value is treated as star-star
+	g.Expect(ParseContentType("/plain")).To(gomega.Equal(ContentType{
 		Type:    "*",
 		Subtype: "*",
 	}))
