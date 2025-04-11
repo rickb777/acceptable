@@ -5,14 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
+	"github.com/rickb777/expect"
 )
 
 func Test_offer_construction(t *testing.T) {
-	g := NewWithT(t)
-
 	base := Of(nil, "")
 
 	cases := map[string]struct {
@@ -43,65 +41,56 @@ func Test_offer_construction(t *testing.T) {
 
 	for s, c := range cases {
 		// invariants
-		g.Expect(base.String()).To(Equal("Accept: */*"), s)
-		g.Expect(base.Langs).To(ConsistOf("*"), s)
-		g.Expect(len(base.data)).To(Equal(0), s)
+		expect.String(base.String()).I(s).ToBe(t, "Accept: */*")
+		expect.Slice(base.Langs).I(s).ToBe(t, "*")
+		expect.Map(base.data).I(s).ToBeEmpty(t)
 
-		g.Expect(c.o.String()).To(Equal(s[3:]), s)
-		g.Expect(c.o.Langs).To(ConsistOf(strings.Split(c.el, ",")), s)
-		g.Expect(len(c.o.data)).To(Equal(c.nd), s)
+		expect.String(c.o.String()).I(s).ToBe(t, s[3:])
+		expect.Slice(c.o.Langs).I(s).ToBe(t, strings.Split(c.el, ",")...)
+		expect.Map(c.o.data).I(s).ToHaveLength(t, c.nd)
 
 		for l, d := range c.o.data {
-			g.Expect(fmt.Sprintf("%T", d)).To(
-				Or(
-					Equal("*data.Value"),
-					Equal("offer.empty"),
-				), s+"|"+l)
+			expect.String(fmt.Sprintf("%T", d)).I("%v|%v", s, l).
+				ToBe(nil, "*data.Value").Or().ToBe(t, "offer.empty")
 		}
 	}
 }
 
 func Test_offer_with(t *testing.T) {
-	g := NewWithT(t)
-
 	o1 := Of(nil, "text/plain")
 	o2 := o1.With("foo", "en")
 	o3 := o2.With("bar", "fr")
 	o4 := o3.With("baz", "pt")
 
-	g.Expect(o1.Langs).To(HaveLen(1))
-	g.Expect(o1.Langs).To(ConsistOf("*"))
-	g.Expect(o2.Langs).To(HaveLen(1))
-	g.Expect(o2.Langs).To(ConsistOf("en"))
-	g.Expect(o3.Langs).To(HaveLen(2))
-	g.Expect(o3.Langs).To(ConsistOf("en", "fr"))
-	g.Expect(o4.Langs).To(HaveLen(3))
-	g.Expect(o4.Langs).To(ConsistOf("en", "fr", "pt"))
+	expect.Slice(o1.Langs).ToHaveLength(t, 1)
+	expect.Slice(o1.Langs).ToBe(t, "*")
+	expect.Slice(o2.Langs).ToHaveLength(t, 1)
+	expect.Slice(o2.Langs).ToBe(t, "en")
+	expect.Slice(o3.Langs).ToHaveLength(t, 2)
+	expect.Slice(o3.Langs).ToBe(t, "en", "fr")
+	expect.Slice(o4.Langs).ToHaveLength(t, 3)
+	expect.Slice(o4.Langs).ToBe(t, "en", "fr", "pt")
 
-	g.Expect(o1.data).To(HaveLen(0))
-	g.Expect(o2.data).To(HaveLen(1))
-	g.Expect(o3.data).To(HaveLen(2))
-	g.Expect(o4.data).To(HaveLen(3))
+	expect.Map(o1.data).ToHaveLength(t, 0)
+	expect.Map(o2.data).ToHaveLength(t, 1)
+	expect.Map(o3.data).ToHaveLength(t, 2)
+	expect.Map(o4.data).ToHaveLength(t, 3)
 }
 
 func TestOffersAllEmpty(t *testing.T) {
-	g := NewWithT(t)
-
 	o1 := Of(nil, "text/plain")
 	o2 := Of(nil, "image/png")
 
 	e := Offers{o1, o2}.AllEmpty()
-	g.Expect(e).To(BeTrue())
+	expect.Bool(e).ToBeTrue(t)
 
 	o3 := Of(nil, "text/plain").With("foo", "*")
 
 	e = Offers{o2, o3}.AllEmpty()
-	g.Expect(e).To(BeFalse())
+	expect.Bool(e).ToBeFalse(t)
 }
 
 func TestBuildMatch(t *testing.T) {
-	g := NewWithT(t)
-
 	txt := TXTProcessor()
 	cases := []struct {
 		o        Offer
@@ -163,6 +152,6 @@ func TestBuildMatch(t *testing.T) {
 	for _, c := range cases {
 		m := c.o.BuildMatch(c.accepted, "en", 0)
 		m.Render = nil // comparing functions would always fail
-		g.Expect(*m).To(Equal(c.m), c.o.String())
+		expect.Any(*m).I(c.o).ToBe(t, c.m)
 	}
 }

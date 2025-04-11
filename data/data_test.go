@@ -8,16 +8,14 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/onsi/gomega"
 	. "github.com/rickb777/acceptable/headername"
+	"github.com/rickb777/expect"
 )
 
 var t1 = time.Date(2020, 1, 1, 1, 1, 1, 0, time.UTC)
 var t2 = time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC)
 
 func TestLazyValue_should_pass_template_and_language(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	for i := 1; i <= 2; i++ {
 		// Given ...
 		count := 0
@@ -27,8 +25,8 @@ func TestLazyValue_should_pass_template_and_language(t *testing.T) {
 		d := Lazy(func(template, language string) (interface{}, error) {
 			// Then ...
 			count++
-			g.Expect(template).To(Equal(expectedTemplate))
-			g.Expect(language).To(Equal(expectedLanguage))
+			expect.String(template).ToBe(t, expectedTemplate)
+			expect.String(language).ToBe(t, expectedLanguage)
 			return "foo", nil
 		})
 
@@ -40,19 +38,17 @@ func TestLazyValue_should_pass_template_and_language(t *testing.T) {
 		c, more, e2 := d.Content(expectedTemplate, expectedLanguage)
 
 		// Then ...
-		g.Expect(e1).NotTo(HaveOccurred())
-		g.Expect(send).To(BeTrue())
+		expect.Error(e1).Not().ToHaveOccurred(t)
+		expect.Bool(send).ToBeTrue(t)
 
-		g.Expect(e2).NotTo(HaveOccurred())
-		g.Expect(more).To(BeFalse())
-		g.Expect(c).To(Equal("foo"))
-		g.Expect(count).To(Equal(1))
+		expect.Error(e2).Not().ToHaveOccurred(t)
+		expect.Bool(more).ToBeFalse(t)
+		expect.Any(c).ToBe(t, "foo")
+		expect.Number(count).ToBe(t, 1)
 	}
 }
 
 func TestLazyValue_attaching_eager_metadata(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	// Given ...
 	d := Lazy(func(template, language string) (interface{}, error) {
 		return "foo", nil
@@ -68,18 +64,16 @@ func TestLazyValue_attaching_eager_metadata(t *testing.T) {
 	_, _, e2 := d.Content("home.html", "en")
 
 	// Then ...
-	g.Expect(e1).NotTo(HaveOccurred())
-	g.Expect(send).To(BeTrue())
+	expect.Error(e1).Not().ToHaveOccurred(t)
+	expect.Bool(send).ToBeTrue(t)
 
-	g.Expect(e2).NotTo(HaveOccurred())
-	g.Expect(w.Header()).To(HaveLen(2))
-	g.Expect(w.Header().Get(LastModified)).To(Equal("Wed, 01 Jan 2020 01:01:01 GMT"))
-	g.Expect(w.Header().Get(ETag)).To(Equal(`"abcdef"`))
+	expect.Error(e2).Not().ToHaveOccurred(t)
+	expect.Map(w.Header()).ToHaveLength(t, 2)
+	expect.String(w.Header().Get(LastModified)).ToBe(t, "Wed, 01 Jan 2020 01:01:01 GMT")
+	expect.String(w.Header().Get(ETag)).ToBe(t, `"abcdef"`)
 }
 
 func TestLazyValue_attaching_lazy_metadata(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	// Given ...
 	d := Lazy(func(template, language string) (interface{}, error) {
 		return "foo", nil
@@ -99,18 +93,16 @@ func TestLazyValue_attaching_lazy_metadata(t *testing.T) {
 	_, _, e2 := d.Content("home.html", "en")
 
 	// Then ...
-	g.Expect(e1).NotTo(HaveOccurred())
-	g.Expect(send).To(BeTrue())
+	expect.Error(e1).Not().ToHaveOccurred(t)
+	expect.Bool(send).ToBeTrue(t)
 
-	g.Expect(e2).NotTo(HaveOccurred())
-	g.Expect(w.Header()).To(HaveLen(2))
-	g.Expect(w.Header().Get(LastModified)).To(Equal("Wed, 01 Jan 2020 01:01:01 GMT"))
-	g.Expect(w.Header().Get(ETag)).To(Equal(`"abcdef"`))
+	expect.Error(e2).Not().ToHaveOccurred(t)
+	expect.Map(w.Header()).ToHaveLength(t, 2)
+	expect.String(w.Header().Get(LastModified)).ToBe(t, "Wed, 01 Jan 2020 01:01:01 GMT")
+	expect.String(w.Header().Get(ETag)).ToBe(t, `"abcdef"`)
 }
 
 func TestLazyValue_returning_error(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	for i := 1; i <= 2; i++ {
 		// Given ...
 		d := Lazy(func(template, language string) (interface{}, error) {
@@ -125,17 +117,15 @@ func TestLazyValue_returning_error(t *testing.T) {
 		_, _, e2 := d.Content("home.html", "en")
 
 		// Then ...
-		g.Expect(e1).NotTo(HaveOccurred())
-		g.Expect(e2).To(HaveOccurred())
-		g.Expect(e2.Error()).To(Equal("expected error"))
+		expect.Error(e1).Not().ToHaveOccurred(t)
+		expect.Error(e2).ToHaveOccurred(t)
+		expect.Error(e2).ToContain(t, "expected error")
 	}
 }
 
 //-------------------------------------------------------------------------------------------------
 
 func TestValue_future_expiry(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	// Given ...
 	d := Of("foo").
 		ETag("abcdef").
@@ -151,20 +141,18 @@ func TestValue_future_expiry(t *testing.T) {
 	_, _, e2 := d.Content("home.html", "en")
 
 	// Then ...
-	g.Expect(e1).NotTo(HaveOccurred())
-	g.Expect(send).To(BeTrue())
+	expect.Error(e1).Not().ToHaveOccurred(t)
+	expect.Bool(send).ToBeTrue(t)
 
-	g.Expect(e2).NotTo(HaveOccurred())
-	g.Expect(w.Header()).To(HaveLen(4))
-	g.Expect(w.Header().Get(CacheControl)).To(Equal("max-age=10"))
-	g.Expect(w.Header().Get(Expires)).To(Equal("Thu, 02 Jan 2020 03:04:05 GMT"))
-	g.Expect(w.Header().Get(LastModified)).To(Equal("Wed, 01 Jan 2020 01:01:01 GMT"))
-	g.Expect(w.Header().Get(ETag)).To(Equal(`"abcdef"`))
+	expect.Error(e2).Not().ToHaveOccurred(t)
+	expect.Map(w.Header()).ToHaveLength(t, 4)
+	expect.String(w.Header().Get(CacheControl)).ToBe(t, "max-age=10")
+	expect.String(w.Header().Get(Expires)).ToBe(t, "Thu, 02 Jan 2020 03:04:05 GMT")
+	expect.String(w.Header().Get(LastModified)).ToBe(t, "Wed, 01 Jan 2020 01:01:01 GMT")
+	expect.String(w.Header().Get(ETag)).ToBe(t, `"abcdef"`)
 }
 
 func TestValue_no_cache_and_additional_headers(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	// Given ...
 	d := Of("foo").NoCache().With("Abc", "1", "Def", "true")
 
@@ -176,20 +164,18 @@ func TestValue_no_cache_and_additional_headers(t *testing.T) {
 	_, _, e2 := d.Content("home.html", "en")
 
 	// Then ...
-	g.Expect(e1).NotTo(HaveOccurred())
-	g.Expect(send).To(BeTrue())
+	expect.Error(e1).Not().ToHaveOccurred(t)
+	expect.Bool(send).ToBeTrue(t)
 
-	g.Expect(e2).NotTo(HaveOccurred())
-	g.Expect(w.Header()).To(HaveLen(4))
-	g.Expect(w.Header().Get(CacheControl)).To(Equal("no-cache, must-revalidate"))
-	g.Expect(w.Header().Get(Pragma)).To(Equal("no-cache"))
-	g.Expect(w.Header().Get("Abc")).To(Equal("1"))
-	g.Expect(w.Header().Get("Def")).To(Equal("true"))
+	expect.Error(e2).Not().ToHaveOccurred(t)
+	expect.Map(w.Header()).ToHaveLength(t, 4)
+	expect.String(w.Header().Get(CacheControl)).ToBe(t, "no-cache, must-revalidate")
+	expect.String(w.Header().Get(Pragma)).ToBe(t, "no-cache")
+	expect.String(w.Header().Get("Abc")).ToBe(t, "1")
+	expect.String(w.Header().Get("Def")).ToBe(t, "true")
 }
 
 func TestValue_if_none_match_not_modified_get_request(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	// Given ...
 	d := Of("foo").With("Abc", "1", "Def", "true").MaxAge(10 * time.Second).
 		ETag("hash123").
@@ -205,23 +191,21 @@ func TestValue_if_none_match_not_modified_get_request(t *testing.T) {
 		_, _, e2 := d.Content("home.html", "en")
 
 		// Then ...
-		g.Expect(e1).NotTo(HaveOccurred())
-		g.Expect(send).To(BeFalse())
+		expect.Error(e1).Not().ToHaveOccurred(t)
+		expect.Bool(send).ToBeFalse(t)
 
-		g.Expect(e2).NotTo(HaveOccurred())
-		g.Expect(w.Code).To(Equal(304))
-		g.Expect(w.Header()).To(HaveLen(5))
-		g.Expect(w.Header().Get(ETag)).To(Equal(`"hash123"`))
-		g.Expect(w.Header().Get(LastModified)).To(Equal(`Thu, 02 Jan 2020 03:04:05 GMT`))
-		g.Expect(w.Header().Get(CacheControl)).To(Equal("max-age=10"))
-		g.Expect(w.Header().Get("Abc")).To(Equal("1"))
-		g.Expect(w.Header().Get("Def")).To(Equal("true"))
+		expect.Error(e2).Not().ToHaveOccurred(t)
+		expect.Number(w.Code).ToBe(t, 304)
+		expect.Map(w.Header()).ToHaveLength(t, 5)
+		expect.String(w.Header().Get(ETag)).ToBe(t, `"hash123"`)
+		expect.String(w.Header().Get(LastModified)).ToBe(t, `Thu, 02 Jan 2020 03:04:05 GMT`)
+		expect.String(w.Header().Get(CacheControl)).ToBe(t, "max-age=10")
+		expect.String(w.Header().Get("Abc")).ToBe(t, "1")
+		expect.String(w.Header().Get("Def")).ToBe(t, "true")
 	}
 }
 
 func TestValue_if_modified_since_not_modified_get_request(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	// Given ...
 	d := Of("foo").ETag("hash123").With("Abc", "1", "Def", "true").MaxAge(10 * time.Second).
 		LastModified(t2)
@@ -236,23 +220,21 @@ func TestValue_if_modified_since_not_modified_get_request(t *testing.T) {
 		_, _, e2 := d.Content("home.html", "en")
 
 		// Then ...
-		g.Expect(e1).NotTo(HaveOccurred())
-		g.Expect(send).To(BeFalse())
+		expect.Error(e1).Not().ToHaveOccurred(t)
+		expect.Bool(send).ToBeFalse(t)
 
-		g.Expect(e2).NotTo(HaveOccurred())
-		g.Expect(w.Code).To(Equal(304))
-		g.Expect(w.Header()).To(HaveLen(5))
-		g.Expect(w.Header().Get(ETag)).To(Equal(`"hash123"`))
-		g.Expect(w.Header().Get(LastModified)).To(Equal(`Thu, 02 Jan 2020 03:04:05 GMT`))
-		g.Expect(w.Header().Get(CacheControl)).To(Equal("max-age=10"))
-		g.Expect(w.Header().Get("Abc")).To(Equal("1"))
-		g.Expect(w.Header().Get("Def")).To(Equal("true"))
+		expect.Error(e2).Not().ToHaveOccurred(t)
+		expect.Number(w.Code).ToBe(t, 304)
+		expect.Map(w.Header()).ToHaveLength(t, 5)
+		expect.String(w.Header().Get(ETag)).ToBe(t, `"hash123"`)
+		expect.String(w.Header().Get(LastModified)).ToBe(t, `Thu, 02 Jan 2020 03:04:05 GMT`)
+		expect.String(w.Header().Get(CacheControl)).ToBe(t, "max-age=10")
+		expect.String(w.Header().Get("Abc")).ToBe(t, "1")
+		expect.String(w.Header().Get("Def")).ToBe(t, "true")
 	}
 }
 
 func TestValue_not_modified_put_request(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	// Given ...
 	d := Of("foo").ETag("hash123").NoCache().With("Abc", "1", "Def", "true")
 
@@ -266,15 +248,15 @@ func TestValue_not_modified_put_request(t *testing.T) {
 		_, _, e2 := d.Content("home.html", "en")
 
 		// Then ...
-		g.Expect(e1).NotTo(HaveOccurred())
-		g.Expect(send).To(BeTrue())
+		expect.Error(e1).Not().ToHaveOccurred(t)
+		expect.Bool(send).ToBeTrue(t)
 
-		g.Expect(e2).NotTo(HaveOccurred())
-		g.Expect(w.Code).To(Equal(200))
-		g.Expect(w.Header()).To(HaveLen(4))
-		g.Expect(w.Header().Get(CacheControl)).To(Equal("no-cache, must-revalidate"))
-		g.Expect(w.Header().Get(Pragma)).To(Equal("no-cache"))
-		g.Expect(w.Header().Get("Abc")).To(Equal("1"))
-		g.Expect(w.Header().Get("Def")).To(Equal("true"))
+		expect.Error(e2).Not().ToHaveOccurred(t)
+		expect.Number(w.Code).ToBe(t, 200)
+		expect.Map(w.Header()).ToHaveLength(t, 4)
+		expect.String(w.Header().Get(CacheControl)).ToBe(t, "no-cache, must-revalidate")
+		expect.String(w.Header().Get(Pragma)).ToBe(t, "no-cache")
+		expect.String(w.Header().Get("Abc")).ToBe(t, "1")
+		expect.String(w.Header().Get("Def")).ToBe(t, "true")
 	}
 }

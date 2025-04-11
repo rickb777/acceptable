@@ -6,13 +6,12 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/offer"
+	"github.com/rickb777/expect"
 )
 
 func TestTXTShouldWriteResponseBody(t *testing.T) {
-	g := NewGomegaWithT(t)
 	req := &http.Request{}
 	names1 := []string{"Alice\n", "Bob\n", "Charles\n"}
 	names2 := []string{"Alice ", "Bob ", "Charles"}
@@ -43,7 +42,7 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 	for _, m := range models {
 		w := httptest.NewRecorder()
 		err := p(w, req, m.stuff, "", "")
-		g.Expect(w.Body.String(), err).To(Equal(m.expected))
+		expect.String(w.Body.String(), err).ToBe(t, m.expected)
 	}
 }
 
@@ -59,7 +58,6 @@ func stringSequence(names []string) func(string, string) (interface{}, error) {
 }
 
 func TestTXTShouldNotReturnError(t *testing.T) {
-	g := NewGomegaWithT(t)
 	req := &http.Request{}
 	w := httptest.NewRecorder()
 
@@ -67,7 +65,7 @@ func TestTXTShouldNotReturnError(t *testing.T) {
 
 	err := p(w, req, nil, "", "")
 
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 }
 
 func tt(y, m, d int) time.Time {

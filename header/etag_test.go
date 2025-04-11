@@ -3,11 +3,10 @@ package header
 import (
 	"testing"
 
-	. "github.com/onsi/gomega"
+	"github.com/rickb777/expect"
 )
 
 func TestETagsOf(t *testing.T) {
-	g := NewGomegaWithT(t)
 	cases := []struct {
 		input    string
 		expected ETags
@@ -29,33 +28,29 @@ func TestETagsOf(t *testing.T) {
 			expected: ETags{ETag{Hash: "xyzzy", Weak: true}, ETag{Hash: "r2d2xxxx", Weak: true}, ETag{Hash: "c3piozzzz", Weak: true}},
 		},
 	}
-	for _, c := range cases {
+	for i, c := range cases {
 		actual := ETagsOf(c.input)
-		g.Expect(actual).To(ConsistOf(c.expected))
-		g.Expect(actual.String()).To(Equal(c.input))
+		expect.Slice(actual).I(i).ToBe(t, c.expected...)
+		expect.String(actual.String()).I(i).ToBe(t, c.input)
 	}
 }
 
 func TestWeaklyMatches(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	etags1 := ETagsOf(`"xyzzy", "r2d2xxxx", "c3piozzzz"`)
-	g.Expect(etags1.WeaklyMatches("c3piozzzz")).To(BeTrue())
-	g.Expect(etags1.WeaklyMatches("zzzz")).To(BeFalse())
+	expect.Bool(etags1.WeaklyMatches("c3piozzzz")).ToBeTrue(t)
+	expect.Bool(etags1.WeaklyMatches("zzzz")).ToBeFalse(t)
 
 	etags2 := ETagsOf(`W/"xyzzy", W/"r2d2xxxx", W/"c3piozzzz"`)
-	g.Expect(etags2.WeaklyMatches("c3piozzzz")).To(BeTrue())
-	g.Expect(etags2.WeaklyMatches("zzzz")).To(BeFalse())
+	expect.Bool(etags2.WeaklyMatches("c3piozzzz")).ToBeTrue(t)
+	expect.Bool(etags2.WeaklyMatches("zzzz")).ToBeFalse(t)
 }
 
 func TestStronglyMatches(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	etags1 := ETagsOf(`"xyzzy", "r2d2xxxx", "c3piozzzz"`)
-	g.Expect(etags1.StronglyMatches("c3piozzzz")).To(BeTrue())
-	g.Expect(etags1.StronglyMatches("zzzz")).To(BeFalse())
+	expect.Bool(etags1.StronglyMatches("c3piozzzz")).ToBeTrue(t)
+	expect.Bool(etags1.StronglyMatches("zzzz")).ToBeFalse(t)
 
 	etags2 := ETagsOf(`W/"xyzzy", W/"r2d2xxxx", W/"c3piozzzz"`)
-	g.Expect(etags2.StronglyMatches("c3piozzzz")).To(BeFalse())
-	g.Expect(etags2.StronglyMatches("zzzz")).To(BeFalse())
+	expect.Bool(etags2.StronglyMatches("c3piozzzz")).ToBeFalse(t)
+	expect.Bool(etags2.StronglyMatches("zzzz")).ToBeFalse(t)
 }

@@ -6,17 +6,15 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v4"
-	. "github.com/onsi/gomega"
 	. "github.com/rickb777/acceptable/contenttype"
 	"github.com/rickb777/acceptable/echo4"
 	"github.com/rickb777/acceptable/header"
 	. "github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
+	"github.com/rickb777/expect"
 )
 
 func TestBestRequestMatch_should_match_best_offer(t *testing.T) {
-	g := NewWithT(t)
-
 	// Given ...
 	oa := offer.Of(offer.TXTProcessor(), TextPlain).With("foo", "en")
 	ob := offer.Of(offer.CSVProcessor(), TextCSV).With("bar", "en")
@@ -34,13 +32,11 @@ func TestBestRequestMatch_should_match_best_offer(t *testing.T) {
 	match := echo4.BestRequestMatch(ec, oa, ob, oc, od, oe)
 
 	// Then ...
-	g.Expect(match.Data.Content("", "en")).To(Equal("hello"))
-	g.Expect(w.Header()).To(HaveLen(0))
+	expect.Any(match.Data.Content("", "en")).ToBe(t, "hello")
+	expect.Map(w.Header()).ToHaveLength(t, 0)
 }
 
 func TestRenderBestMatch_should_use_default_processor_if_no_accept_header(t *testing.T) {
-	g := NewWithT(t)
-
 	// Given ...
 	oa := offer.Of(offer.TXTProcessor(), "text/test").With("hello world", "*")
 	ob := offer.Of(offer.TXTProcessor(), TextPlain).With("hello world", "*")
@@ -60,15 +56,13 @@ func TestRenderBestMatch_should_use_default_processor_if_no_accept_header(t *tes
 	err := echo4.RenderBestMatch(ec, 200, "", oa, ob, oc, od, oe)
 
 	// Then ...
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(w.Code).To(Equal(200))
-	g.Expect(w.Header()).To(HaveLen(1))
-	g.Expect(w.Header().Get(ContentType)).To(Equal("text/test;charset=utf-8"))
+	expect.Error(err).Not().ToHaveOccurred(t)
+	expect.Number(w.Code).ToBe(t, 200)
+	expect.Map(w.Header()).ToHaveLength(t, 1)
+	expect.String(w.Header().Get(ContentType)).ToBe(t, "text/test;charset=utf-8")
 }
 
 func TestRenderBestMatch_should_give_JSON_response_for_ajax_requests(t *testing.T) {
-	g := NewWithT(t)
-
 	// Given ...
 	oa := offer.JSON().With("foo", "en")
 
@@ -82,9 +76,9 @@ func TestRenderBestMatch_should_give_JSON_response_for_ajax_requests(t *testing.
 	err := echo4.RenderBestMatch(ec, 201, "", oa)
 
 	// Then ...
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(w.Code).To(Equal(201))
-	g.Expect(w.HeaderMap).To(HaveLen(2))
-	g.Expect(w.Header().Get(ContentType)).To(Equal("application/json;charset=utf-8"))
-	g.Expect(w.Header().Get(ContentLanguage)).To(Equal("en"))
+	expect.Error(err).Not().ToHaveOccurred(t)
+	expect.Number(w.Code).ToBe(t, 201)
+	expect.Map(w.HeaderMap).ToHaveLength(t, 2)
+	expect.String(w.Header().Get(ContentType)).ToBe(t, "application/json;charset=utf-8")
+	expect.String(w.Header().Get(ContentLanguage)).ToBe(t, "en")
 }

@@ -7,13 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/offer"
+	"github.com/rickb777/expect"
 )
 
 func TestBinaryShouldWriteResponseBody(t *testing.T) {
-	g := NewGomegaWithT(t)
 	names := []string{"Alice\n", "Bob\n", "Charles\n"}
 
 	models := []struct {
@@ -45,12 +44,11 @@ func TestBinaryShouldWriteResponseBody(t *testing.T) {
 	for _, m := range models {
 		w := httptest.NewRecorder()
 		err := p(w, req, m.stuff, "", "")
-		g.Expect(w.Body.String(), err).To(Equal(m.expected))
+		expect.String(w.Body.String(), err).ToBe(t, m.expected)
 	}
 }
 
 func TestBinaryShouldNotReturnError(t *testing.T) {
-	g := NewGomegaWithT(t)
 	w := httptest.NewRecorder()
 
 	req := &http.Request{}
@@ -58,7 +56,7 @@ func TestBinaryShouldNotReturnError(t *testing.T) {
 
 	err := p(w, req, nil, "", "")
 
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 }
 
 type simpleReader struct {

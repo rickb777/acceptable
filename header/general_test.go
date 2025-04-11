@@ -5,13 +5,12 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/onsi/gomega"
 	. "github.com/rickb777/acceptable/header"
+	"github.com/rickb777/expect"
 )
 
 func TestParseDate(t *testing.T) {
 	//est, _ := time.LoadLocation("America/New_York")
-	g := NewGomegaWithT(t)
 	cases := []struct {
 		input     string
 		canonical string
@@ -41,21 +40,20 @@ func TestParseDate(t *testing.T) {
 
 	for i, c := range cases {
 		actual, err := ParseHTTPDateTime(c.input)
-		g.Expect(err).NotTo(HaveOccurred(), "%d", i)
-		g.Expect(actual.Equal(c.expected)).To(BeTrue(), "%d %s != %s", i, actual, c.expected)
-		g.Expect(FormatHTTPDateTime(actual)).To(Equal(c.canonical), "%d", i)
+		expect.Error(err).I(i).Not().ToHaveOccurred(t)
+		expect.Any(actual).I(i).ToBe(t, c.expected)
+		expect.String(FormatHTTPDateTime(actual)).I(i).ToBe(t, c.canonical)
 	}
 
 	_, err := ParseHTTPDateTime("")
-	g.Expect(err).To(HaveOccurred())
+	expect.Error(err).ToHaveOccurred(t)
 
 	_, err = ParseHTTPDateTime("not a date")
-	g.Expect(err).To(HaveOccurred())
+	expect.Error(err).ToHaveOccurred(t)
 }
 
 func TestFormatDate(t *testing.T) {
 	est, _ := time.LoadLocation("America/New_York")
-	g := NewGomegaWithT(t)
 	cases := []struct {
 		dateTime  time.Time
 		canonical string
@@ -76,15 +74,14 @@ func TestFormatDate(t *testing.T) {
 
 	for i, c := range cases {
 		actual := FormatHTTPDateTime(c.dateTime)
-		g.Expect(actual).To(Equal(c.canonical), "%d", i)
+		expect.String(actual).I(i).ToBe(t, c.canonical)
 	}
 
 	_, err := ParseHTTPDateTime("")
-	g.Expect(err).To(HaveOccurred())
+	expect.Error(err).ToHaveOccurred(t)
 }
 
 func TestParseAcceptXyzHeader_with_inverse_string(t *testing.T) {
-	g := NewGomegaWithT(t)
 	cases := []struct {
 		actual   string
 		expected PrecedenceValues
@@ -130,15 +127,14 @@ func TestParseAcceptXyzHeader_with_inverse_string(t *testing.T) {
 		},
 	}
 
-	for _, c := range cases {
+	for i, c := range cases {
 		actual := ParsePrecedenceValues(c.actual)
-		g.Expect(actual).To(Equal(c.expected))
-		g.Expect(actual.String()).To(Equal(c.actual))
+		expect.Any(actual).I(i).ToBe(t, c.expected)
+		expect.String(actual.String()).I(i).ToBe(t, c.actual)
 	}
 }
 
 func TestParseAcceptXyzHeader_special_cases(t *testing.T) {
-	g := NewGomegaWithT(t)
 	cases := []struct {
 		actual   string
 		expected PrecedenceValues
@@ -189,9 +185,9 @@ func TestParseAcceptXyzHeader_special_cases(t *testing.T) {
 		},
 	}
 
-	for _, c := range cases {
+	for i, c := range cases {
 		actual := ParsePrecedenceValues(c.actual)
-		g.Expect(actual).To(Equal(c.expected))
+		expect.Any(actual).I(i).ToBe(t, c.expected)
 	}
 }
 

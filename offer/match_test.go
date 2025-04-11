@@ -5,16 +5,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	. "github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
+	"github.com/rickb777/expect"
 )
 
 func TestApplyHeaders(t *testing.T) {
-	g := NewWithT(t)
-
 	// Given ...
 	cases := []struct {
 		str  string
@@ -108,13 +106,13 @@ func TestApplyHeaders(t *testing.T) {
 
 		// Then ...
 		info := fmt.Sprintf("%d:%s", i, c.m)
-		g.Expect(c.m.String()).To(Equal(c.str), info)
+		expect.String(c.m.String()).I(info).ToBe(t, c.str)
 		if c.utf8 {
-			g.Expect(w).To(BeIdenticalTo(rec), info)
+			expect.Any(w).I(info).ToBe(t, rec)
 		}
-		g.Expect(rec.HeaderMap).To(HaveLen(len(c.hdrs)), info)
+		expect.Map(rec.HeaderMap).I(info).ToHaveLength(t, len(c.hdrs))
 		for h, v := range c.hdrs {
-			g.Expect(rec.Header().Get(h)).To(Equal(v), info)
+			expect.String(rec.Header().Get(h)).I(info).ToBe(t, v)
 		}
 	}
 }

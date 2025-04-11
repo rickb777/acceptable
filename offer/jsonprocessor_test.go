@@ -6,15 +6,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	. "github.com/onsi/gomega"
 	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	. "github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
+	"github.com/rickb777/expect"
 )
 
 func TestJSONShouldWriteResponseBody_lazy_indented(t *testing.T) {
-	g := NewGomegaWithT(t)
 	req := &http.Request{}
 	rw := httptest.NewRecorder()
 
@@ -36,14 +35,13 @@ func TestJSONShouldWriteResponseBody_lazy_indented(t *testing.T) {
 	w := match.ApplyHeaders(rw)
 	err := p(w, req, match.Data, "template", match.Language)
 
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(rw.Header().Get(ContentType)).To(Equal("application/json;charset=utf-8"))
-	g.Expect(rw.Header().Get(ContentLanguage)).To(Equal("en"))
-	g.Expect(rw.Body.String()).To(Equal("{\n  \"Name\": \"Joe Bloggs\"\n}\n"))
+	expect.Error(err).Not().ToHaveOccurred(t)
+	expect.String(rw.Header().Get(ContentType)).ToBe(t, "application/json;charset=utf-8")
+	expect.String(rw.Header().Get(ContentLanguage)).ToBe(t, "en")
+	expect.String(rw.Body.String()).ToBe(t, "{\n  \"Name\": \"Joe Bloggs\"\n}\n")
 }
 
 func TestJSONShouldWriteResponseBody_sequence(t *testing.T) {
-	g := NewGomegaWithT(t)
 	req := &http.Request{}
 	rw := httptest.NewRecorder()
 
@@ -68,16 +66,15 @@ func TestJSONShouldWriteResponseBody_sequence(t *testing.T) {
 	w := match.ApplyHeaders(rw)
 	err := p(w, req, match.Data, "template", match.Language)
 
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(rw.Header().Get(ContentType)).To(Equal("application/json;charset=utf-8"))
-	g.Expect(rw.Header().Get(ContentLanguage)).To(Equal("en"))
-	g.Expect(rw.Body.String()).To(Equal(
+	expect.Error(err).Not().ToHaveOccurred(t)
+	expect.String(rw.Header().Get(ContentType)).ToBe(t, "application/json;charset=utf-8")
+	expect.String(rw.Header().Get(ContentLanguage)).ToBe(t, "en")
+	expect.String(rw.Body.String()).ToBe(t,
 		"[\n{\n    \"Name\": \"Ann Bollin\"\n  }\n,\n{\n    \"Name\": \"Joe Bloggs\"\n  }\n,\n{\n    \"Name\": \"Jane Hays\"\n  }\n\n]\n",
-	))
+	)
 }
 
 func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
-	g := NewGomegaWithT(t)
 	req := &http.Request{}
 
 	model := struct {
@@ -102,17 +99,16 @@ func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 
 		err := p(w, req, match.Data, "template", "cn")
 
-		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(rw.Header().Get(ContentType)).To(Equal("application/json;charset=utf-16le"))
-		g.Expect(rw.Header().Get(ContentLanguage)).To(Equal("cn"))
-		g.Expect(rw.Body.Bytes()).To(Equal([]byte{
+		expect.Error(err).Not().ToHaveOccurred(t)
+		expect.String(rw.Header().Get(ContentType)).ToBe(t, "application/json;charset=utf-16le")
+		expect.String(rw.Header().Get(ContentLanguage)).ToBe(t, "cn")
+		expect.String(rw.Body.Bytes()).ToBe(t, []byte{
 			'{', 0, '"', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '"', 0,
-			':', 0, '"', 0, 13, 84, 240, 121, '"', 0, '}', 0, '\n', 0}))
+			':', 0, '"', 0, 13, 84, 240, 121, '"', 0, '}', 0, '\n', 0})
 	}
 }
 
 func TestJSONShouldReturnError(t *testing.T) {
-	g := NewGomegaWithT(t)
 	req := &http.Request{}
 	w := httptest.NewRecorder()
 
@@ -122,9 +118,9 @@ func TestJSONShouldReturnError(t *testing.T) {
 
 	err := p(w, req, datapkg.Of(model), "template", "en")
 
-	g.Expect(err).To(HaveOccurred())
-	g.Expect(err.Error()).To(ContainSubstring("error calling MarshalJSON for type"))
-	g.Expect(err.Error()).To(ContainSubstring("oops"))
+	expect.Error(err).ToHaveOccurred(t)
+	expect.Error(err).ToContain(t, "error calling MarshalJSON for type")
+	expect.Error(err).ToContain(t, "oops")
 }
 
 type User struct {

@@ -4,79 +4,72 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/rickb777/acceptable/headername"
-
-	"github.com/onsi/gomega"
 	. "github.com/rickb777/acceptable/header"
+	"github.com/rickb777/acceptable/headername"
+	"github.com/rickb777/expect"
 )
 
 func TestParseContentTypeFromHeaders(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	hdrs := make(http.Header)
 
 	ct1 := ParseContentTypeFromHeaders(hdrs)
 
-	g.Expect(ct1).To(gomega.Equal(ContentType{
+	expect.Any(ct1).ToBe(t, ContentType{
 		Type:    "*",
 		Subtype: "*",
-	}))
+	})
 
 	hdrs.Set(headername.ContentType, "text/plain")
 
 	ct2 := ParseContentTypeFromHeaders(hdrs)
 
-	g.Expect(ct2).To(gomega.Equal(ContentType{
+	expect.Any(ct2).ToBe(t, ContentType{
 		Type:    "text",
 		Subtype: "plain",
-	}))
+	})
 }
 
 func TestParseContentType(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	// blank value is treated as star-star
-	g.Expect(ParseContentType("")).To(gomega.Equal(ContentType{
+	expect.Any(ParseContentType("")).ToBe(t, ContentType{
 		Type:    "*",
 		Subtype: "*",
-	}))
+	})
 
 	// illegal value is treated as star-star
-	g.Expect(ParseContentType("/")).To(gomega.Equal(ContentType{
+	expect.Any(ParseContentType("/")).ToBe(t, ContentType{
 		Type:    "*",
 		Subtype: "*",
-	}))
+	})
 
 	// illegal value is treated as star-star
-	g.Expect(ParseContentType("/plain")).To(gomega.Equal(ContentType{
+	expect.Any(ParseContentType("/plain")).ToBe(t, ContentType{
 		Type:    "*",
 		Subtype: "*",
-	}))
+	})
 
 	// error case handled silently
-	g.Expect(ParseContentType("text/")).To(gomega.Equal(ContentType{
+	expect.Any(ParseContentType("text/")).ToBe(t, ContentType{
 		Type:    "text",
 		Subtype: "*",
-	}))
+	})
 
-	g.Expect(ParseContentType("text/plain")).To(gomega.Equal(ContentType{
+	expect.Any(ParseContentType("text/plain")).ToBe(t, ContentType{
 		Type:    "text",
 		Subtype: "plain",
-	}))
+	})
 
-	g.Expect(ParseContentType("text/html; charset=utf-8")).To(gomega.Equal(ContentType{
+	expect.Any(ParseContentType("text/html; charset=utf-8")).ToBe(t, ContentType{
 		Type:    "text",
 		Subtype: "html",
 		Params: []KV{{
 			Key:   "charset",
 			Value: "utf-8",
 		}},
-	}))
+	})
 }
 
 func TestContentType_IsTextual(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	cases := []ContentType{
 		{Type: "text", Subtype: "plain"},
 		{Type: "application", Subtype: "json"},
@@ -89,14 +82,12 @@ func TestContentType_IsTextual(t *testing.T) {
 		{Type: "model", Subtype: "gltf+json"},
 	}
 	for _, c := range cases {
-		g.Expect(c.IsTextual()).To(gomega.BeTrue(), c.String())
+		expect.Bool(c.IsTextual()).I(c.String).ToBeTrue(t)
 	}
-	g.Expect(ContentType{Type: "video", Subtype: "mp4"}.IsTextual()).To(gomega.BeFalse())
+	expect.Bool(ContentType{Type: "video", Subtype: "mp4"}.IsTextual()).ToBeFalse(t)
 }
 
 func TestContentType_String(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	ct := ContentType{
 		Type:    "text",
 		Subtype: "html",
@@ -106,5 +97,5 @@ func TestContentType_String(t *testing.T) {
 		},
 	}
 
-	g.Expect(ct.String()).To(gomega.Equal("text/html;charset=utf-8;level=1"))
+	expect.String(ct.String()).ToBe(t, "text/html;charset=utf-8;level=1")
 }

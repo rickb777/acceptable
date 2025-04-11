@@ -6,18 +6,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/benmoss/matchers"
-	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	. "github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
+	"github.com/rickb777/expect"
 )
 
 func Test_should_return_wildcard_data_for_any_language(t *testing.T) {
-	g := NewWithT(t)
-
 	// Given ...
 	a := offer.Of(offer.TXTProcessor(), "text/test").With(someSliceData, "*")
 
@@ -31,22 +28,20 @@ func Test_should_return_wildcard_data_for_any_language(t *testing.T) {
 		best := acceptable.BestRequestMatch(req, a)
 
 		// Then ...
-		g.Expect(best.Render).NotTo(BeNil(), lang)
+		expect.Any(best.Render).I(lang).Not().ToBeNil(t)
 		best.Render = nil
 
-		g.Expect(best).To(matchers.DeepEqual(&offer.Match{
+		expect.Any(best).I(lang).ToBe(t, &offer.Match{
 			ContentType: header.ContentType{Type: "text", Subtype: "test"},
 			Language:    lang,
 			Charset:     "utf-8",
 			Vary:        []string{Accept, AcceptLanguage},
 			Data:        data.Of(someSliceData),
-		}), lang)
+		})
 	}
 }
 
 func Test_should_match_subtype_wildcard1(t *testing.T) {
-	g := NewWithT(t)
-
 	// Given ...
 	a := offer.Of(nil, "text/test")
 
@@ -57,17 +52,15 @@ func Test_should_match_subtype_wildcard1(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
+	expect.Any(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{Type: "text", Subtype: "test"},
 		Language:    "*",
 		Charset:     "utf-8",
 		Vary:        []string{Accept},
-	}))
+	})
 }
 
 func Test_should_match_subtype_wildcard2(t *testing.T) {
-	g := NewWithT(t)
-
 	// Given ...
 	a := offer.Of(nil, "text/*") // <-- wildcard
 
@@ -78,17 +71,15 @@ func Test_should_match_subtype_wildcard2(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
+	expect.Any(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{Type: "text", Subtype: "test"},
 		Language:    "*",
 		Charset:     "utf-8",
 		Vary:        []string{Accept},
-	}))
+	})
 }
 
 func Test_should_match_language_when_offer_language_is_not_specified(t *testing.T) {
-	g := NewWithT(t)
-
 	// Given ...
 	a := offer.Of(nil, "text/html")
 
@@ -101,17 +92,15 @@ func Test_should_match_language_when_offer_language_is_not_specified(t *testing.
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
+	expect.Any(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{Type: "text", Subtype: "html"},
 		Language:    "en",
 		Charset:     "utf-8",
 		Vary:        []string{Accept, AcceptLanguage},
-	}))
+	})
 }
 
 func Test_should_match_language_wildcard_and_return_selected_language(t *testing.T) {
-	g := NewWithT(t)
-
 	// Given ...
 	a := offer.Of(nil, "").With(nil, "en")
 	b := offer.Of(nil, "").With(nil, "de")
@@ -123,17 +112,15 @@ func Test_should_match_language_wildcard_and_return_selected_language(t *testing
 	best := acceptable.BestRequestMatch(req, a, b)
 
 	// Then ...
-	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
+	expect.Any(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{Type: "application", Subtype: "octet-stream"},
 		Language:    "en",
 		Charset:     "utf-8",
 		Vary:        []string{AcceptLanguage},
-	}))
+	})
 }
 
 func Test_should_select_language_of_first_matched_offer_when_no_language_matches(t *testing.T) {
-	g := NewWithT(t)
-
 	// Given ...
 	a := offer.Of(nil, "text/csv").With(someSliceData, "es")
 	b := offer.Of(nil, "text/html").With(someMapData, "en").With(someMapData, "pt")
@@ -147,18 +134,16 @@ func Test_should_select_language_of_first_matched_offer_when_no_language_matches
 	best := acceptable.BestRequestMatch(req, a, b, c)
 
 	// Then ...
-	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
+	expect.Any(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{Type: "text", Subtype: "html"},
 		Language:    "en",
 		Charset:     "utf-8",
 		Vary:        []string{Accept, AcceptLanguage},
 		Data:        data.Of(someMapData),
-	}))
+	})
 }
 
 func Test_should_negotiate_a_default_processor(t *testing.T) {
-	g := NewWithT(t)
-
 	// Given ...
 	wildcard := offer.Of(nil, "text/*")
 	a := offer.Of(nil, "text/test")
@@ -170,28 +155,26 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, wildcard)
 
 	// Then ...
-	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
+	expect.Any(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{Type: "text", Subtype: "plain"},
 		Language:    "*",
 		Charset:     "utf-8",
 		Vary:        []string{Accept},
-	}))
+	})
 
 	// And when ...
 	best = acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
+	expect.Any(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{Type: "text", Subtype: "test"},
 		Language:    "*",
 		Charset:     "utf-8",
 		Vary:        []string{Accept},
-	}))
+	})
 }
 
 func Test_should_negotiate_one_of_the_processors(t *testing.T) {
-	g := NewWithT(t)
-
 	// Given ...
 	a := offer.Of(nil, "text/a")
 	b := offer.Of(nil, "text/b")
@@ -203,23 +186,23 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
+	expect.Any(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{Type: "text", Subtype: "a"},
 		Language:    "*",
 		Charset:     "utf-8",
 		Vary:        []string{Accept},
-	}))
+	})
 
 	// And when ...
 	best = acceptable.BestRequestMatch(req, b)
 
 	// Then ...
-	g.Expect(best).To(matchers.DeepEqual(&offer.Match{
+	expect.Any(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{Type: "text", Subtype: "b"},
 		Language:    "*",
 		Charset:     "utf-8",
 		Vary:        []string{Accept},
-	}))
+	})
 }
 
 func TestMain(m *testing.M) {

@@ -7,14 +7,13 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/onsi/gomega"
 	datapkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/templates"
+	"github.com/rickb777/expect"
 	"github.com/spf13/afero"
 )
 
 func TestProductionInstance_using_files(t *testing.T) {
-	g := NewGomegaWithT(t)
 	templates.Fs = afero.NewOsFs() // real test files
 
 	templates.ReloadOnTheFly = false
@@ -31,21 +30,20 @@ func TestProductionInstance_using_files(t *testing.T) {
 	w1 := httptest.NewRecorder()
 
 	err := render(w1, req, data, "home.html", "en")
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 
-	g.Expect(w1.Body.String()).To(Equal("<html>\n<body>\n<h1>Home.</h1>\n<h4>A Title</h4>\n\n<h3>1</h3>\n<p>Text 1.</p>\n\n</body>\n</html>\n"))
+	expect.String(w1.Body.String()).ToBe(t, "<html>\n<body>\n<h1>Home.</h1>\n<h4>A Title</h4>\n\n<h3>1</h3>\n<p>Text 1.</p>\n\n</body>\n</html>\n")
 
 	// request 2
 	w2 := httptest.NewRecorder()
 
 	err = render(w2, req, data, "foo/bar.html", "en")
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 
-	g.Expect(w2.Body.String()).To(Equal("<html>\n<body>\n<h1>Bar.</h1>\n<h4>A Title</h4>\n\n<h3>1</h3>\n<p>Text 1.</p>\n\n</body>\n</html>\n"))
+	expect.String(w2.Body.String()).ToBe(t, "<html>\n<body>\n<h1>Bar.</h1>\n<h4>A Title</h4>\n\n<h3>1</h3>\n<p>Text 1.</p>\n\n</body>\n</html>\n")
 }
 
 func TestDebugInstance_using_fakes(t *testing.T) {
-	g := NewGomegaWithT(t)
 	rec := &recorder{fs: afero.NewMemMapFs()}
 	templates.Fs = rec
 	rec.fs.MkdirAll("foo/bar", 0755)
@@ -67,19 +65,19 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	//t0 := time.Now()
 	err := render(w, req, data, "foo/home.html", "en")
 	//d1 := time.Now().Sub(t0)
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 
-	g.Expect(w.Body.String()).To(Equal("<html>Hello-Home</html>"))
-	g.Expect(rec.opened).To(ContainElements("synthetic/foo/home.html", "synthetic/foo/bar/baz.html"))
+	expect.String(w.Body.String()).ToBe(t, "<html>Hello-Home</html>")
+	expect.Slice(rec.opened).ToContainAll(t, "synthetic/foo/home.html", "synthetic/foo/bar/baz.html")
 
 	//---------- request 2: javascript ----------
 	rec.opened = nil
 	w = httptest.NewRecorder()
 
 	err = render(w, req, data, "foo/bar/util.js", "en")
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 
-	g.Expect(w.Body.String()).To(Equal("func Hello() {}"))
+	expect.String(w.Body.String()).ToBe(t, "func Hello() {}")
 
 	//---------- request 3: no change so no parsing ----------
 	rec.opened = nil
@@ -88,21 +86,21 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	//t2 := time.Now()
 	err = render(w, req, data, "foo/home.html", "en")
 	//d2 := time.Now().Sub(t2)
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 
-	g.Expect(w.Body.String()).To(Equal("<html>Hello-Home</html>"))
-	g.Expect(rec.opened).To(BeEmpty())
-	//g.Expect(d2).To(BeNumerically("<", d1)) // it should be faster
+	expect.String(w.Body.String()).ToBe(t, "<html>Hello-Home</html>")
+	expect.Slice(rec.opened).ToBeEmpty(t)
+	//expect.String(d2).To(BeNumerically("<", d1)) // it should be faster
 
 	//---------- request 4: a different file ----------
 	rec.opened = nil
 	w = httptest.NewRecorder()
 
 	err = render(w, req, data, "foo/bar/baz.html", "en")
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 
-	g.Expect(w.Body.String()).To(Equal("<html>Hello-Baz</html>"))
-	g.Expect(rec.opened).To(BeEmpty())
+	expect.String(w.Body.String()).ToBe(t, "<html>Hello-Baz</html>")
+	expect.Slice(rec.opened).ToBeEmpty(t)
 
 	//---------- request 5: an altered file ----------
 	rec.opened = nil
@@ -110,10 +108,10 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	afero.WriteFile(rec.fs, "synthetic/foo/bar/baz.html", []byte("<html>{{.Title}}-Updated</html>"), 0644)
 
 	err = render(w, req, data, "foo/bar/baz.html", "en")
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 
-	g.Expect(w.Body.String()).To(Equal("<html>Hello-Updated</html>"))
-	g.Expect(rec.opened).To(ContainElements("synthetic/foo/home.html", "synthetic/foo/bar/baz.html"))
+	expect.String(w.Body.String()).ToBe(t, "<html>Hello-Updated</html>")
+	expect.Slice(rec.opened).ToContainAll(t, "synthetic/foo/home.html", "synthetic/foo/bar/baz.html")
 
 	//---------- request 6: a new file ----------
 	rec.opened = nil
@@ -121,10 +119,10 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	afero.WriteFile(rec.fs, "synthetic/foo/bar/new.html", []byte("<html>{{.Title}}-New</html>"), 0644)
 
 	err = render(w, req, data, "foo/bar/new.html", "en")
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 
-	g.Expect(w.Body.String()).To(Equal("<html>Hello-New</html>"))
-	g.Expect(rec.opened).To(ContainElements("synthetic/foo/home.html", "synthetic/foo/bar/baz.html", "synthetic/foo/bar/new.html"))
+	expect.String(w.Body.String()).ToBe(t, "<html>Hello-New</html>")
+	expect.Slice(rec.opened).ToContainAll(t, "synthetic/foo/home.html", "synthetic/foo/bar/baz.html", "synthetic/foo/bar/new.html")
 
 	//---------- request 7: ok after deleting an unrelated file ----------
 	rec.opened = nil
@@ -132,10 +130,10 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	rec.fs.Remove("synthetic/foo/bar/baz.html")
 
 	err = render(w, req, data, "foo/bar/new.html", "en")
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 
-	g.Expect(w.Body.String()).To(Equal("<html>Hello-New</html>"))
-	g.Expect(rec.opened).To(BeEmpty())
+	expect.String(w.Body.String()).ToBe(t, "<html>Hello-New</html>")
+	expect.Slice(rec.opened).ToBeEmpty(t)
 }
 
 //-------------------------------------------------------------------------------------------------

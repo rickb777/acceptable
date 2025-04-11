@@ -5,13 +5,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	. "github.com/onsi/gomega"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/offer"
+	"github.com/rickb777/expect"
 )
 
 func TestCSVShouldWriteResponseBody(t *testing.T) {
-	g := NewGomegaWithT(t)
 	models := []struct {
 		stuff    data.Data
 		expected string
@@ -40,12 +39,11 @@ func TestCSVShouldWriteResponseBody(t *testing.T) {
 	for _, m := range models {
 		w := httptest.NewRecorder()
 		p(w, req, m.stuff, "", "")
-		g.Expect(w.Body.String()).To(Equal(m.expected))
+		expect.String(w.Body.String()).ToBe(t, m.expected)
 	}
 }
 
 func TestCSVShouldWriteResponseBodyWithTabs(t *testing.T) {
-	g := NewGomegaWithT(t)
 	models := []struct {
 		stuff    data.Data
 		expected string
@@ -69,7 +67,7 @@ func TestCSVShouldWriteResponseBodyWithTabs(t *testing.T) {
 	for _, m := range models {
 		w := httptest.NewRecorder()
 		p(w, req, m.stuff, "", "")
-		g.Expect(w.Body.String()).To(Equal(m.expected))
+		expect.String(w.Body.String()).ToBe(t, m.expected)
 	}
 }
 
