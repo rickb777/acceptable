@@ -22,3 +22,5 @@ _testmain.go
 *.prof
 
 .idea/
+/go.work
+/go.work.sum
