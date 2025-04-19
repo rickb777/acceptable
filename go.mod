@@ -21,7 +21,7 @@ require (
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/goveralls v0.0.12 // indirect
-	github.com/rickb777/plural v1.4.2 // indirect
+	github.com/rickb777/plural v1.4.3 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/mod v0.24.0 // indirect
