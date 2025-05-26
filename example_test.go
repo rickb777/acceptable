@@ -75,7 +75,7 @@ func Example() {
 		fmt.Printf("%s %s %d\n", req.Method, req.URL, res.Code)
 		fmt.Printf("%d headers\n", len(res.Header()))
 		var hdrs []string
-		for h, _ := range res.Header() {
+		for h := range res.Header() {
 			hdrs = append(hdrs, h)
 		}
 		sort.Strings(hdrs)
