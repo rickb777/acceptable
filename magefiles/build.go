@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -29,6 +30,7 @@ func Build() error {
 	return nil
 }
 
+// runs all the unit tests and reports the test coverage
 func Coverage() error {
 	if err := Build(); err != nil {
 		return err
@@ -77,6 +79,7 @@ func listOfFoldersContainingTests() []string {
 	for dir := range set {
 		list = append(list, dir)
 	}
+	slices.Sort(list)
 	return list
 }
 
