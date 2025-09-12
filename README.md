@@ -1,7 +1,7 @@
 # Acceptable 
 
 [![GoDoc](https://img.shields.io/badge/api-Godoc-blue.svg)](http://pkg.go.dev/github.com/rickb777/acceptable)
-[![Build Status](https://travis-ci.org/rickb777/acceptable.svg?branch=master)](https://travis-ci.org/rickb777/acceptable/builds)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rickb777/acceptable)](https://goreportcard.com/report/github.com/rickb777/acceptable)
 [![Build](https://github.com/rickb777/acceptable/actions/workflows/go.yml/badge.svg)](https://github.com/rickb777/acceptable/actions)
 [![Issues](https://img.shields.io/github/issues/rickb777/acceptable.svg)](https://github.com/rickb777/acceptable/issues)
 
