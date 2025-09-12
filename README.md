@@ -2,6 +2,7 @@
 
 [![GoDoc](https://img.shields.io/badge/api-Godoc-blue.svg)](http://pkg.go.dev/github.com/rickb777/acceptable)
 [![Build Status](https://travis-ci.org/rickb777/acceptable.svg?branch=master)](https://travis-ci.org/rickb777/acceptable/builds)
+[![Build](https://github.com/rickb777/acceptable/actions/workflows/go.yml/badge.svg)](https://github.com/rickb777/acceptable/actions)
 [![Issues](https://img.shields.io/github/issues/rickb777/acceptable.svg)](https://github.com/rickb777/acceptable/issues)
 
 This is a library that handles `Accept` headers, which form the basis of content negotiation in HTTP server applications written in Go. It provides an implementation of the proactive server-driven content negotiation algorithm specified in [RFC-7231 section 5.3](https://tools.ietf.org/html/rfc7231#section-5.3).
