@@ -7,7 +7,7 @@
 _obj
 _test
 
-test.out
+*.out
 
 *.cgo1.go
 *.cgo2.c
