@@ -26,7 +26,7 @@ require (
 	github.com/rickb777/plural v1.4.6 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/time v0.11.0 // indirect
+	golang.org/x/time v0.14.0 // indirect
 )
 
 tool github.com/magefile/mage
