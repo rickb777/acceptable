@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/rickb777/acceptable/headername"
-
 	"github.com/rickb777/acceptable/internal"
 )
 
@@ -31,6 +30,19 @@ func (ct ContentType) AsMediaRange(quality float64) MediaRange {
 }
 
 // IsTextual returns true if the content represents a textual entity; false otherwise.
+// Textual types are
+//
+//   - "text/*"
+//   - "application/json"
+//   - "application/xml"
+//   - "application/*+json"
+//   - "application/*+xml"
+//   - "image/*+xml"
+//   - "message/*+xml"
+//   - "model/*+json"
+//   - "model/*+xml"
+//
+// where "*" is a wildcard.
 func (ct ContentType) IsTextual() bool {
 	if ct.Type == "text" {
 		return true
