@@ -18,6 +18,7 @@ const (
 	ETag                = "ETag"
 	Expires             = "Expires"
 	IfModifiedSince     = "If-Modified-Since"
+	IfMatch             = "If-Match"
 	IfNoneMatch         = "If-None-Match"
 	LastModified        = "Last-Modified"
 	Location            = "Location"

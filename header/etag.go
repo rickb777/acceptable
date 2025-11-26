@@ -12,7 +12,7 @@ type ETag struct {
 	Weak bool
 }
 
-// ETag is a slice of ETag.
+// ETags is a slice of ETag.
 type ETags []ETag
 
 // ETagsOf splits an etag header string and parses each part.
