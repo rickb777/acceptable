@@ -57,7 +57,7 @@ func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, 
 	}
 
 	if best.Render == nil {
-		panic(fmt.Sprintf("misconfigured offers for %s/%s;charset=%s;lang=%s", best.Type, best.Subtype, best.Charset, best.Language))
+		panic(fmt.Sprintf("misconfigured offers for %s;charset=%s;lang=%s", best.MediaType, best.Charset, best.Language))
 	}
 
 	w := best.ApplyHeaders(rw)

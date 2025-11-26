@@ -99,9 +99,9 @@ func TestBuildMatch(t *testing.T) {
 	}{
 		{
 			o:        Of(txt, "text/*"),
-			accepted: header.ContentType{Type: "text", Subtype: "plain"},
+			accepted: header.ContentType{MediaType: "text/plain"},
 			m: Match{
-				ContentType:        header.ContentType{Type: "text", Subtype: "plain"},
+				ContentType:        header.ContentType{MediaType: "text/plain"},
 				Language:           "en",
 				Data:               nil,
 				StatusCodeOverride: 0,
@@ -109,9 +109,9 @@ func TestBuildMatch(t *testing.T) {
 		},
 		{
 			o:        Of(txt, "*/*"),
-			accepted: header.ContentType{Type: "text", Subtype: "plain"},
+			accepted: header.ContentType{MediaType: "text/plain"},
 			m: Match{
-				ContentType:        header.ContentType{Type: "text", Subtype: "plain"},
+				ContentType:        header.ContentType{MediaType: "text/plain"},
 				Language:           "en",
 				Data:               nil,
 				StatusCodeOverride: 0,
@@ -119,9 +119,9 @@ func TestBuildMatch(t *testing.T) {
 		},
 		{
 			o:        Of(txt, "text/*"),
-			accepted: header.ContentType{Type: "text", Subtype: "*"},
+			accepted: header.ContentType{MediaType: "text/*"},
 			m: Match{
-				ContentType:        header.ContentType{Type: "text", Subtype: "plain"},
+				ContentType:        header.ContentType{MediaType: "text/plain"},
 				Language:           "en",
 				Data:               nil,
 				StatusCodeOverride: 0,
@@ -129,9 +129,9 @@ func TestBuildMatch(t *testing.T) {
 		},
 		{
 			o:        Of(txt, "*/*"),
-			accepted: header.ContentType{Type: "*", Subtype: "*"},
+			accepted: header.ContentType{MediaType: "*/*"},
 			m: Match{
-				ContentType:        header.ContentType{Type: "application", Subtype: "octet-stream"},
+				ContentType:        header.ContentType{MediaType: "application/octet-stream"},
 				Language:           "en",
 				Data:               nil,
 				StatusCodeOverride: 0,
@@ -139,9 +139,9 @@ func TestBuildMatch(t *testing.T) {
 		},
 		{
 			o:        Of(txt, "text/plain").With("foo", "fr").With("bar", "en"),
-			accepted: header.ContentType{Type: "text", Subtype: "*"},
+			accepted: header.ContentType{MediaType: "text/*"},
 			m: Match{
-				ContentType:        header.ContentType{Type: "text", Subtype: "plain"},
+				ContentType:        header.ContentType{MediaType: "text/plain"},
 				Language:           "en",
 				Data:               data.Of("bar"),
 				StatusCodeOverride: 0,

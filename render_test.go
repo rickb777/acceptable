@@ -119,7 +119,7 @@ func Test_should_give_JSON_response_for_ajax_requests(t *testing.T) {
 	// Then ...
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.Map(w.Header()).ToHaveLength(t, 2)
-	expect.String(w.Header().Get(ContentType)).ToBe(t, "application/json;charset=utf-8")
+	expect.String(w.Header().Get(ContentType)).ToBe(t, "application/json")
 	expect.String(w.Header().Get(ContentLanguage)).ToBe(t, "en")
 }
 

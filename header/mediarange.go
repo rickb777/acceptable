@@ -48,17 +48,19 @@ func (mr MediaRange) StrongerThan(other MediaRange) bool {
 		return false
 	}
 
-	if mr.Type != "*" {
-		if other.Type == "*" {
+	t1, s1 := mr.Split()
+	t2, s2 := other.Split()
+	if t1 != "*" {
+		if t2 == "*" {
 			return true
 		}
-		if mr.Subtype != "*" && other.Subtype == "*" {
+		if s1 != "*" && s2 == "*" {
 			return true
 		}
 	}
 
-	if mr.Type == other.Type {
-		if mr.Subtype == other.Subtype {
+	if t1 == t2 {
+		if s1 == s2 {
 			return len(mr.Params) > len(other.Params)
 		}
 	}
@@ -69,7 +71,7 @@ func (mr MediaRange) StrongerThan(other MediaRange) bool {
 // It does not include the quality value nor any of the extensions.
 func (mr MediaRange) Value() string {
 	buf := &strings.Builder{}
-	fmt.Fprintf(buf, "%s/%s", mr.Type, mr.Subtype)
+	buf.WriteString(mr.MediaType)
 	for _, p := range mr.Params {
 		fmt.Fprintf(buf, ";%s=%s", p.Key, p.Value)
 	}
@@ -91,7 +93,7 @@ func (mr MediaRange) String() string {
 // list is empty, the result holds a wildcard entry ("*/*").
 func (mrs MediaRanges) WithDefault() MediaRanges {
 	if len(mrs) == 0 {
-		return []MediaRange{{ContentType: ContentType{Type: "*", Subtype: "*"}, Quality: DefaultQuality}}
+		return []MediaRange{{ContentType: ContentType{MediaType: "*/*"}, Quality: DefaultQuality}}
 	}
 	return mrs
 }

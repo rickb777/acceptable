@@ -49,16 +49,14 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) io.Writer {
 		}
 	}
 
-	if m.IsTextual() {
-		ct := fmt.Sprintf("%s/%s;charset=%s", m.Type, m.Subtype, charset)
-		rw.Header().Set(headername.ContentType, ct)
-
-		if m.Language != "" && m.Language != "*" {
-			rw.Header().Set(headername.ContentLanguage, m.Language)
-		}
+	if m.Type() == "text" {
+		rw.Header().Set(headername.ContentType, fmt.Sprintf("%s;charset=%s", m.MediaType, charset))
 	} else {
-		ct := fmt.Sprintf("%s/%s", m.Type, m.Subtype)
-		rw.Header().Set(headername.ContentType, ct)
+		rw.Header().Set(headername.ContentType, m.MediaType)
+	}
+
+	if m.IsTextual() && m.Language != "" && m.Language != "*" {
+		rw.Header().Set(headername.ContentLanguage, m.Language)
 	}
 
 	if len(m.Vary) > 0 {
@@ -85,5 +83,5 @@ func (m Match) String() string {
 	if m.StatusCodeOverride != 0 {
 		a = "; not accepted"
 	}
-	return fmt.Sprintf("%s/%s; charset=%s; lang=%s vary=%v%s%s%s", m.Type, m.Subtype, m.Charset, m.Language, m.Vary, d, r, a)
+	return fmt.Sprintf("%s; charset=%s; lang=%s vary=%v%s%s%s", m.MediaType, m.Charset, m.Language, m.Vary, d, r, a)
 }

@@ -24,7 +24,7 @@ func TestJSONShouldWriteResponseBody_lazy_indented(t *testing.T) {
 	}
 
 	match := offer.Match{
-		ContentType: header.ContentType{Type: "application", Subtype: "json"},
+		ContentType: header.ContentType{MediaType: "application/json"},
 		Language:    "en",
 		Charset:     "utf-8",
 		Data:        datapkg.Lazy(func(string, string) (interface{}, error) { return model, nil }),
@@ -36,7 +36,7 @@ func TestJSONShouldWriteResponseBody_lazy_indented(t *testing.T) {
 	err := p(w, req, match.Data, "template", match.Language)
 
 	expect.Error(err).Not().ToHaveOccurred(t)
-	expect.String(rw.Header().Get(ContentType)).ToBe(t, "application/json;charset=utf-8")
+	expect.String(rw.Header().Get(ContentType)).ToBe(t, "application/json")
 	expect.String(rw.Header().Get(ContentLanguage)).ToBe(t, "en")
 	expect.String(rw.Body.String()).ToBe(t, "{\n  \"Name\": \"Joe Bloggs\"\n}\n")
 }
@@ -48,7 +48,7 @@ func TestJSONShouldWriteResponseBody_sequence(t *testing.T) {
 	model := []interface{}{User{Name: "Ann Bollin"}, User{Name: "Joe Bloggs"}, User{Name: "Jane Hays"}}
 
 	match := offer.Match{
-		ContentType: header.ContentType{Type: "application", Subtype: "json"},
+		ContentType: header.ContentType{MediaType: "application/json"},
 		Language:    "en",
 		Charset:     "utf-8",
 		Data: datapkg.Sequence(func(string, string) (interface{}, error) {
@@ -67,7 +67,7 @@ func TestJSONShouldWriteResponseBody_sequence(t *testing.T) {
 	err := p(w, req, match.Data, "template", match.Language)
 
 	expect.Error(err).Not().ToHaveOccurred(t)
-	expect.String(rw.Header().Get(ContentType)).ToBe(t, "application/json;charset=utf-8")
+	expect.String(rw.Header().Get(ContentType)).ToBe(t, "application/json")
 	expect.String(rw.Header().Get(ContentLanguage)).ToBe(t, "en")
 	expect.String(rw.Body.String()).ToBe(t,
 		"[\n{\n    \"Name\": \"Ann Bollin\"\n  }\n,\n{\n    \"Name\": \"Joe Bloggs\"\n  }\n,\n{\n    \"Name\": \"Jane Hays\"\n  }\n\n]\n",
@@ -87,7 +87,7 @@ func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 
 	for _, enc := range cases {
 		match := offer.Match{
-			ContentType: header.ContentType{Type: "application", Subtype: "json"},
+			ContentType: header.ContentType{MediaType: "application/json"},
 			Language:    "cn",
 			Charset:     enc,
 			Data:        datapkg.Of(model),
@@ -100,7 +100,7 @@ func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 		err := p(w, req, match.Data, "template", "cn")
 
 		expect.Error(err).Not().ToHaveOccurred(t)
-		expect.String(rw.Header().Get(ContentType)).ToBe(t, "application/json;charset=utf-16le")
+		expect.String(rw.Header().Get(ContentType)).ToBe(t, "application/json")
 		expect.String(rw.Header().Get(ContentLanguage)).ToBe(t, "cn")
 		expect.String(rw.Body.Bytes()).ToBe(t, []byte{
 			'{', 0, '"', 0, 'N', 0, 'a', 0, 'm', 0, 'e', 0, '"', 0,

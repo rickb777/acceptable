@@ -2,11 +2,11 @@ package header
 
 import (
 	"io"
+	"mime"
 	"net/http"
 	"strings"
 
 	"github.com/rickb777/acceptable/headername"
-	"github.com/rickb777/acceptable/internal"
 )
 
 // ContentType is a media type as defined in RFC-2045, RFC-2046, RFC-2231
@@ -15,9 +15,24 @@ import (
 // There may also be parameters (e.g. "charset=utf-8") and extension values.
 type ContentType struct {
 	// Type and Subtype carry the media type, e.g. "text" and "html"
-	Type, Subtype string
+	MediaType string
 	// Params and Extensions hold optional parameter information
 	Params []KV
+}
+
+func (ct ContentType) Split() (string, string) {
+	t, s, _ := strings.Cut(ct.MediaType, "/")
+	return t, s
+}
+
+func (ct ContentType) Type() string {
+	t, _ := ct.Split()
+	return t
+}
+
+func (ct ContentType) Subtype() string {
+	_, s := ct.Split()
+	return s
 }
 
 // AsMediaRange converts this ContentType to a MediaRange.
@@ -44,33 +59,32 @@ func (ct ContentType) AsMediaRange(quality float64) MediaRange {
 //
 // where "*" is a wildcard.
 func (ct ContentType) IsTextual() bool {
-	if ct.Type == "text" {
+	t, s := ct.Split()
+	if t == "text" {
 		return true
 	}
 
-	if ct.Type == "application" {
-		return ct.Subtype == "json" ||
-			ct.Subtype == "xml" ||
-			strings.HasSuffix(ct.Subtype, "+xml") ||
-			strings.HasSuffix(ct.Subtype, "+json")
+	if t == "application" {
+		return s == "json" ||
+			s == "xml" ||
+			strings.HasSuffix(s, "+xml") ||
+			strings.HasSuffix(s, "+json")
 	}
 
-	if ct.Type == "model" {
-		return strings.HasSuffix(ct.Subtype, "+xml") ||
-			strings.HasSuffix(ct.Subtype, "+json")
+	if t == "model" {
+		return strings.HasSuffix(s, "+xml") ||
+			strings.HasSuffix(s, "+json")
 	}
 
-	if ct.Type == "image" || ct.Type == "message" {
-		return strings.HasSuffix(ct.Subtype, "+xml")
+	if t == "image" || t == "message" {
+		return strings.HasSuffix(s, "+xml")
 	}
 
 	return false
 }
 
 func (ct ContentType) writeTo(w io.StringWriter) {
-	w.WriteString(ct.Type)
-	w.WriteString("/")
-	w.WriteString(ct.Subtype)
+	w.WriteString(ct.MediaType)
 	for _, p := range ct.Params {
 		w.WriteString(";")
 		w.WriteString(p.Key)
@@ -85,7 +99,7 @@ func (ct ContentType) String() string {
 	return buf.String()
 }
 
-var starStar = ContentType{Type: "*", Subtype: "*"}
+var starStar = ContentType{MediaType: "*/*"}
 
 // ParseContentTypeFromHeaders gets the "Content-Type" header and returns
 // its parsed value.
@@ -103,34 +117,17 @@ func ParseContentType(ct string) ContentType {
 		return starStar
 	}
 
-	valueAndParams := Split(ct, ";").TrimSpace()
-	t, s := internal.Split1(valueAndParams[0], '/')
-	return contentTypeOf(t, s, valueAndParams[1:])
-}
-
-// contentTypeOf builds a content type value with optional parameters.
-// The parameters are passed in as literal strings, e.g. "charset=utf-8".
-func contentTypeOf(typ, subtype string, paramKV []string) ContentType {
-	if typ == "" {
+	mt, params, err := mime.ParseMediaType(ct)
+	if err != nil {
 		return starStar
 	}
 
-	if subtype == "" {
-		subtype = "*"
-	}
-
-	var params []KV
-	if len(paramKV) > 0 {
-		params = make([]KV, 0, len(paramKV))
-		for _, p := range paramKV {
-			k, v := internal.Split1(p, '=')
-			params = append(params, KV{Key: k, Value: v})
+	var paramsKV []KV
+	if len(params) > 0 {
+		paramsKV = make([]KV, 0, len(params))
+		for k, v := range params {
+			paramsKV = append(paramsKV, KV{Key: k, Value: v})
 		}
 	}
-
-	return ContentType{
-		Type:    typ,
-		Subtype: subtype,
-		Params:  params,
-	}
+	return ContentType{MediaType: mt, Params: paramsKV}
 }

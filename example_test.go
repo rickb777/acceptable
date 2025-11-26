@@ -99,7 +99,7 @@ func Example() {
 	// GET /request2 200
 	// 4 headers
 	// Content-Language: fr
-	// Content-Type: application/json;charset=utf-8
+	// Content-Type: application/json
 	// Etag: "hash1"
 	// Vary: Accept, Accept-Language
 	//

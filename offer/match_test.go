@@ -23,7 +23,7 @@ func TestApplyHeaders(t *testing.T) {
 		{
 			str: "text/test; charset=windows-1252; lang=en vary=[Accept Accept-Language]",
 			m: offer.Match{
-				ContentType: header.ContentType{Type: "text", Subtype: "test"},
+				ContentType: header.ContentType{MediaType: "text/test"},
 				Language:    "en",
 				Charset:     "windows-1252",
 				Data:        data.Of("data"),
@@ -40,14 +40,14 @@ func TestApplyHeaders(t *testing.T) {
 		{
 			str: "application/xhtml+xml; charset=utf-8; lang=fr vary=[Accept Accept-Language]; no data; no renderer; not accepted",
 			m: offer.Match{
-				ContentType:        header.ContentType{Type: "application", Subtype: "xhtml+xml"},
+				ContentType:        header.ContentType{MediaType: "application/xhtml+xml"},
 				Language:           "fr",
 				Charset:            "utf-8",
 				Vary:               []string{Accept, AcceptLanguage},
 				StatusCodeOverride: 400,
 			},
 			hdrs: map[string]string{
-				ContentType:     "application/xhtml+xml;charset=utf-8",
+				ContentType:     "application/xhtml+xml",
 				ContentLanguage: "fr",
 				Vary:            "Accept, Accept-Language",
 			},
@@ -56,7 +56,7 @@ func TestApplyHeaders(t *testing.T) {
 		{
 			str: "image/png; charset=utf-8; lang=fr vary=[Accept]; no data; no renderer; not accepted",
 			m: offer.Match{
-				ContentType:        header.ContentType{Type: "image", Subtype: "png"},
+				ContentType:        header.ContentType{MediaType: "image/png"},
 				Language:           "fr",
 				Charset:            "utf-8",
 				Vary:               []string{Accept},
@@ -71,7 +71,7 @@ func TestApplyHeaders(t *testing.T) {
 		{
 			str: "text/plain; charset=utf-8; lang=fr vary=[]; no data; no renderer; not accepted",
 			m: offer.Match{
-				ContentType:        header.ContentType{Type: "text", Subtype: "plain"},
+				ContentType:        header.ContentType{MediaType: "text/plain"},
 				Language:           "fr",
 				Charset:            "utf-8",
 				Vary:               nil,
@@ -86,7 +86,7 @@ func TestApplyHeaders(t *testing.T) {
 		{
 			str: "application/octet-stream; charset=utf-8; lang=fr vary=[]; no data; no renderer",
 			m: offer.Match{
-				ContentType: header.ContentType{Type: "application", Subtype: "octet-stream"},
+				ContentType: header.ContentType{MediaType: "application/octet-stream"},
 				Language:    "fr",
 				Charset:     "utf-8",
 				Vary:        nil,

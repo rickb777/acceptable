@@ -23,7 +23,7 @@ func TestXMLShouldWriteLazyResponseBody(t *testing.T) {
 	}
 
 	match := offer.Match{
-		ContentType: header.ContentType{Type: "application", Subtype: "json"},
+		ContentType: header.ContentType{MediaType: "application/json"},
 		Language:    "en",
 		Charset:     "utf-8",
 		Data:        data.Lazy(func(string, string) (interface{}, error) { return model, nil }),
@@ -35,7 +35,7 @@ func TestXMLShouldWriteLazyResponseBody(t *testing.T) {
 	err := p(w, req, match.Data, "template", match.Language)
 
 	expect.Error(err).Not().ToHaveOccurred(t)
-	expect.String(rw.Header().Get(headername.ContentType)).ToBe(t, "application/json;charset=utf-8")
+	expect.String(rw.Header().Get(headername.ContentType)).ToBe(t, "application/json")
 	expect.String(rw.Header().Get(headername.ContentLanguage)).ToBe(t, "en")
 	expect.String(rw.Body.String()).ToBe(t, "<ValidXMLUser><Name>Joe Bloggs</Name></ValidXMLUser>\n")
 }
@@ -57,7 +57,7 @@ func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
 	}
 
 	match := offer.Match{
-		ContentType: header.ContentType{Type: "application", Subtype: "json"},
+		ContentType: header.ContentType{MediaType: "application/json"},
 		Language:    "en",
 		Charset:     "utf-8",
 		Data: data.Sequence(func(string, string) (interface{}, error) {
@@ -76,7 +76,7 @@ func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
 	err := p(w, req, match.Data, "template", match.Language)
 
 	expect.Error(err).Not().ToHaveOccurred(t)
-	expect.String(rw.Header().Get(headername.ContentType)).ToBe(t, "application/json;charset=utf-8")
+	expect.String(rw.Header().Get(headername.ContentType)).ToBe(t, "application/json")
 	expect.String(rw.Header().Get(headername.ContentLanguage)).ToBe(t, "en")
 	expect.String(rw.Body.String()).Info(rw.Body.String()).ToBe(t,
 		"<xml>\n"+
@@ -100,7 +100,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 
 	for _, enc := range cases {
 		match := offer.Match{
-			ContentType: header.ContentType{Type: "application", Subtype: "json"},
+			ContentType: header.ContentType{MediaType: "application/json"},
 			Language:    "cn",
 			Charset:     enc,
 			Data:        data.Of(model),
@@ -113,7 +113,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 		err := p(w, req, match.Data, "template", match.Language)
 
 		expect.Error(err).Not().ToHaveOccurred(t)
-		expect.String(rw.Header().Get(headername.ContentType)).I(enc).ToBe(t, "application/json;charset=utf-16be")
+		expect.String(rw.Header().Get(headername.ContentType)).I(enc).ToBe(t, "application/json")
 		expect.String(rw.Header().Get(headername.ContentLanguage)).I(enc).ToBe(t, "cn")
 		expect.String(rw.Body.Bytes()).I(enc).ToBe(t, []byte{
 			0, '<', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n',
@@ -132,7 +132,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 
 	for _, enc := range cases {
 		match := offer.Match{
-			ContentType: header.ContentType{Type: "application", Subtype: "json"},
+			ContentType: header.ContentType{MediaType: "application/json"},
 			Language:    "cn",
 			Charset:     enc,
 			Data:        data.Of(model),
@@ -145,7 +145,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 		err := p(w, req, match.Data, "template", match.Language)
 
 		expect.Error(err).Not().ToHaveOccurred(t)
-		expect.String(rw.Header().Get(headername.ContentType)).I(enc).ToBe(t, "application/json;charset=utf-16le")
+		expect.String(rw.Header().Get(headername.ContentType)).I(enc).ToBe(t, "application/json")
 		expect.String(rw.Header().Get(headername.ContentLanguage)).I(enc).ToBe(t, "cn")
 		expect.String(rw.Body.Bytes()).I(enc).ToBe(t, []byte{
 			'<', 0, 'V', 0, 'a', 0, 'l', 0, 'i', 0, 'd', 0, 'X', 0, 'M', 0, 'L', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, '>', 0, '\n', 0,

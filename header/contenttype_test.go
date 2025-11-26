@@ -14,54 +14,32 @@ func TestParseContentTypeFromHeaders(t *testing.T) {
 
 	ct1 := ParseContentTypeFromHeaders(hdrs)
 
-	expect.Any(ct1).ToBe(t, ContentType{
-		Type:    "*",
-		Subtype: "*",
-	})
+	expect.Any(ct1).ToBe(t, ContentType{MediaType: "*/*"})
 
 	hdrs.Set(headername.ContentType, "text/plain")
 
 	ct2 := ParseContentTypeFromHeaders(hdrs)
 
-	expect.Any(ct2).ToBe(t, ContentType{
-		Type:    "text",
-		Subtype: "plain",
-	})
+	expect.Any(ct2).ToBe(t, ContentType{MediaType: "text/plain"})
 }
 
 func TestParseContentType(t *testing.T) {
 	// blank value is treated as star-star
-	expect.Any(ParseContentType("")).ToBe(t, ContentType{
-		Type:    "*",
-		Subtype: "*",
-	})
+	expect.Any(ParseContentType("")).ToBe(t, ContentType{MediaType: "*/*"})
 
 	// illegal value is treated as star-star
-	expect.Any(ParseContentType("/")).ToBe(t, ContentType{
-		Type:    "*",
-		Subtype: "*",
-	})
+	expect.Any(ParseContentType("/")).ToBe(t, ContentType{MediaType: "*/*"})
 
 	// illegal value is treated as star-star
-	expect.Any(ParseContentType("/plain")).ToBe(t, ContentType{
-		Type:    "*",
-		Subtype: "*",
-	})
+	expect.Any(ParseContentType("/plain")).ToBe(t, ContentType{MediaType: "*/*"})
 
 	// error case handled silently
-	expect.Any(ParseContentType("text/")).ToBe(t, ContentType{
-		Type:    "text",
-		Subtype: "*",
-	})
+	expect.Any(ParseContentType("text/")).ToBe(t, ContentType{MediaType: "*/*"})
 
-	expect.Any(ParseContentType("text/plain")).ToBe(t, ContentType{
-		Type:    "text",
-		Subtype: "plain",
-	})
+	expect.Any(ParseContentType("text/plain")).ToBe(t, ContentType{MediaType: "text/plain"})
 
 	expect.Any(ParseContentType("text/html; charset=utf-8")).ToBe(t, ContentType{
-		Type:    "text",
-		Subtype: "html",
+		MediaType: "text/html",
 		Params: []KV{{
 			Key:   "charset",
 			Value: "utf-8",
@@ -71,26 +49,25 @@ func TestParseContentType(t *testing.T) {
 
 func TestContentType_IsTextual(t *testing.T) {
 	cases := []ContentType{
-		{Type: "text", Subtype: "plain"},
-		{Type: "application", Subtype: "json"},
-		{Type: "application", Subtype: "geo+json"},
-		{Type: "application", Subtype: "xml"},
-		{Type: "application", Subtype: "xv+xml"},
-		{Type: "image", Subtype: "svg+xml"},
-		{Type: "message", Subtype: "imdn+xml"},
-		{Type: "model", Subtype: "x3d+xml"},
-		{Type: "model", Subtype: "gltf+json"},
+		{MediaType: "text/plain"},
+		{MediaType: "application/json"},
+		{MediaType: "application/geo+json"},
+		{MediaType: "application/xml"},
+		{MediaType: "application/xv+xml"},
+		{MediaType: "image/svg+xml"},
+		{MediaType: "message/imdn+xml"},
+		{MediaType: "model/x3d+xml"},
+		{MediaType: "model/gltf+json"},
 	}
 	for _, c := range cases {
 		expect.Bool(c.IsTextual()).I(c.String).ToBeTrue(t)
 	}
-	expect.Bool(ContentType{Type: "video", Subtype: "mp4"}.IsTextual()).ToBeFalse(t)
+	expect.Bool(ContentType{MediaType: "video/mp4"}.IsTextual()).ToBeFalse(t)
 }
 
 func TestContentType_String(t *testing.T) {
 	ct := ContentType{
-		Type:    "text",
-		Subtype: "html",
+		MediaType: "text/html",
 		Params: []KV{
 			{Key: "charset", Value: "utf-8"},
 			{Key: "level", Value: "1"},

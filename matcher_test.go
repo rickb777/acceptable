@@ -32,7 +32,7 @@ func Test_should_return_wildcard_data_for_any_language(t *testing.T) {
 		best.Render = nil
 
 		expect.Any(best).I(lang).ToBe(t, &offer.Match{
-			ContentType: header.ContentType{Type: "text", Subtype: "test"},
+			ContentType: header.ContentType{MediaType: "text/test"},
 			Language:    lang,
 			Charset:     "utf-8",
 			Vary:        []string{Accept, AcceptLanguage},
@@ -53,7 +53,7 @@ func Test_should_match_subtype_wildcard1(t *testing.T) {
 
 	// Then ...
 	expect.Any(best).ToBe(t, &offer.Match{
-		ContentType: header.ContentType{Type: "text", Subtype: "test"},
+		ContentType: header.ContentType{MediaType: "text/test"},
 		Language:    "*",
 		Charset:     "utf-8",
 		Vary:        []string{Accept},
@@ -72,7 +72,7 @@ func Test_should_match_subtype_wildcard2(t *testing.T) {
 
 	// Then ...
 	expect.Any(best).ToBe(t, &offer.Match{
-		ContentType: header.ContentType{Type: "text", Subtype: "test"},
+		ContentType: header.ContentType{MediaType: "text/test"},
 		Language:    "*",
 		Charset:     "utf-8",
 		Vary:        []string{Accept},
@@ -93,7 +93,7 @@ func Test_should_match_language_when_offer_language_is_not_specified(t *testing.
 
 	// Then ...
 	expect.Any(best).ToBe(t, &offer.Match{
-		ContentType: header.ContentType{Type: "text", Subtype: "html"},
+		ContentType: header.ContentType{MediaType: "text/html"},
 		Language:    "en",
 		Charset:     "utf-8",
 		Vary:        []string{Accept, AcceptLanguage},
@@ -113,7 +113,7 @@ func Test_should_match_language_wildcard_and_return_selected_language(t *testing
 
 	// Then ...
 	expect.Any(best).ToBe(t, &offer.Match{
-		ContentType: header.ContentType{Type: "application", Subtype: "octet-stream"},
+		ContentType: header.ContentType{MediaType: "application/octet-stream"},
 		Language:    "en",
 		Charset:     "utf-8",
 		Vary:        []string{AcceptLanguage},
@@ -135,7 +135,7 @@ func Test_should_select_language_of_first_matched_offer_when_no_language_matches
 
 	// Then ...
 	expect.Any(best).ToBe(t, &offer.Match{
-		ContentType: header.ContentType{Type: "text", Subtype: "html"},
+		ContentType: header.ContentType{MediaType: "text/html"},
 		Language:    "en",
 		Charset:     "utf-8",
 		Vary:        []string{Accept, AcceptLanguage},
@@ -156,7 +156,7 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 
 	// Then ...
 	expect.Any(best).ToBe(t, &offer.Match{
-		ContentType: header.ContentType{Type: "text", Subtype: "plain"},
+		ContentType: header.ContentType{MediaType: "text/plain"},
 		Language:    "*",
 		Charset:     "utf-8",
 		Vary:        []string{Accept},
@@ -167,7 +167,7 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 
 	// Then ...
 	expect.Any(best).ToBe(t, &offer.Match{
-		ContentType: header.ContentType{Type: "text", Subtype: "test"},
+		ContentType: header.ContentType{MediaType: "text/test"},
 		Language:    "*",
 		Charset:     "utf-8",
 		Vary:        []string{Accept},
@@ -187,7 +187,7 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 
 	// Then ...
 	expect.Any(best).ToBe(t, &offer.Match{
-		ContentType: header.ContentType{Type: "text", Subtype: "a"},
+		ContentType: header.ContentType{MediaType: "text/a"},
 		Language:    "*",
 		Charset:     "utf-8",
 		Vary:        []string{Accept},
@@ -198,7 +198,7 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 
 	// Then ...
 	expect.Any(best).ToBe(t, &offer.Match{
-		ContentType: header.ContentType{Type: "text", Subtype: "b"},
+		ContentType: header.ContentType{MediaType: "text/b"},
 		Language:    "*",
 		Charset:     "utf-8",
 		Vary:        []string{Accept},

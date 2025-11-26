@@ -215,13 +215,13 @@ func (o Offer) BuildFallbackMatch() *Match {
 }
 
 func (o Offer) resolvedType(acceptedCT header.ContentType) header.ContentType {
-	t := o.Type
-	s := o.Subtype
+	t, s := o.Split()
+	ta, sa := acceptedCT.Split()
 
-	if o.Subtype == "*" && acceptedCT.Subtype != "*" {
-		s = acceptedCT.Subtype
-		if o.Type == "*" && acceptedCT.Type != "*" {
-			t = acceptedCT.Type
+	if s == "*" && sa != "*" {
+		s = sa
+		if t == "*" && ta != "*" {
+			t = ta
 		}
 	}
 
@@ -236,7 +236,7 @@ func (o Offer) resolvedType(acceptedCT header.ContentType) header.ContentType {
 		// first 512 bytes but there is no attempt to do that here.
 	}
 
-	return header.ContentType{Type: t, Subtype: s}
+	return header.ContentType{MediaType: t + "/" + s}
 }
 
 // Data gets the data lodged for a given language (or language group).
@@ -305,7 +305,8 @@ func (offers Offers) Filter(typ, subtype string) Offers {
 
 	allowed := make(Offers, 0, len(offers))
 	for _, o := range offers {
-		if internal.EqualOrWildcard(o.Type, typ) && internal.EqualOrWildcard(o.Subtype, subtype) {
+		t, s := o.Split()
+		if internal.EqualOrWildcard(t, typ) && internal.EqualOrWildcard(s, subtype) {
 			allowed = append(allowed, o)
 		}
 	}

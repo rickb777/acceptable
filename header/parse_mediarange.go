@@ -35,8 +35,10 @@ func parseMediaRangeHeader(acceptHeader string) MediaRanges {
 	for _, part := range parts {
 		valueAndParams := Split(part, ";").TrimSpace()
 		if len(valueAndParams) == 1 {
-			t, s := internal.Split1(strings.TrimSpace(valueAndParams[0]), '/')
-			wvs = append(wvs, MediaRange{ContentType: ContentType{Type: t, Subtype: s}, Quality: DefaultQuality})
+			wvs = append(wvs, MediaRange{
+				ContentType: ContentType{MediaType: strings.TrimSpace(valueAndParams[0])},
+				Quality:     DefaultQuality,
+			})
 		} else {
 			wvs = append(wvs, handleMediaRangeWithParams(valueAndParams[0], valueAndParams[1:]))
 		}
@@ -47,7 +49,7 @@ func parseMediaRangeHeader(acceptHeader string) MediaRanges {
 
 func handleMediaRangeWithParams(value string, acceptParams []string) MediaRange {
 	wv := new(MediaRange)
-	wv.Type, wv.Subtype = internal.Split1(value, '/')
+	wv.MediaType = value
 	wv.Quality = DefaultQuality
 
 	for _, ap := range acceptParams {

@@ -79,6 +79,6 @@ func TestRenderBestMatch_should_give_JSON_response_for_ajax_requests(t *testing.
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.Number(w.Code).ToBe(t, 201)
 	expect.Map(w.HeaderMap).ToHaveLength(t, 2)
-	expect.String(w.Header().Get(ContentType)).ToBe(t, "application/json;charset=utf-8")
+	expect.String(w.Header().Get(ContentType)).ToBe(t, "application/json")
 	expect.String(w.Header().Get(ContentLanguage)).ToBe(t, "en")
 }

@@ -151,9 +151,7 @@ func (c context) removeExcludedOffers(mrs header.MediaRanges, available offerpkg
 	for i, offer := range available {
 		for _, accepted := range mrs {
 			if accepted.Quality <= 0 &&
-				accepted.Type == offer.Type &&
-				accepted.Subtype == offer.Subtype {
-
+				accepted.MediaType == offer.MediaType {
 				excluded[i] = true
 			}
 		}
@@ -220,13 +218,12 @@ func (c context) findBestMatch(mrs header.MediaRanges, languages header.Preceden
 //-------------------------------------------------------------------------------------------------
 
 func exactMatch(accepted header.MediaRange, offer offerpkg.Offer) bool {
-	return accepted.Type == offer.Type &&
-		accepted.Subtype == offer.Subtype
+	return accepted.MediaType == offer.MediaType
 }
 
 func nearMatch(accepted header.MediaRange, offer offerpkg.Offer) bool {
-	return equalOrWildcard(accepted.Type, offer.Type) &&
-		equalOrWildcard(accepted.Subtype, offer.Subtype)
+	return equalOrWildcard(accepted.Type(), offer.Type()) &&
+		equalOrWildcard(accepted.Subtype(), offer.Subtype())
 }
 
 func equalOrPrefix(acceptedLang, offeredLang string) bool {

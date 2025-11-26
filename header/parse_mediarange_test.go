@@ -12,8 +12,7 @@ func TestParseAcceptHeader_parses_single(t *testing.T) {
 	mr := header.ParseMediaRanges("application/json")
 
 	expect.Number(len(mr)).ToBe(t, 1)
-	expect.String(mr[0].Type).ToBe(t, "application")
-	expect.String(mr[0].Subtype).ToBe(t, "json")
+	expect.String(mr[0].MediaType).ToBe(t, "application/json")
 	expect.Any(mr[0].Quality).ToBe(t, header.DefaultQuality)
 }
 
@@ -21,8 +20,7 @@ func TestParseAcceptHeader_converts_mediaRange_to_lowercase(t *testing.T) {
 	mr := header.ParseMediaRanges("Application/CEA")
 
 	expect.Number(len(mr)).ToBe(t, 1)
-	expect.String(mr[0].Type).ToBe(t, "application")
-	expect.String(mr[0].Subtype).ToBe(t, "cea")
+	expect.String(mr[0].MediaType).ToBe(t, "application/cea")
 }
 
 func TestParseAcceptHeader_defaults_quality_if_not_explicit(t *testing.T) {
@@ -36,8 +34,7 @@ func TestParseAcceptHeader_should_parse_quality(t *testing.T) {
 	mr := header.ParseMediaRanges("application/json; q=0.9")
 
 	expect.Number(len(mr)).ToBe(t, 1)
-	expect.String(mr[0].Type).ToBe(t, "application")
-	expect.String(mr[0].Subtype).ToBe(t, "json")
+	expect.String(mr[0].MediaType).ToBe(t, "application/json")
 	expect.Any(mr[0].Quality).ToBe(t, 0.9) // 1e-4)
 }
 
@@ -45,8 +42,7 @@ func TestParseAcceptHeader_extension_can_omit_value(t *testing.T) {
 	mr := header.ParseMediaRanges("application/json; q=0.9; label")
 
 	expect.Number(len(mr)).ToBe(t, 1)
-	expect.String(mr[0].Type).ToBe(t, "application")
-	expect.String(mr[0].Subtype).ToBe(t, "json")
+	expect.String(mr[0].MediaType).ToBe(t, "application/json")
 	expect.Slice(mr[0].Params).ToBe(t, header.KV{Key: "label"})
 }
 
@@ -55,16 +51,13 @@ func TestParseAcceptHeader_sorts_by_decending_quality(t *testing.T) {
 
 	expect.Number(len(mr)).ToBe(t, 3)
 
-	expect.String(mr[0].Type).ToBe(t, "application")
-	expect.String(mr[0].Subtype).ToBe(t, "xml")
+	expect.String(mr[0].MediaType).ToBe(t, "application/xml")
 	expect.Any(mr[0].Quality).ToBe(t, header.DefaultQuality)
 
-	expect.String(mr[1].Type).ToBe(t, "application")
-	expect.String(mr[1].Subtype).ToBe(t, "json")
+	expect.String(mr[1].MediaType).ToBe(t, "application/json")
 	expect.Any(mr[1].Quality).ToBe(t, 0.8) // 1e-4
 
-	expect.String(mr[2].Type).ToBe(t, "application")
-	expect.String(mr[2].Subtype).ToBe(t, "*")
+	expect.String(mr[2].MediaType).ToBe(t, "application/*")
 	expect.Any(mr[2].Quality).ToBe(t, 0.1) // 1e-4
 }
 
@@ -72,8 +65,7 @@ func TestMediaRanges_should_ignore_invalid_quality(t *testing.T) {
 	mr := header.ParseMediaRanges("text/html;q=blah")
 
 	expect.Number(len(mr)).ToBe(t, 1)
-	expect.String(mr[0].Type).ToBe(t, "text")
-	expect.String(mr[0].Subtype).ToBe(t, "html")
+	expect.String(mr[0].MediaType).ToBe(t, "text/html")
 	expect.Any(mr[0].Quality).ToBe(t, header.DefaultQuality)
 	expect.Slice(mr[0].Params).ToHaveLength(t, 0)
 }
@@ -115,8 +107,7 @@ func TestMediaRanges_should_not_remove_accept_extension(t *testing.T) {
 	mr := header.ParseMediaRanges("text/html; q=0.5; a=1;b=2")
 
 	expect.Number(len(mr)).ToBe(t, 1)
-	expect.String(mr[0].Type).ToBe(t, "text")
-	expect.String(mr[0].Subtype).ToBe(t, "html")
+	expect.String(mr[0].MediaType).ToBe(t, "text/html")
 	expect.Any(mr[0].Quality).ToBe(t, 0.5)
 	expect.Slice(mr[0].Params).ToBe(t, header.KV{"a", "1"}, header.KV{"b", "2"})
 }
