@@ -6,9 +6,10 @@
 package main
 
 import (
-	"github.com/magefile/mage/sh"
 	"log"
 	"os"
+
+	"github.com/magefile/mage/sh"
 )
 
 var Default = Build

@@ -14,7 +14,8 @@ func TestParseContentTypeFromHeaders(t *testing.T) {
 
 	ct1 := ParseContentTypeFromHeaders(hdrs)
 
-	expect.Any(ct1).ToBe(t, ContentType{MediaType: "*/*"})
+	expect.Any(ct1).ToBe(t, ContentType{MediaType: ""})
+	expect.Any(ct1.WithDefault()).ToBe(t, ContentType{MediaType: "*/*"})
 
 	hdrs.Set(headername.ContentType, "text/plain")
 
@@ -25,16 +26,16 @@ func TestParseContentTypeFromHeaders(t *testing.T) {
 
 func TestParseContentType(t *testing.T) {
 	// blank value is treated as star-star
-	expect.Any(ParseContentType("")).ToBe(t, ContentType{MediaType: "*/*"})
+	expect.Any(ParseContentType("")).ToBe(t, ContentType{MediaType: ""})
 
 	// illegal value is treated as star-star
-	expect.Any(ParseContentType("/")).ToBe(t, ContentType{MediaType: "*/*"})
+	expect.Any(ParseContentType("/")).ToBe(t, ContentType{MediaType: ""})
 
 	// illegal value is treated as star-star
-	expect.Any(ParseContentType("/plain")).ToBe(t, ContentType{MediaType: "*/*"})
+	expect.Any(ParseContentType("/plain")).ToBe(t, ContentType{MediaType: ""})
 
 	// error case handled silently
-	expect.Any(ParseContentType("text/")).ToBe(t, ContentType{MediaType: "*/*"})
+	expect.Any(ParseContentType("text/")).ToBe(t, ContentType{MediaType: ""})
 
 	expect.Any(ParseContentType("text/plain")).ToBe(t, ContentType{MediaType: "text/plain"})
 

@@ -20,6 +20,14 @@ type ContentType struct {
 	Params []KV
 }
 
+// WithDefault returns "*/*" if ct has a blank media type.
+func (ct ContentType) WithDefault() ContentType {
+	if ct.MediaType == "" {
+		ct.MediaType = "*/*"
+	}
+	return ct
+}
+
 func (ct ContentType) Split() (string, string) {
 	t, s, _ := strings.Cut(ct.MediaType, "/")
 	return t, s
@@ -99,27 +107,26 @@ func (ct ContentType) String() string {
 	return buf.String()
 }
 
-var starStar = ContentType{MediaType: "*/*"}
-
 // ParseContentTypeFromHeaders gets the "Content-Type" header and returns
-// its parsed value.
+// its parsed value. An absent or malformed input yields a blank media type.
 func ParseContentTypeFromHeaders(hdrs http.Header) ContentType {
 	cts := hdrs[headername.ContentType]
 	if len(cts) == 0 {
-		return starStar
+		return ContentType{}
 	}
 	return ParseContentType(cts[0])
 }
 
 // ParseContentType parses a content type value.
+// An absent or malformed input yields a blank media type.
 func ParseContentType(ct string) ContentType {
 	if ct == "" {
-		return starStar
+		return ContentType{}
 	}
 
 	mt, params, err := mime.ParseMediaType(ct)
 	if err != nil {
-		return starStar
+		return ContentType{}
 	}
 
 	var paramsKV []KV

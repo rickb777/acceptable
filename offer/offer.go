@@ -51,7 +51,7 @@ type Offer struct {
 // The correct behaviour is a 406 when no match can be made.
 func Of(processor Processor, contentType string) Offer {
 	return Offer{
-		ContentType: header.ParseContentType(contentType),
+		ContentType: header.ParseContentType(contentType).WithDefault(),
 		processor:   processor,
 		Langs:       []string{"*"},
 		data:        make(map[string]datapkg.Data),
