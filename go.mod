@@ -14,14 +14,14 @@ require (
 
 require (
 	github.com/magefile/mage v1.15.0
-	github.com/rickb777/expect v1.0.7
+	github.com/rickb777/expect v1.0.8
 )
 
 require (
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
-	github.com/rickb777/plural v1.4.7 // indirect
+	github.com/rickb777/plural v1.4.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/time v0.14.0 // indirect
