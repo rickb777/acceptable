@@ -1,22 +1,20 @@
 module github.com/rickb777/acceptable
 
-go 1.24.1
-
-toolchain go1.24.2
+go 1.25.0
 
 require (
-	github.com/labstack/echo/v4 v4.13.4
+	github.com/labstack/echo/v4 v4.15.0
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/spf13/afero v1.15.0
-	golang.org/x/crypto v0.45.0 // indirect
-	golang.org/x/net v0.47.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/text v0.31.0
+	golang.org/x/crypto v0.48.0 // indirect
+	golang.org/x/net v0.50.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/text v0.34.0
 )
 
 require (
 	github.com/magefile/mage v1.15.0
-	github.com/rickb777/expect v1.0.6
+	github.com/rickb777/expect v1.0.7
 )
 
 require (
