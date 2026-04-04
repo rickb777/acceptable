@@ -14,7 +14,11 @@ import (
 func TestMediaRange_String(t *testing.T) {
 	ct := ParseContentType("text/html;charset=utf-8;level=1").AsMediaRange(0.5)
 
-	expect.String(ct.String()).ToBe(t, "text/html;charset=utf-8;level=1;q=0.5")
+	// allow for the order of params to vary
+	expect.String(ct.String()).ToContain(t, "text/html;")
+	expect.String(ct.String()).ToContain(t, ";charset=utf-8;")
+	expect.String(ct.String()).ToContain(t, ";level=1;")
+	expect.String(ct.String()).ToContain(t, ";q=0.5")
 }
 
 func TestPrecedenceValues_String(t *testing.T) {
