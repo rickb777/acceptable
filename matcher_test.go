@@ -208,7 +208,7 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 func TestMain(m *testing.M) {
 	flag.Parse()
 	//if testing.Verbose() {
-	//	acceptable.Debug = func(m string, a ...interface{}) { fmt.Printf(m, a...) }
+	//	acceptable.Debug = func(m string, a ...any) { fmt.Printf(m, a...) }
 	//}
 	os.Exit(m.Run())
 }

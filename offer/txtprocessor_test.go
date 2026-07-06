@@ -23,7 +23,7 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 		{data.Of("Joe Bloggs"), "Joe Bloggs\n"},
 		{data.Of("Joe Bloggs\n"), "Joe Bloggs\n"},
 		{data.Of([]byte("Joe Bloggs")), "Joe Bloggs\n"},
-		{data.Lazy(func(string, string) (interface{}, error) { return "Joe Bloggs", nil }), "Joe Bloggs\n"},
+		{data.Lazy(func(string, string) (any, error) { return "Joe Bloggs", nil }), "Joe Bloggs\n"},
 		{data.Sequence(
 			stringSequence(names1)),
 			"Alice\nBob\nCharles\n",
@@ -46,8 +46,8 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 	}
 }
 
-func stringSequence(names []string) func(string, string) (interface{}, error) {
-	return func(string, string) (interface{}, error) {
+func stringSequence(names []string) func(string, string) (any, error) {
+	return func(string, string) (any, error) {
 		if len(names) == 0 {
 			return nil, nil
 		}

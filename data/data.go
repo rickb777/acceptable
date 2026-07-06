@@ -11,27 +11,26 @@ import (
 
 // Data provides a source for response content. It is optimised for lazy evaluation, avoiding
 // wasted processing.
-//
-// If necessary, Content will be called a second time, this time with dataRequired=true. The
-// data must always be returned in this case. However the metadata will be ignored.
-//
-// The metadata can be nil if not needed.
 type Data interface {
 	// Meta returns the metadata that will be used to set response headers automatically.
 	// The headers are ETag and Last-Modified.
 	Meta(template, language string) (meta *Metadata, err error)
 
 	// Content returns the data as a value that can be processed by encoders such as "encoding/json"
-	// The returned values are the data itself, a boolean that is true if the data is in chunks and
-	// there is more data to follow, and an error if arising. For chunked data, this method
-	// will be called repeatedly until the boolean yields false or an error arises.
-	Content(template, language string) (interface{}, bool, error)
+	// The returned values are
+	//   - the data itself,
+	//   - a boolean that is true if the data is in chunks and there is more data to follow, and
+	//   - an error if one occurs.
+	// For chunked data, this method will be called repeatedly until the boolean yields false
+	// or an error arises.
+	Content(template, language string) (any, bool, error)
 
 	// Headers returns response headers relating to the data (optional)
 	Headers() map[string]string
 }
 
-// Metadata provides optional entity tag and last modified information about some data.
+// Metadata provides optional entity tag and last modified information about some data. This
+// can be sent with a response such thath the client can make conditional requests in future.
 type Metadata struct {
 	Hash         string    // used as entity tag; blank if not required
 	LastModified time.Time // used for Last-Modified header; zero if not required
@@ -39,17 +38,17 @@ type Metadata struct {
 
 // Of wraps a data value.
 //
-// If an entity tag is known, the ETag method should be used. Likewise, if a last-modified
-// timestamp is known, the LastModified method should also be used.
-func Of(v interface{}) *Value {
+// If an entity tag is known, the [Value.ETag] method should be used on the result. Likewise,
+// if a last-modified timestamp is known, the [Value.LastModified] method should also be used.
+func Of(v any) *Value {
 	return &Value{value: v}
 }
 
 // Lazy wraps a function that supplies a data value, but only fetches the data when it is needed.
 //
-// If an entity tag is known, the ETag method should be used. Likewise, if a last-modified
-// timestamp is known, the LastModified method should also be used.
-func Lazy(supplier func(template, language string) (interface{}, error)) *Value {
+// If an entity tag is known, the [Value.ETag] method should be used on the result. Likewise,
+// if a last-modified timestamp is known, the [Value.LastModified] method should also be used.
+func Lazy(supplier func(template, language string) (any, error)) *Value {
 	return &Value{supplier: supplier, chunked: false}
 }
 
@@ -60,19 +59,19 @@ func Lazy(supplier func(template, language string) (interface{}, error)) *Value 
 // Typical use might be where a response contains many database records that are obtained
 // one by one to avoid the need to cache all results in memory before rendering.
 //
-// If an entity tag is known, the ETag method should be used. Likewise, if a last-modified
-// timestamp is known, the LastModified method should also be used.
-func Sequence(supplier func(template, language string) (interface{}, error)) *Value {
+// If an entity tag is known, the [Value.ETag] method should be used on the result. Likewise,
+// if a last-modified timestamp is known, the [Value.LastModified] method should also be used.
+func Sequence(supplier func(template, language string) (any, error)) *Value {
 	return &Value{supplier: supplier, chunked: true}
 }
 
 // Value is a simple implementation of Data.
 type Value struct {
-	supplier     func(template, language string) (interface{}, error)
+	supplier     func(template, language string) (any, error)
 	chunked      bool
 	etagFn       func(template, language string) (string, error)
 	lastModFn    func(template, language string) (time.Time, error)
-	value        interface{}
+	value        any
 	etag         string
 	lastModified time.Time
 	hdrs         map[string]string
@@ -98,7 +97,7 @@ func (v *Value) Meta(template, language string) (meta *Metadata, err error) {
 	return meta, err
 }
 
-func (v *Value) Content(template, language string) (result interface{}, more bool, err error) {
+func (v *Value) Content(template, language string) (result any, more bool, err error) {
 	if v.supplier == nil {
 		return v.value, false, nil
 	}
@@ -110,12 +109,12 @@ func (v *Value) Content(template, language string) (result interface{}, more boo
 	return v.lazyContent(template, language)
 }
 
-func (v *Value) lazyContent(template, language string) (result interface{}, more bool, err error) {
+func (v *Value) lazyContent(template, language string) (result any, more bool, err error) {
 	r, err := v.supplier(template, language)
 	return r, false, err
 }
 
-func (v *Value) chunkedContent(template, language string) (result interface{}, more bool, err error) {
+func (v *Value) chunkedContent(template, language string) (result any, more bool, err error) {
 	if v.value != nil {
 		result = v.value
 		v.value, err = v.supplier(template, language)
@@ -138,7 +137,7 @@ func (v Value) Headers() map[string]string {
 // With returns a copy of v with extra headers attached. These are passed in as key+value pairs.
 // The header names should be in normal form, e.g. "Last-Modified" instead of "last-modified",
 // but this is not mandatory. The values are simple strings, numbers etc. Or they can be
-// func(interface{}) string, in which case they will be called using the result of Content.
+// func(any) string, in which case they will be called using the result of Content.
 func (v Value) With(hdr string, value string, others ...string) *Value {
 	if v.hdrs == nil {
 		v.hdrs = make(map[string]string)
@@ -159,15 +158,15 @@ func (v Value) ETag(hash string) *Value {
 }
 
 // LastModified sets the time at which the content was last modified. This allows for conditional
-// requests, possibly avoiding network traffic, although ETag takes precedence. This is not
+// requests, possibly avoiding network traffic, although [Value.ETag] takes precedence. This is not
 // necessary if Lazy was used and the function returns metadata.
 func (v Value) LastModified(at time.Time) *Value {
 	v.lastModified = at
 	return &v
 }
 
-// ETag lazily sets the entity tag for the content. This allows for conditional requests,
-// possibly avoiding network traffic.
+// ETagUsing lazily sets the entity tag for the content. This allows for conditional requests,
+// possibly avoiding some network traffic.
 func (v Value) ETagUsing(fn func(template, language string) (string, error)) *Value {
 	v.etagFn = fn
 	return &v

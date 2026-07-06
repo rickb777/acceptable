@@ -22,7 +22,7 @@ func TestLazyValue_should_pass_template_and_language(t *testing.T) {
 		expectedTemplate := fmt.Sprintf("p%d.html", i)
 		expectedLanguage := fmt.Sprintf("en-x%d", i)
 
-		d := Lazy(func(template, language string) (interface{}, error) {
+		d := Lazy(func(template, language string) (any, error) {
 			// Then ...
 			count++
 			expect.String(template).ToBe(t, expectedTemplate)
@@ -50,7 +50,7 @@ func TestLazyValue_should_pass_template_and_language(t *testing.T) {
 
 func TestLazyValue_attaching_eager_metadata(t *testing.T) {
 	// Given ...
-	d := Lazy(func(template, language string) (interface{}, error) {
+	d := Lazy(func(template, language string) (any, error) {
 		return "foo", nil
 	}).
 		ETag("abcdef").
@@ -75,7 +75,7 @@ func TestLazyValue_attaching_eager_metadata(t *testing.T) {
 
 func TestLazyValue_attaching_lazy_metadata(t *testing.T) {
 	// Given ...
-	d := Lazy(func(template, language string) (interface{}, error) {
+	d := Lazy(func(template, language string) (any, error) {
 		return "foo", nil
 	}).
 		ETagUsing(func(template, language string) (string, error) {
@@ -105,7 +105,7 @@ func TestLazyValue_attaching_lazy_metadata(t *testing.T) {
 func TestLazyValue_returning_error(t *testing.T) {
 	for i := 1; i <= 2; i++ {
 		// Given ...
-		d := Lazy(func(template, language string) (interface{}, error) {
+		d := Lazy(func(template, language string) (any, error) {
 			return nil, errors.New("expected error")
 		})
 

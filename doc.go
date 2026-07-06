@@ -74,7 +74,7 @@
 // several offers each with their own data model - if these were all to be read from the database before selection
 // of the best match, all but one would be wasted. Lazy evaluation of the selected data easily overcomes this problem.
 //
-//	en := data.Lazy(func(template, language string) (value interface{}, err error) {
+//	en := data.Lazy(func(template, language string) (value any, err error) {
 //	    return ...
 //	})
 //

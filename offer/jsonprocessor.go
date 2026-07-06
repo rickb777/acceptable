@@ -86,7 +86,7 @@ func JSONProcessor(indent ...string) Processor {
 // JSONEncoder summarises the key methods of the standard JSON encoder.
 type JSONEncoder interface {
 	SetIndent(string, string)
-	Encode(interface{}) error
+	Encode(any) error
 }
 
 // NewJSONEncoder is a pluggable JSON encoder, initialised with the standard library implementation.

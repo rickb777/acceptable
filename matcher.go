@@ -201,7 +201,7 @@ func (c context) findBestMatch(mrs header.MediaRanges, languages header.Preceden
 							if offeredLang == "*" && prefLang.Value != "*" {
 								offeredLang = prefLang.Value
 							}
-							m := offer.BuildMatch(acceptedCT.ContentType, offeredLang, 0)
+							m := offer.BuildMatch(acceptedCT.ContentType, offeredLang)
 							m.Vary = vary
 							return m, true
 						}
@@ -242,4 +242,4 @@ func equalOrWildcard(accepted, offered string) bool {
 //-------------------------------------------------------------------------------------------------
 
 // Debug can be used for observing decisions made by the negotiation algorithm. By default it is no-op.
-var Debug = func(string, ...interface{}) {}
+var Debug = func(string, ...any) {}

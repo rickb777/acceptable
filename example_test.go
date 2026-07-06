@@ -26,7 +26,7 @@ func Example() {
 	fr := data.Of("Bonjour!").ETag("hash1") // get French content and some metadata
 
 	// 3. this uses a lazy evaluation function, wrapped in a data.Data
-	es := data.Lazy(func(template string, language string) (interface{}, error) {
+	es := data.Lazy(func(template string, language string) (any, error) {
 		return "Hola!", nil // get Spanish content - eg from database
 	}).ETagUsing(func(template, language string) (string, error) {
 		// allows us to obtain the etag lazily, should we need to

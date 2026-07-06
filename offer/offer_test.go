@@ -104,7 +104,7 @@ func TestBuildMatch(t *testing.T) {
 				ContentType:        header.ContentType{MediaType: "text/plain"},
 				Language:           "en",
 				Data:               nil,
-				StatusCodeOverride: 0,
+				StatusCodeOverride: 400,
 			},
 		},
 		{
@@ -114,7 +114,7 @@ func TestBuildMatch(t *testing.T) {
 				ContentType:        header.ContentType{MediaType: "text/plain"},
 				Language:           "en",
 				Data:               nil,
-				StatusCodeOverride: 0,
+				StatusCodeOverride: 401,
 			},
 		},
 		{
@@ -124,7 +124,7 @@ func TestBuildMatch(t *testing.T) {
 				ContentType:        header.ContentType{MediaType: "text/plain"},
 				Language:           "en",
 				Data:               nil,
-				StatusCodeOverride: 0,
+				StatusCodeOverride: 402,
 			},
 		},
 		{
@@ -134,7 +134,7 @@ func TestBuildMatch(t *testing.T) {
 				ContentType:        header.ContentType{MediaType: "application/octet-stream"},
 				Language:           "en",
 				Data:               nil,
-				StatusCodeOverride: 0,
+				StatusCodeOverride: 403,
 			},
 		},
 		{
@@ -144,13 +144,13 @@ func TestBuildMatch(t *testing.T) {
 				ContentType:        header.ContentType{MediaType: "text/plain"},
 				Language:           "en",
 				Data:               data.Of("bar"),
-				StatusCodeOverride: 0,
+				StatusCodeOverride: 404,
 			},
 		},
 	}
 
-	for _, c := range cases {
-		m := c.o.BuildMatch(c.accepted, "en", 0)
+	for i, c := range cases {
+		m := c.o.BuildMatch(c.accepted, "en", i+400)
 		m.Render = nil // comparing functions would always fail
 		expect.Any(*m).I(c.o).ToBe(t, c.m)
 	}

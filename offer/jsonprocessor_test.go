@@ -27,7 +27,7 @@ func TestJSONShouldWriteResponseBody_lazy_indented(t *testing.T) {
 		ContentType: header.ContentType{MediaType: "application/json"},
 		Language:    "en",
 		Charset:     "utf-8",
-		Data:        datapkg.Lazy(func(string, string) (interface{}, error) { return model, nil }),
+		Data:        datapkg.Lazy(func(string, string) (any, error) { return model, nil }),
 	}
 
 	p := offer.JSONProcessor("  ")
@@ -45,13 +45,13 @@ func TestJSONShouldWriteResponseBody_sequence(t *testing.T) {
 	req := &http.Request{}
 	rw := httptest.NewRecorder()
 
-	model := []interface{}{User{Name: "Ann Bollin"}, User{Name: "Joe Bloggs"}, User{Name: "Jane Hays"}}
+	model := []any{User{Name: "Ann Bollin"}, User{Name: "Joe Bloggs"}, User{Name: "Jane Hays"}}
 
 	match := offer.Match{
 		ContentType: header.ContentType{MediaType: "application/json"},
 		Language:    "en",
 		Charset:     "utf-8",
-		Data: datapkg.Sequence(func(string, string) (interface{}, error) {
+		Data: datapkg.Sequence(func(string, string) (any, error) {
 			if len(model) == 0 {
 				return nil, nil
 			}

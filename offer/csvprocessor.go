@@ -51,7 +51,7 @@ func CSVProcessor(comma ...rune) Processor {
 		more := data != nil
 
 		for more {
-			var d interface{}
+			var d any
 			d, more, err = data.Content(template, language)
 			if err != nil {
 				return err
@@ -68,7 +68,7 @@ func CSVProcessor(comma ...rune) Processor {
 	}
 }
 
-func writeCSV(writer *csv.Writer, data interface{}) error {
+func writeCSV(writer *csv.Writer, data any) error {
 	debug("csvProcessor.process %T\n", data)
 
 	switch v := data.(type) {
@@ -151,7 +151,7 @@ func writeCSV(writer *csv.Writer, data interface{}) error {
 	return fmt.Errorf("Unsupported type for CSV: %T", data)
 }
 
-func writeArrayOfStructFields(writer *csv.Writer, value reflect.Value, dataModel interface{}) error {
+func writeArrayOfStructFields(writer *csv.Writer, value reflect.Value, dataModel any) error {
 	for j := 0; j < value.Len(); j++ {
 		err := writeStructFields(writer, reflect.Indirect(value.Index(j)), dataModel)
 		if err != nil {
@@ -161,7 +161,7 @@ func writeArrayOfStructFields(writer *csv.Writer, value reflect.Value, dataModel
 	return nil
 }
 
-func writeStructFields(writer *csv.Writer, str reflect.Value, dataModel interface{}) error {
+func writeStructFields(writer *csv.Writer, str reflect.Value, dataModel any) error {
 	sa := make([]string, str.NumField())
 	for i := 0; i < str.NumField(); i++ {
 		sa[i] = fmt.Sprintf("%v", reflect.Indirect(str.Field(i)))
@@ -207,6 +207,6 @@ func writeArrayOfScalars(writer *csv.Writer, vj reflect.Value) error {
 	return writer.Write(sa)
 }
 
-var debug = func(msg string, args ...interface{}) {}
+var debug = func(msg string, args ...any) {}
 
 //var debug = fmt.Printf

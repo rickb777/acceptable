@@ -94,7 +94,7 @@ func (o Offer) clone() Offer {
 // must not be "*" (or blank). Duplicates are not allowed.
 //
 // Language matching is described further in IETF BCP 47.
-func (o Offer) With(data interface{}, language string, otherLanguages ...string) Offer {
+func (o Offer) With(data any, language string, otherLanguages ...string) Offer {
 	o.checkForBlanks(language, otherLanguages)
 
 	if data == nil {
@@ -198,16 +198,19 @@ func (o Offer) String() string {
 
 // BuildMatch implements the transition between a selected Offer and the resulting Match.
 // The result is based on the best-matched media type and language.
-func (o Offer) BuildMatch(acceptedCT header.ContentType, lang string, statusCodeOverride int) *Match {
+func (o Offer) BuildMatch(acceptedCT header.ContentType, lang string, statusCodeOverride ...int) *Match {
 	resolved := o.resolvedType(acceptedCT)
 
-	return &Match{
-		ContentType:        resolved,
-		Language:           lang,
-		Data:               o.Data(lang),
-		Render:             o.processor,
-		StatusCodeOverride: statusCodeOverride,
+	m := &Match{
+		ContentType: resolved,
+		Language:    lang,
+		Data:        o.Data(lang),
+		Render:      o.processor,
 	}
+	if len(statusCodeOverride) > 0 {
+		m.StatusCodeOverride = statusCodeOverride[0]
+	}
+	return m
 }
 
 func (o Offer) BuildFallbackMatch() *Match {
@@ -269,7 +272,7 @@ func (e empty) Meta(_, _ string) (*datapkg.Metadata, error) {
 	panic("not reachable")
 }
 
-func (e empty) Content(_, _ string) (interface{}, bool, error) {
+func (e empty) Content(_, _ string) (any, bool, error) {
 	panic("not reachable")
 }
 

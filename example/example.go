@@ -32,7 +32,7 @@ import (
 //     * gets Russian as HTML using the page home.html
 
 func main() {
-	acceptable.Debug = func(msg string, args ...interface{}) {
+	acceptable.Debug = func(msg string, args ...any) {
 		fmt.Printf(msg, args...)
 	}
 
@@ -55,7 +55,7 @@ func main() {
 // Handler
 func hello(c echo.Context) error {
 	// example lazy data source (although this one just returns a fixed value)
-	lazyEn := data.Lazy(func(string, string) (interface{}, error) {
+	lazyEn := data.Lazy(func(string, string) (any, error) {
 		return en, nil
 	}).MaxAge(10 * time.Second).ETag("hash123") // replace "hash123" appropriately
 

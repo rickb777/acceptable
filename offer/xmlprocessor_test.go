@@ -26,7 +26,7 @@ func TestXMLShouldWriteLazyResponseBody(t *testing.T) {
 		ContentType: header.ContentType{MediaType: "application/json"},
 		Language:    "en",
 		Charset:     "utf-8",
-		Data:        data.Lazy(func(string, string) (interface{}, error) { return model, nil }),
+		Data:        data.Lazy(func(string, string) (any, error) { return model, nil }),
 	}
 
 	p := offer.XMLProcessor("xml")
@@ -44,7 +44,7 @@ func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
 	req := &http.Request{}
 	rw := httptest.NewRecorder()
 
-	model := []interface{}{
+	model := []any{
 		&ValidXMLUser{
 			"Ann Bollin",
 		},
@@ -60,7 +60,7 @@ func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
 		ContentType: header.ContentType{MediaType: "application/json"},
 		Language:    "en",
 		Charset:     "utf-8",
-		Data: data.Sequence(func(string, string) (interface{}, error) {
+		Data: data.Sequence(func(string, string) (any, error) {
 			if len(model) == 0 {
 				return nil, nil
 			}

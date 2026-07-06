@@ -31,7 +31,7 @@ func BinaryProcessor() Processor {
 		more := data != nil
 
 		for more {
-			var d interface{}
+			var d any
 			d, more, err = data.Content(template, language)
 			if err != nil {
 				return err
