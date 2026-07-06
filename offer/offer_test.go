@@ -2,10 +2,9 @@ package offer
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/expect"
 )
@@ -36,7 +35,7 @@ func Test_offer_construction(t *testing.T) {
 
 		"09.Accept: a/b. Accept-Language: en,fr": {o: Of(nil, "a/b").With("foo", "en", "fr"), el: "en,fr", nd: 2},
 
-		"10.Accept: a/b. Accept-Language: en,fr": {o: Of(nil, "a/b").With(data.Of("foo"), "en", "fr"), el: "en,fr", nd: 2},
+		"10.Accept: a/b. Accept-Language: en,fr": {o: Of(nil, "a/b").With(dpkg.Of("foo"), "en", "fr"), el: "en,fr", nd: 2},
 	}
 
 	for s, c := range cases {
@@ -46,7 +45,7 @@ func Test_offer_construction(t *testing.T) {
 		expect.Map(base.data).I(s).ToBeEmpty(t)
 
 		expect.String(c.o.String()).I(s).ToBe(t, s[3:])
-		expect.Slice(c.o.Langs).I(s).ToBe(t, strings.Split(c.el, ",")...)
+		expect.Slice(c.o.Langs).I(s).ToBe(t, dpkg.SplitLangs(c.el, ",")...)
 		expect.Map(c.o.data).I(s).ToHaveLength(t, c.nd)
 
 		for l, d := range c.o.data {
@@ -96,6 +95,7 @@ func TestBuildMatch(t *testing.T) {
 		o        Offer
 		accepted header.ContentType
 		m        Match
+		data     any
 	}{
 		{
 			o:        Of(txt, "text/*"),
@@ -143,15 +143,19 @@ func TestBuildMatch(t *testing.T) {
 			m: Match{
 				ContentType:        header.ContentType{MediaType: "text/plain"},
 				Language:           "en",
-				Data:               data.Of("bar"),
 				StatusCodeOverride: 404,
 			},
+			data: "bar",
 		},
 	}
 
 	for i, c := range cases {
 		m := c.o.BuildMatch(c.accepted, "en", i+400)
 		m.Render = nil // comparing functions would always fail
-		expect.Any(*m).I(c.o).ToBe(t, c.m)
+		if m.Data != nil {
+			expect.Value(m.Data.Content()).ToBe(t, c.data)
+		}
+		m.Data = nil // because functions cannot be compared
+		expect.Value(*m).I(c.o).ToBe(t, c.m)
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	. "github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
@@ -26,7 +26,7 @@ func TestApplyHeaders(t *testing.T) {
 				ContentType: header.ContentType{MediaType: "text/test"},
 				Language:    "en",
 				Charset:     "windows-1252",
-				Data:        data.Of("data"),
+				Data:        dpkg.Of("data"),
 				Vary:        []string{Accept, AcceptLanguage},
 				Render:      offer.TXTProcessor(),
 			},
@@ -108,7 +108,7 @@ func TestApplyHeaders(t *testing.T) {
 		info := fmt.Sprintf("%d:%s", i, c.m)
 		expect.String(c.m.String()).I(info).ToBe(t, c.str)
 		if c.utf8 {
-			expect.Any(w).I(info).ToBe(t, rec)
+			expect.Value(w).I(info).ToBe(t, rec)
 		}
 		expect.Map(rec.HeaderMap).I(info).ToHaveLength(t, len(c.hdrs))
 		for h, v := range c.hdrs {

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/rickb777/acceptable/contenttype"
-	datapkg "github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
 )
 
@@ -28,12 +28,12 @@ func JSONProcessor(indent ...string) Processor {
 		in = indent[0]
 	}
 
-	return func(w io.Writer, _ *http.Request, data datapkg.Data, template, language string) (err error) {
+	return func(w io.Writer, _ *http.Request, data dpkg.Data, constraint ...dpkg.Parameter) (err error) {
 		p := internal.EnsureNewline(w)
 
 		enc := NewJSONEncoder(p)
 
-		item, more, err := data.Content(template, language)
+		item, more, err := data.Content(constraint...)
 		if err != nil {
 			return err
 		}
@@ -63,7 +63,7 @@ func JSONProcessor(indent ...string) Processor {
 			p.Write(comma)
 			p.Write(newline)
 
-			item, stillMore, err = data.Content(template, language)
+			item, stillMore, err = data.Content(constraint...)
 			if err != nil {
 				return err
 			}

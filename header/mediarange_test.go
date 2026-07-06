@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 	. "github.com/rickb777/acceptable/header"
 	"github.com/rickb777/acceptable/offer"
 	"github.com/rickb777/expect"
@@ -28,7 +28,7 @@ func TestPrecedenceValues_String(t *testing.T) {
 }
 
 func TestOffer_String(t *testing.T) {
-	p := func(_ io.Writer, _ *http.Request, _ data.Data, _, _ string) error {
+	p := func(_ io.Writer, _ *http.Request, _ dpkg.Data, constraint ...dpkg.Parameter) error {
 		return nil
 	}
 	o := offer.Of(p, "text/html").With(nil, "en")

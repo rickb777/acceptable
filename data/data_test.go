@@ -22,11 +22,11 @@ func TestLazyValue_should_pass_template_and_language(t *testing.T) {
 		expectedTemplate := fmt.Sprintf("p%d.html", i)
 		expectedLanguage := fmt.Sprintf("en-x%d", i)
 
-		d := Lazy(func(template, language string) (any, error) {
+		d := Lazy(func(params ...Parameter) (any, error) {
 			// Then ...
 			count++
-			expect.String(template).ToBe(t, expectedTemplate)
-			expect.String(language).ToBe(t, expectedLanguage)
+			expect.String(params[0].String()).ToEqual(t, expectedTemplate)
+			expect.String(params[1].String()).ToEqual(t, expectedLanguage)
 			return "foo", nil
 		})
 
@@ -34,8 +34,8 @@ func TestLazyValue_should_pass_template_and_language(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		send, e1 := ConditionalRequest(w, req, d, expectedTemplate, expectedLanguage)
-		c, more, e2 := d.Content(expectedTemplate, expectedLanguage)
+		send, e1 := ConditionalRequest(w, req, d, TemplateName(expectedTemplate), Language(expectedLanguage))
+		c, more, e2 := d.Content(TemplateName(expectedTemplate), Language(expectedLanguage))
 
 		// Then ...
 		expect.Error(e1).Not().ToHaveOccurred(t)
@@ -43,14 +43,14 @@ func TestLazyValue_should_pass_template_and_language(t *testing.T) {
 
 		expect.Error(e2).Not().ToHaveOccurred(t)
 		expect.Bool(more).ToBeFalse(t)
-		expect.Any(c).ToBe(t, "foo")
+		expect.Value(c).ToBe(t, "foo")
 		expect.Number(count).ToBe(t, 1)
 	}
 }
 
 func TestLazyValue_attaching_eager_metadata(t *testing.T) {
 	// Given ...
-	d := Lazy(func(template, language string) (any, error) {
+	d := Lazy(func(params ...Parameter) (any, error) {
 		return "foo", nil
 	}).
 		ETag("abcdef").
@@ -60,8 +60,8 @@ func TestLazyValue_attaching_eager_metadata(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
-	_, _, e2 := d.Content("home.html", "en")
+	send, e1 := ConditionalRequest(w, req, d, TemplateName("home.html"), Language("en"))
+	_, _, e2 := d.Content(TemplateName("home.html"), Language("en"))
 
 	// Then ...
 	expect.Error(e1).Not().ToHaveOccurred(t)
@@ -75,13 +75,13 @@ func TestLazyValue_attaching_eager_metadata(t *testing.T) {
 
 func TestLazyValue_attaching_lazy_metadata(t *testing.T) {
 	// Given ...
-	d := Lazy(func(template, language string) (any, error) {
+	d := Lazy(func(params ...Parameter) (any, error) {
 		return "foo", nil
 	}).
-		ETagUsing(func(template, language string) (string, error) {
+		ETagUsing(func(params ...Parameter) (string, error) {
 			return "abcdef", nil
 		}).
-		LastModifiedUsing(func(template, language string) (time.Time, error) {
+		LastModifiedUsing(func(params ...Parameter) (time.Time, error) {
 			return t1, nil
 		})
 
@@ -89,8 +89,8 @@ func TestLazyValue_attaching_lazy_metadata(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
-	_, _, e2 := d.Content("home.html", "en")
+	send, e1 := ConditionalRequest(w, req, d, TemplateName("home.html"), Language("en"))
+	_, _, e2 := d.Content(TemplateName("home.html"), Language("en"))
 
 	// Then ...
 	expect.Error(e1).Not().ToHaveOccurred(t)
@@ -105,7 +105,7 @@ func TestLazyValue_attaching_lazy_metadata(t *testing.T) {
 func TestLazyValue_returning_error(t *testing.T) {
 	for i := 1; i <= 2; i++ {
 		// Given ...
-		d := Lazy(func(template, language string) (any, error) {
+		d := Lazy(func(params ...Parameter) (any, error) {
 			return nil, errors.New("expected error")
 		})
 
@@ -113,8 +113,8 @@ func TestLazyValue_returning_error(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		_, e1 := ConditionalRequest(w, req, d, "home.html", "en")
-		_, _, e2 := d.Content("home.html", "en")
+		_, e1 := ConditionalRequest(w, req, d, TemplateName("home.html"), Language("en"))
+		_, _, e2 := d.Content(TemplateName("home.html"), Language("en"))
 
 		// Then ...
 		expect.Error(e1).Not().ToHaveOccurred(t)
@@ -137,8 +137,8 @@ func TestValue_future_expiry(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
-	_, _, e2 := d.Content("home.html", "en")
+	send, e1 := ConditionalRequest(w, req, d, TemplateName("home.html"), Language("en"))
+	_, _, e2 := d.Content(TemplateName("home.html"), Language("en"))
 
 	// Then ...
 	expect.Error(e1).Not().ToHaveOccurred(t)
@@ -160,8 +160,8 @@ func TestValue_no_cache_and_additional_headers(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
-	_, _, e2 := d.Content("home.html", "en")
+	send, e1 := ConditionalRequest(w, req, d, TemplateName("home.html"), Language("en"))
+	_, _, e2 := d.Content(TemplateName("home.html"), Language("en"))
 
 	// Then ...
 	expect.Error(e1).Not().ToHaveOccurred(t)
@@ -187,8 +187,8 @@ func TestValue_if_none_match_not_modified_get_request(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
-		_, _, e2 := d.Content("home.html", "en")
+		send, e1 := ConditionalRequest(w, req, d, TemplateName("home.html"), Language("en"))
+		_, _, e2 := d.Content(TemplateName("home.html"), Language("en"))
 
 		// Then ...
 		expect.Error(e1).Not().ToHaveOccurred(t)
@@ -216,8 +216,8 @@ func TestValue_if_modified_since_not_modified_get_request(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
-		_, _, e2 := d.Content("home.html", "en")
+		send, e1 := ConditionalRequest(w, req, d, TemplateName("home.html"), Language("en"))
+		_, _, e2 := d.Content(TemplateName("home.html"), Language("en"))
 
 		// Then ...
 		expect.Error(e1).Not().ToHaveOccurred(t)
@@ -244,8 +244,8 @@ func TestValue_not_modified_put_request(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		send, e1 := ConditionalRequest(w, req, d, "home.html", "en")
-		_, _, e2 := d.Content("home.html", "en")
+		send, e1 := ConditionalRequest(w, req, d, TemplateName("home.html"), Language("en"))
+		_, _, e2 := d.Content(TemplateName("home.html"), Language("en"))
 
 		// Then ...
 		expect.Error(e1).Not().ToHaveOccurred(t)

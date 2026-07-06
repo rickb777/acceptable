@@ -18,25 +18,27 @@ func Test_should_return_wildcard_data_for_any_language(t *testing.T) {
 	// Given ...
 	a := offer.Of(offer.TXTProcessor(), "text/test").With(someSliceData, "*")
 
-	for _, lang := range []string{"en", "de"} {
+	for _, lang := range []data.Language{"en", "de"} {
 		req, _ := http.NewRequest("GET", "/", nil)
 		// this header means "anything but text/test"
 		req.Header.Add(Accept, "text/test, */*")
-		req.Header.Add(AcceptLanguage, lang)
+		req.Header.Add(AcceptLanguage, string(lang))
 
 		// When ...
 		best := acceptable.BestRequestMatch(req, a)
 
 		// Then ...
-		expect.Any(best.Render).I(lang).Not().ToBeNil(t)
-		best.Render = nil
+		expect.Value(best.Render).I(lang).Not().ToBeNil(t)
+		best.Render = nil // because functions cannot be compared
 
-		expect.Any(best).I(lang).ToBe(t, &offer.Match{
+		expect.Value(best.Data.Content()).I(lang).ToBe(t, someSliceData)
+
+		best.Data = nil // because functions cannot be compared
+		expect.Value(best).I(lang).ToBe(t, &offer.Match{
 			ContentType: header.ContentType{MediaType: "text/test"},
 			Language:    lang,
 			Charset:     "utf-8",
 			Vary:        []string{Accept, AcceptLanguage},
-			Data:        data.Of(someSliceData),
 		})
 	}
 }
@@ -52,7 +54,7 @@ func Test_should_match_subtype_wildcard1(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	expect.Any(best).ToBe(t, &offer.Match{
+	expect.Value(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{MediaType: "text/test"},
 		Language:    "*",
 		Charset:     "utf-8",
@@ -71,7 +73,7 @@ func Test_should_match_subtype_wildcard2(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	expect.Any(best).ToBe(t, &offer.Match{
+	expect.Value(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{MediaType: "text/test"},
 		Language:    "*",
 		Charset:     "utf-8",
@@ -92,7 +94,7 @@ func Test_should_match_language_when_offer_language_is_not_specified(t *testing.
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	expect.Any(best).ToBe(t, &offer.Match{
+	expect.Value(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{MediaType: "text/html"},
 		Language:    "en",
 		Charset:     "utf-8",
@@ -112,7 +114,7 @@ func Test_should_match_language_wildcard_and_return_selected_language(t *testing
 	best := acceptable.BestRequestMatch(req, a, b)
 
 	// Then ...
-	expect.Any(best).ToBe(t, &offer.Match{
+	expect.Value(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{MediaType: "application/octet-stream"},
 		Language:    "en",
 		Charset:     "utf-8",
@@ -134,12 +136,14 @@ func Test_should_select_language_of_first_matched_offer_when_no_language_matches
 	best := acceptable.BestRequestMatch(req, a, b, c)
 
 	// Then ...
-	expect.Any(best).ToBe(t, &offer.Match{
+	expect.Value(best.Data.Content()).ToBe(t, someMapData)
+
+	best.Data = nil // because functions cannot be compared
+	expect.Value(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{MediaType: "text/html"},
 		Language:    "en",
 		Charset:     "utf-8",
 		Vary:        []string{Accept, AcceptLanguage},
-		Data:        data.Of(someMapData),
 	})
 }
 
@@ -155,7 +159,7 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, wildcard)
 
 	// Then ...
-	expect.Any(best).ToBe(t, &offer.Match{
+	expect.Value(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{MediaType: "text/plain"},
 		Language:    "*",
 		Charset:     "utf-8",
@@ -166,7 +170,7 @@ func Test_should_negotiate_a_default_processor(t *testing.T) {
 	best = acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	expect.Any(best).ToBe(t, &offer.Match{
+	expect.Value(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{MediaType: "text/test"},
 		Language:    "*",
 		Charset:     "utf-8",
@@ -186,7 +190,7 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 	best := acceptable.BestRequestMatch(req, a)
 
 	// Then ...
-	expect.Any(best).ToBe(t, &offer.Match{
+	expect.Value(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{MediaType: "text/a"},
 		Language:    "*",
 		Charset:     "utf-8",
@@ -197,7 +201,7 @@ func Test_should_negotiate_one_of_the_processors(t *testing.T) {
 	best = acceptable.BestRequestMatch(req, b)
 
 	// Then ...
-	expect.Any(best).ToBe(t, &offer.Match{
+	expect.Value(best).ToBe(t, &offer.Match{
 		ContentType: header.ContentType{MediaType: "text/b"},
 		Language:    "*",
 		Charset:     "utf-8",

@@ -13,7 +13,7 @@ func TestParseAcceptHeader_parses_single(t *testing.T) {
 
 	expect.Number(len(mr)).ToBe(t, 1)
 	expect.String(mr[0].MediaType).ToBe(t, "application/json")
-	expect.Any(mr[0].Quality).ToBe(t, header.DefaultQuality)
+	expect.Value(mr[0].Quality).ToBe(t, header.DefaultQuality)
 }
 
 func TestParseAcceptHeader_converts_mediaRange_to_lowercase(t *testing.T) {
@@ -27,7 +27,7 @@ func TestParseAcceptHeader_defaults_quality_if_not_explicit(t *testing.T) {
 	mr := header.ParseMediaRanges("text/plain")
 
 	expect.Number(len(mr)).ToBe(t, 1)
-	expect.Any(mr[0].Quality).ToBe(t, header.DefaultQuality)
+	expect.Value(mr[0].Quality).ToBe(t, header.DefaultQuality)
 }
 
 func TestParseAcceptHeader_should_parse_quality(t *testing.T) {
@@ -35,7 +35,7 @@ func TestParseAcceptHeader_should_parse_quality(t *testing.T) {
 
 	expect.Number(len(mr)).ToBe(t, 1)
 	expect.String(mr[0].MediaType).ToBe(t, "application/json")
-	expect.Any(mr[0].Quality).ToBe(t, 0.9) // 1e-4)
+	expect.Value(mr[0].Quality).ToBe(t, 0.9) // 1e-4)
 }
 
 func TestParseAcceptHeader_extension_can_omit_value(t *testing.T) {
@@ -52,13 +52,13 @@ func TestParseAcceptHeader_sorts_by_decending_quality(t *testing.T) {
 	expect.Number(len(mr)).ToBe(t, 3)
 
 	expect.String(mr[0].MediaType).ToBe(t, "application/xml")
-	expect.Any(mr[0].Quality).ToBe(t, header.DefaultQuality)
+	expect.Value(mr[0].Quality).ToBe(t, header.DefaultQuality)
 
 	expect.String(mr[1].MediaType).ToBe(t, "application/json")
-	expect.Any(mr[1].Quality).ToBe(t, 0.8) // 1e-4
+	expect.Value(mr[1].Quality).ToBe(t, 0.8) // 1e-4
 
 	expect.String(mr[2].MediaType).ToBe(t, "application/*")
-	expect.Any(mr[2].Quality).ToBe(t, 0.1) // 1e-4
+	expect.Value(mr[2].Quality).ToBe(t, 0.1) // 1e-4
 }
 
 func TestMediaRanges_should_ignore_invalid_quality(t *testing.T) {
@@ -66,7 +66,7 @@ func TestMediaRanges_should_ignore_invalid_quality(t *testing.T) {
 
 	expect.Number(len(mr)).ToBe(t, 1)
 	expect.String(mr[0].MediaType).ToBe(t, "text/html")
-	expect.Any(mr[0].Quality).ToBe(t, header.DefaultQuality)
+	expect.Value(mr[0].Quality).ToBe(t, header.DefaultQuality)
 	expect.Slice(mr[0].Params).ToHaveLength(t, 0)
 }
 
@@ -84,19 +84,19 @@ func TestMediaRanges_should_handle_precedence(t *testing.T) {
 		mr := header.ParseMediaRanges(c)
 
 		expect.Number(len(mr)).ToBe(t, 4)
-		expect.Any(mr[0]).I(c).ToBe(t, header.MediaRange{
+		expect.Value(mr[0]).I(c).ToBe(t, header.MediaRange{
 			ContentType: header.ParseContentType("text/plain; format=flowed"),
 			Quality:     header.DefaultQuality,
 		})
-		expect.Any(mr[1]).I(c).ToBe(t, header.MediaRange{
+		expect.Value(mr[1]).I(c).ToBe(t, header.MediaRange{
 			ContentType: header.ParseContentType("text/plain"),
 			Quality:     header.DefaultQuality,
 		})
-		expect.Any(mr[2]).I(c).ToBe(t, header.MediaRange{
+		expect.Value(mr[2]).I(c).ToBe(t, header.MediaRange{
 			ContentType: header.ParseContentType("text/*"),
 			Quality:     header.DefaultQuality,
 		})
-		expect.Any(mr[3]).I(c).ToBe(t, header.MediaRange{
+		expect.Value(mr[3]).I(c).ToBe(t, header.MediaRange{
 			ContentType: header.ParseContentType("*/*"),
 			Quality:     header.DefaultQuality,
 		})
@@ -108,7 +108,7 @@ func TestMediaRanges_should_not_remove_accept_extension(t *testing.T) {
 
 	expect.Number(len(mr)).ToBe(t, 1)
 	expect.String(mr[0].MediaType).ToBe(t, "text/html")
-	expect.Any(mr[0].Quality).ToBe(t, 0.5)
+	expect.Value(mr[0].Quality).ToBe(t, 0.5)
 	expect.Slice(mr[0].Params).ToBe(t, header.KV{"a", "1"}, header.KV{"b", "2"})
 }
 
@@ -131,27 +131,27 @@ func TestMediaRanges_should_handle_quality_precedence(t *testing.T) {
 		mr := header.ParseMediaRanges(c)
 		expect.Number(len(mr)).ToBe(t, 5)
 
-		expect.Any(mr[0]).I(c).ToBe(t, header.MediaRange{
+		expect.Value(mr[0]).I(c).ToBe(t, header.MediaRange{
 			ContentType: header.ParseContentType("text/html; level=1"),
 			Quality:     header.DefaultQuality,
 		})
 
-		expect.Any(mr[1]).I(c).ToBe(t, header.MediaRange{
+		expect.Value(mr[1]).I(c).ToBe(t, header.MediaRange{
 			ContentType: header.ParseContentType("text/html"),
 			Quality:     0.7,
 		})
 
-		expect.Any(mr[2]).I(c).ToBe(t, header.MediaRange{
+		expect.Value(mr[2]).I(c).ToBe(t, header.MediaRange{
 			ContentType: header.ParseContentType("*/*"),
 			Quality:     0.5,
 		})
 
-		expect.Any(mr[3]).I(c).ToBe(t, header.MediaRange{
+		expect.Value(mr[3]).I(c).ToBe(t, header.MediaRange{
 			ContentType: header.ParseContentType("text/html; level=2"),
 			Quality:     0.4,
 		})
 
-		expect.Any(mr[4]).I(c).ToBe(t, header.MediaRange{
+		expect.Value(mr[4]).I(c).ToBe(t, header.MediaRange{
 			ContentType: header.ParseContentType("text/*"),
 			Quality:     0.3,
 		})
@@ -164,16 +164,16 @@ func TestMediaRanges_should_ignore_case_of_quality_and_whitespace(t *testing.T) 
 	expect.Number(len(mr)).ToBe(t, 4)
 
 	expect.String(mr[0].Value()).ToBe(t, "text/html")
-	expect.Any(mr[0].Quality).ToBe(t, 0.7)
+	expect.Value(mr[0].Quality).ToBe(t, 0.7)
 
 	expect.String(mr[1].Value()).ToBe(t, "*/*")
-	expect.Any(mr[1].Quality).ToBe(t, 0.5)
+	expect.Value(mr[1].Quality).ToBe(t, 0.5)
 
 	expect.String(mr[2].Value()).ToBe(t, "text/html;level=2")
-	expect.Any(mr[2].Quality).ToBe(t, 0.4)
+	expect.Value(mr[2].Quality).ToBe(t, 0.4)
 
 	expect.String(mr[3].Value()).ToBe(t, "text/*")
-	expect.Any(mr[3].Quality).ToBe(t, 0.3)
+	expect.Value(mr[3].Quality).ToBe(t, 0.3)
 }
 
 func ExampleParseMediaRanges() {

@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/rickb777/acceptable/contenttype"
-	datapkg "github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
 )
 
@@ -35,14 +35,14 @@ var textPlainOffer = Of(TXTProcessor(), contenttype.TextPlain)
 // Because it handles io.Reader and io.WriterTo, TXTProcessor can be used to stream large responses (without any
 // further encoding).
 func TXTProcessor() Processor {
-	return func(w io.Writer, _ *http.Request, data datapkg.Data, template, language string) (err error) {
+	return func(w io.Writer, _ *http.Request, data dpkg.Data, constraint ...dpkg.Parameter) (err error) {
 		p := internal.EnsureNewline(w)
 
 		more := data != nil
 
 		for more {
 			var d any
-			d, more, err = data.Content(template, language)
+			d, more, err = data.Content(constraint...)
 			if err != nil {
 				return err
 			}

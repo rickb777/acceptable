@@ -25,7 +25,7 @@ var ReloadOnTheFly = false
 //
 // Optionally, the suffix can be a pipe-separated list, e.g. ".html|.js".
 //
-// The function map can be nil if not required.
+// The function map (see [template.FuncMap]) can be nil if not required.
 //
 // A processor is returned that handles requests using the templates available.
 func Templates(dir, suffix string, funcMap template.FuncMap) offer.Processor {

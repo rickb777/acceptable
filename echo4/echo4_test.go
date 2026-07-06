@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	. "github.com/rickb777/acceptable/contenttype"
+	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/echo4"
 	"github.com/rickb777/acceptable/header"
 	. "github.com/rickb777/acceptable/headername"
@@ -32,7 +33,7 @@ func TestBestRequestMatch_should_match_best_offer(t *testing.T) {
 	match := echo4.BestRequestMatch(ec, oa, ob, oc, od, oe)
 
 	// Then ...
-	expect.Any(match.Data.Content("", "en")).ToBe(t, "hello")
+	expect.Value(match.Data.Content(dpkg.Language("en"))).ToBe(t, "hello")
 	expect.Map(w.Header()).ToHaveLength(t, 0)
 }
 

@@ -1,4 +1,4 @@
-package main
+package examples
 
 // Universal Declaration of Human Rights
 // https://www.un.org/en/about-us/universal-declaration-of-human-rights
@@ -14,7 +14,7 @@ type Article struct {
 	Text string
 }
 
-var en = Declaration{
+var EN = Declaration{
 	Proclamation: "The General Assembly proclaims this Universal Declaration of Human Rights as a common standard of achievement for all peoples and all nations, to the end that every individual and every organ of society, keeping this Declaration constantly in mind, shall strive by teaching and education to promote respect for these rights and freedoms and by progressive measures, national and international, to secure their universal and effective recognition and observance, both among the peoples of Member States themselves and among the peoples of territories under their jurisdiction.",
 
 	Articles: []Article{
@@ -30,7 +30,7 @@ var en = Declaration{
 	},
 }
 
-var fr = Declaration{
+var FR = Declaration{
 	Proclamation: "L'Assemblée générale proclame la présente Déclaration universelle des droits de l'homme comme l'idéal commun à atteindre par tous les peuples et toutes les nations afin que tous les individus et tous les organes de la société, ayant cette Déclaration constamment à l'esprit, s'efforcent, par l'enseignement et l'éducation, de développer le respect de ces droits et libertés et d'en assurer, par des mesures progressives d'ordre national et international, la reconnaissance et l'application universelles et effectives, tant parmi les populations des Etats Membres eux-mêmes que parmi celles des territoires placés sous leur juridiction.",
 
 	Articles: []Article{
@@ -46,7 +46,7 @@ var fr = Declaration{
 	},
 }
 
-var es = Declaration{
+var ES = Declaration{
 	Proclamation: "como ideal común por el que todos los pueblos y naciones deben esforzarse, a fin de que tanto los individuos como las instituciones, inspirándose constantemente en ella, promuevan, mediante la enseñanza y la educación, el respeto a estos derechos y libertades, y aseguren, por medidas progresivas de carácter nacional e internacional, su reconocimiento y aplicación universales y efectivos, tanto entre los pueblos de los Estados Miembros como entre los de los territorios colocados bajo su jurisdicción.",
 
 	Articles: []Article{
@@ -62,7 +62,7 @@ var es = Declaration{
 	},
 }
 
-var ru = Declaration{
+var RU = Declaration{
 	Proclamation: "провозглашает настоящую Всеобщую декларацию прав человека в качестве задачи, к выполнению которой должны стремиться все народы и государства с тем, чтобы каждый человек и каждый орган общества, постоянно имея в виду настоящую Декларацию, стремились путем просвещения и образования содействовать уважению этих прав и свобод и обеспечению, путем национальных и международных прогрессивных мероприятий, всеобщего и эффективного признания и осуществления их как среди народов государств-членов Организации, так и среди народов территорий, находящихся под их юрисдикцией.",
 
 	Articles: []Article{

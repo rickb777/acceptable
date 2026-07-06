@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/rickb777/acceptable/contenttype"
-	datapkg "github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
 )
 
@@ -39,12 +39,12 @@ func XMLProcessor(root string, indent ...string) Processor {
 		in = indent[0]
 	}
 
-	return func(w io.Writer, _ *http.Request, data datapkg.Data, template, language string) (err error) {
+	return func(w io.Writer, _ *http.Request, data dpkg.Data, constraint ...dpkg.Parameter) (err error) {
 		p := internal.EnsureNewline(w)
 
 		enc := xml.NewEncoder(p)
 
-		d, more, err := data.Content(template, language)
+		d, more, err := data.Content(constraint...)
 		if err != nil {
 			return err
 		}
@@ -72,7 +72,7 @@ func XMLProcessor(root string, indent ...string) Processor {
 		for stillMore {
 			p.Write(newline)
 
-			d, stillMore, err = data.Content(template, language)
+			d, stillMore, err = data.Content(constraint...)
 			if err != nil {
 				return err
 			}

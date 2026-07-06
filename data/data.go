@@ -10,11 +10,11 @@ import (
 )
 
 // Data provides a source for response content. It is optimised for lazy evaluation, avoiding
-// wasted processing.
+// wasted processing as much as possible.
 type Data interface {
 	// Meta returns the metadata that will be used to set response headers automatically.
 	// The headers are ETag and Last-Modified.
-	Meta(template, language string) (meta *Metadata, err error)
+	Meta(params ...Parameter) (meta *Metadata, err error)
 
 	// Content returns the data as a value that can be processed by encoders such as "encoding/json"
 	// The returned values are
@@ -23,7 +23,7 @@ type Data interface {
 	//   - an error if one occurs.
 	// For chunked data, this method will be called repeatedly until the boolean yields false
 	// or an error arises.
-	Content(template, language string) (any, bool, error)
+	Content(params ...Parameter) (any, bool, error)
 
 	// Headers returns response headers relating to the data (optional)
 	Headers() map[string]string
@@ -41,14 +41,14 @@ type Metadata struct {
 // If an entity tag is known, the [Value.ETag] method should be used on the result. Likewise,
 // if a last-modified timestamp is known, the [Value.LastModified] method should also be used.
 func Of(v any) *Value {
-	return &Value{value: v}
+	return Lazy(func(_ ...Parameter) (any, error) { return v, nil })
 }
 
 // Lazy wraps a function that supplies a data value, but only fetches the data when it is needed.
 //
 // If an entity tag is known, the [Value.ETag] method should be used on the result. Likewise,
 // if a last-modified timestamp is known, the [Value.LastModified] method should also be used.
-func Lazy(supplier func(template, language string) (any, error)) *Value {
+func Lazy(supplier func(params ...Parameter) (any, error)) *Value {
 	return &Value{supplier: supplier, chunked: false}
 }
 
@@ -61,73 +61,65 @@ func Lazy(supplier func(template, language string) (any, error)) *Value {
 //
 // If an entity tag is known, the [Value.ETag] method should be used on the result. Likewise,
 // if a last-modified timestamp is known, the [Value.LastModified] method should also be used.
-func Sequence(supplier func(template, language string) (any, error)) *Value {
+func Sequence(supplier func(params ...Parameter) (any, error)) *Value {
 	return &Value{supplier: supplier, chunked: true}
 }
 
 // Value is a simple implementation of Data.
 type Value struct {
-	supplier     func(template, language string) (any, error)
+	supplier     func(params ...Parameter) (any, error)
 	chunked      bool
-	etagFn       func(template, language string) (string, error)
-	lastModFn    func(template, language string) (time.Time, error)
-	value        any
+	next         any // used for sequence behaviour
+	etagFn       func(params ...Parameter) (string, error)
+	lastModFn    func(params ...Parameter) (time.Time, error)
 	etag         string
 	lastModified time.Time
 	hdrs         map[string]string
 }
 
-func (v *Value) Meta(template, language string) (meta *Metadata, err error) {
+func (v *Value) Meta(params ...Parameter) (meta *Metadata, err error) {
 	meta = &Metadata{
 		Hash:         v.etag,
 		LastModified: v.lastModified,
 	}
 
 	if v.etagFn != nil {
-		meta.Hash, err = v.etagFn(template, language)
+		meta.Hash, err = v.etagFn(params...)
 		if err != nil {
 			return meta, err
 		}
 	}
 
 	if v.lastModFn != nil {
-		meta.LastModified, err = v.lastModFn(template, language)
+		meta.LastModified, err = v.lastModFn(params...)
 	}
 
 	return meta, err
 }
 
-func (v *Value) Content(template, language string) (result any, more bool, err error) {
-	if v.supplier == nil {
-		return v.value, false, nil
-	}
-
+func (v *Value) Content(params ...Parameter) (result any, more bool, err error) {
 	if v.chunked {
-		return v.chunkedContent(template, language)
+		return v.chunkedContent(params...)
 	}
 
-	return v.lazyContent(template, language)
-}
-
-func (v *Value) lazyContent(template, language string) (result any, more bool, err error) {
-	r, err := v.supplier(template, language)
+	r, err := v.supplier(params...)
 	return r, false, err
 }
 
-func (v *Value) chunkedContent(template, language string) (result any, more bool, err error) {
-	if v.value != nil {
-		result = v.value
-		v.value, err = v.supplier(template, language)
-		return result, v.value != nil, err
+func (v *Value) chunkedContent(params ...Parameter) (result any, more bool, err error) {
+	if v.next != nil {
+		result = v.next
+		v.next, err = v.supplier(params...)
+		return result, v.next != nil, err
 	}
 
-	result, err = v.supplier(template, language)
+	result, err = v.supplier(params...)
 	if result != nil {
 		// lookahead
-		v.value, err = v.supplier(template, language)
+		v.next, err = v.supplier(params...)
 	}
 
-	return result, result != nil && v.value != nil, err
+	return result, result != nil && v.next != nil, err
 }
 
 func (v Value) Headers() map[string]string {
@@ -136,8 +128,8 @@ func (v Value) Headers() map[string]string {
 
 // With returns a copy of v with extra headers attached. These are passed in as key+value pairs.
 // The header names should be in normal form, e.g. "Last-Modified" instead of "last-modified",
-// but this is not mandatory. The values are simple strings, numbers etc. Or they can be
-// func(any) string, in which case they will be called using the result of Content.
+// but this is not mandatory. The values are simple strings, numbers etc.
+// The others contain more key/value pairs; there should be an even number of them.
 func (v Value) With(hdr string, value string, others ...string) *Value {
 	if v.hdrs == nil {
 		v.hdrs = make(map[string]string)
@@ -167,14 +159,14 @@ func (v Value) LastModified(at time.Time) *Value {
 
 // ETagUsing lazily sets the entity tag for the content. This allows for conditional requests,
 // possibly avoiding some network traffic.
-func (v Value) ETagUsing(fn func(template, language string) (string, error)) *Value {
+func (v Value) ETagUsing(fn func(params ...Parameter) (string, error)) *Value {
 	v.etagFn = fn
 	return &v
 }
 
 // LastModifiedUsing lazily sets the time at which the content was last modified. This allows
 // for conditional requests, possibly avoiding network traffic, although ETag takes precedence.
-func (v Value) LastModifiedUsing(fn func(template, language string) (time.Time, error)) *Value {
+func (v Value) LastModifiedUsing(fn func(params ...Parameter) (time.Time, error)) *Value {
 	v.lastModFn = fn
 	return &v
 }
@@ -202,8 +194,8 @@ func (v Value) NoCache() *Value {
 // response processor does not need to do anything further.
 //
 // Data d must not be nil.
-func ConditionalRequest(rw http.ResponseWriter, req *http.Request, d Data, template, language string) (sendContent bool, err error) {
-	meta, err := d.Meta(template, language)
+func ConditionalRequest(rw http.ResponseWriter, req *http.Request, d Data, params ...Parameter) (sendContent bool, err error) {
+	meta, err := d.Meta(params...)
 	if err != nil {
 		return false, err
 	}

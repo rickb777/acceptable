@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/acceptable/headername"
 	"golang.org/x/text/encoding"
@@ -16,10 +16,10 @@ import (
 // Match holds the best-matched offer after content negotiation and is used for response rendering.
 type Match struct {
 	header.ContentType
-	Language           string
+	Language           dpkg.Language
 	Charset            string
 	Vary               []string
-	Data               data.Data
+	Data               dpkg.Data
 	Render             Processor
 	StatusCodeOverride int
 }
@@ -56,7 +56,7 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) io.Writer {
 	}
 
 	if m.IsTextual() && m.Language != "" && m.Language != "*" {
-		rw.Header().Set(headername.ContentLanguage, m.Language)
+		rw.Header().Set(headername.ContentLanguage, m.Language.String())
 	}
 
 	if len(m.Vary) > 0 {

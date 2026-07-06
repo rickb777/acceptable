@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/offer"
 	"github.com/rickb777/expect"
 )
@@ -16,13 +16,13 @@ func TestBinaryShouldWriteResponseBody(t *testing.T) {
 	names := []string{"Alice\n", "Bob\n", "Charles\n"}
 
 	models := []struct {
-		stuff    data.Data
+		stuff    dpkg.Data
 		expected string
 	}{
-		{data.Of([]byte("Joe Bloggs")), "Joe Bloggs"},
-		{data.Lazy(func(string, string) (any, error) { return []byte("Joe Bloggs"), nil }), "Joe Bloggs"},
-		{data.Sequence(
-			func(string, string) (any, error) {
+		{dpkg.Of([]byte("Joe Bloggs")), "Joe Bloggs"},
+		{dpkg.Lazy(func(...dpkg.Parameter) (any, error) { return []byte("Joe Bloggs"), nil }), "Joe Bloggs"},
+		{dpkg.Sequence(
+			func(...dpkg.Parameter) (any, error) {
 				if len(names) == 0 {
 					return nil, nil
 				}
@@ -32,9 +32,9 @@ func TestBinaryShouldWriteResponseBody(t *testing.T) {
 			}),
 			"Alice\nBob\nCharles\n",
 		},
-		{data.Of(strings.NewReader("Joe Bloggs")), "Joe Bloggs"},
-		{data.Of(&simpleReader{s: "Joe Bloggs"}), "Joe Bloggs"},
-		{data.Of(nil), ""},
+		{dpkg.Of(strings.NewReader("Joe Bloggs")), "Joe Bloggs"},
+		{dpkg.Of(&simpleReader{s: "Joe Bloggs"}), "Joe Bloggs"},
+		{dpkg.Of(nil), ""},
 		{nil, ""},
 	}
 
@@ -43,7 +43,7 @@ func TestBinaryShouldWriteResponseBody(t *testing.T) {
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		err := p(w, req, m.stuff, "", "")
+		err := p(w, req, m.stuff)
 		expect.String(w.Body.String(), err).ToBe(t, m.expected)
 	}
 }
@@ -54,7 +54,7 @@ func TestBinaryShouldNotReturnError(t *testing.T) {
 	req := &http.Request{}
 	p := offer.BinaryProcessor()
 
-	err := p(w, req, nil, "", "")
+	err := p(w, req, nil)
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 }

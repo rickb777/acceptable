@@ -250,7 +250,7 @@ func Test_should_negotiate_using_media_and_language(t *testing.T) {
 
 func Test_should_render_iso8859_html_using_templates(t *testing.T) {
 	// Given ...
-	p := templates.Templates("example/templates/en", ".html", nil)
+	p := templates.Templates("examples/templates/en", ".html", nil)
 	a := offer.Of(p, "text/html").With(nil, "en")
 
 	req, _ := http.NewRequest("GET", "/", nil)

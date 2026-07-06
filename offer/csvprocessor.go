@@ -8,7 +8,7 @@ import (
 	"reflect"
 
 	"github.com/rickb777/acceptable/contenttype"
-	datapkg "github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 )
 
 // CSV constructs a CSV Offer easily.
@@ -44,7 +44,7 @@ func CSVProcessor(comma ...rune) Processor {
 		in = comma[0]
 	}
 
-	return func(w io.Writer, _ *http.Request, data datapkg.Data, template, language string) (err error) {
+	return func(w io.Writer, _ *http.Request, data dpkg.Data, constraint ...dpkg.Parameter) (err error) {
 		writer := csv.NewWriter(w)
 		writer.Comma = in
 
@@ -52,7 +52,7 @@ func CSVProcessor(comma ...rune) Processor {
 
 		for more {
 			var d any
-			d, more, err = data.Content(template, language)
+			d, more, err = data.Content(constraint...)
 			if err != nil {
 				return err
 			}

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/acceptable/headername"
 	offerpkg "github.com/rickb777/acceptable/offer"
@@ -146,7 +147,7 @@ func (c context) bestMatch(mrs header.MediaRanges, languages header.PrecedenceVa
 	return nil // 406 - Not Acceptable
 }
 
-func (c context) removeExcludedOffers(mrs header.MediaRanges, available offerpkg.Offers) []offerpkg.Offer {
+func (c context) removeExcludedOffers(mrs header.MediaRanges, available offerpkg.Offers) offerpkg.Offers {
 	excluded := make([]bool, len(available))
 	for i, offer := range available {
 		for _, accepted := range mrs {
@@ -193,13 +194,13 @@ func (c context) findBestMatch(mrs header.MediaRanges, languages header.Preceden
 
 			for _, prefLang := range languages {
 				for _, offeredLang := range offer.Langs {
-					if langMatch(prefLang.Value, offeredLang) {
+					if langMatch(prefLang.Value, string(offeredLang)) {
 						Debug("%s try matching %s, lang=%s to %s, lang=%s\n", c, acceptedCT, prefLang, offer.ContentType, offeredLang)
 
 						if prefLang.Quality > 0 {
 							Debug("%s successfully matched %s, lang=%s to %s\n", c, acceptedCT, prefLang, offer)
 							if offeredLang == "*" && prefLang.Value != "*" {
-								offeredLang = prefLang.Value
+								offeredLang = data.Language(prefLang.Value)
 							}
 							m := offer.BuildMatch(acceptedCT.ContentType, offeredLang)
 							m.Vary = vary

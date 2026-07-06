@@ -41,7 +41,7 @@ func TestParseDate(t *testing.T) {
 	for i, c := range cases {
 		actual, err := ParseHTTPDateTime(c.input)
 		expect.Error(err).I(i).Not().ToHaveOccurred(t)
-		expect.Any(actual).I(i).ToBe(t, c.expected)
+		expect.Value(actual).I(i).ToBe(t, c.expected)
 		expect.String(FormatHTTPDateTime(actual)).I(i).ToBe(t, c.canonical)
 	}
 
@@ -129,7 +129,7 @@ func TestParseAcceptXyzHeader_with_inverse_string(t *testing.T) {
 
 	for i, c := range cases {
 		actual := ParsePrecedenceValues(c.actual)
-		expect.Any(actual).I(i).ToBe(t, c.expected)
+		expect.Value(actual).I(i).ToBe(t, c.expected)
 		expect.String(actual.String()).I(i).ToBe(t, c.actual)
 	}
 }
@@ -187,7 +187,7 @@ func TestParseAcceptXyzHeader_special_cases(t *testing.T) {
 
 	for i, c := range cases {
 		actual := ParsePrecedenceValues(c.actual)
-		expect.Any(actual).I(i).ToBe(t, c.expected)
+		expect.Value(actual).I(i).ToBe(t, c.expected)
 	}
 }
 

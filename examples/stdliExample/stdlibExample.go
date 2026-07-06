@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"github.com/rickb777/acceptable"
 	"github.com/rickb777/acceptable/contenttype"
 	"github.com/rickb777/acceptable/data"
-	"github.com/rickb777/acceptable/echo4"
+	"github.com/rickb777/acceptable/examples"
 	"github.com/rickb777/acceptable/offer"
 	"github.com/rickb777/acceptable/templates"
 )
@@ -38,43 +37,45 @@ func main() {
 
 	templates.ReloadOnTheFly = true // development mode
 
-	// Echo instance
-	e := echo.New()
-
-	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	mux := http.NewServeMux()
 
 	// Routes
-	e.GET("/*", hello)
+	mux.HandleFunc("GET /{path...}", hello)
 
-	// Start server
-	e.Logger.Fatal(e.Start(":8080"))
+	svr := http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+
+	err := svr.ListenAndServe()
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Handler
-func hello(c echo.Context) error {
+func hello(rw http.ResponseWriter, req *http.Request) {
 	// example lazy data source (although this one just returns a fixed value)
-	lazyEn := data.Lazy(func(string, string) (any, error) {
-		return en, nil
+	lazyEn := data.Lazy(func(params ...data.Parameter) (any, error) {
+		return examples.EN, nil
 	}).MaxAge(10 * time.Second).ETag("hash123") // replace "hash123" appropriately
 
-	template := c.Request().URL.String()[1:]
+	template := req.URL.String()[1:]
 
-	return echo4.RenderBestMatch(c, 200, template,
+	acceptable.RenderBestMatch(rw, req, 200, data.TemplateName(template),
 		offer.JSON("  ").
-			With(lazyEn, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
+			With(lazyEn, "en").With(examples.FR, "fr").With(examples.ES, "es").With(examples.RU, "ru"),
 
 		offer.XML("xml", "  ").
-			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
+			With(examples.EN, "en").With(examples.FR, "fr").With(examples.ES, "es").With(examples.RU, "ru"),
 
 		offer.Of(offer.TXTProcessor(), contenttype.TextPlain).
-			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
+			With(examples.EN, "en").With(examples.FR, "fr").With(examples.ES, "es").With(examples.RU, "ru"),
 
-		templates.TextHtmlOffer("example/templates/en", ".html", nil).
-			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
+		templates.TextHtmlOffer("examples/templates/en", ".html", nil).
+			With(examples.EN, "en").With(examples.FR, "fr").With(examples.ES, "es").With(examples.RU, "ru"),
 
-		templates.ApplicationXhtmlOffer("example/templates/en", ".html", nil).
-			With(en, "en").With(fr, "fr").With(es, "es").With(ru, "ru"),
+		templates.ApplicationXhtmlOffer("examples/templates/en", ".html", nil).
+			With(examples.EN, "en").With(examples.FR, "fr").With(examples.ES, "es").With(examples.RU, "ru"),
 	)
 }

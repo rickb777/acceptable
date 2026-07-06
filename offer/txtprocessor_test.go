@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/offer"
 	"github.com/rickb777/expect"
 )
@@ -17,37 +17,37 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 	names2 := []string{"Alice ", "Bob ", "Charles"}
 
 	models := []struct {
-		stuff    data.Data
+		stuff    dpkg.Data
 		expected string
 	}{
-		{data.Of("Joe Bloggs"), "Joe Bloggs\n"},
-		{data.Of("Joe Bloggs\n"), "Joe Bloggs\n"},
-		{data.Of([]byte("Joe Bloggs")), "Joe Bloggs\n"},
-		{data.Lazy(func(string, string) (any, error) { return "Joe Bloggs", nil }), "Joe Bloggs\n"},
-		{data.Sequence(
+		{dpkg.Of("Joe Bloggs"), "Joe Bloggs\n"},
+		{dpkg.Of("Joe Bloggs\n"), "Joe Bloggs\n"},
+		{dpkg.Of([]byte("Joe Bloggs")), "Joe Bloggs\n"},
+		{dpkg.Lazy(func(...dpkg.Parameter) (any, error) { return "Joe Bloggs", nil }), "Joe Bloggs\n"},
+		{dpkg.Sequence(
 			stringSequence(names1)),
 			"Alice\nBob\nCharles\n",
 		},
-		{data.Sequence(
+		{dpkg.Sequence(
 			stringSequence(names2)),
 			"Alice Bob Charles\n",
 		},
-		{data.Of(hidden{tt(2001, 10, 31)}), "(2001-10-31)\n"},
-		{data.Of(tm{"Joe Bloggs"}), "Joe Bloggs\n"},
-		{data.Of(nil), ""},
+		{dpkg.Of(hidden{tt(2001, 10, 31)}), "(2001-10-31)\n"},
+		{dpkg.Of(tm{"Joe Bloggs"}), "Joe Bloggs\n"},
+		{dpkg.Of(nil), ""},
 	}
 
 	p := offer.TXTProcessor()
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		err := p(w, req, m.stuff, "", "")
+		err := p(w, req, m.stuff)
 		expect.String(w.Body.String(), err).ToBe(t, m.expected)
 	}
 }
 
-func stringSequence(names []string) func(string, string) (any, error) {
-	return func(string, string) (any, error) {
+func stringSequence(names []string) func(params ...dpkg.Parameter) (any, error) {
+	return func(params ...dpkg.Parameter) (any, error) {
 		if len(names) == 0 {
 			return nil, nil
 		}
@@ -63,7 +63,7 @@ func TestTXTShouldNotReturnError(t *testing.T) {
 
 	p := offer.TXTProcessor()
 
-	err := p(w, req, nil, "", "")
+	err := p(w, req, nil)
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 }

@@ -26,9 +26,9 @@ func Example() {
 	fr := data.Of("Bonjour!").ETag("hash1") // get French content and some metadata
 
 	// 3. this uses a lazy evaluation function, wrapped in a data.Data
-	es := data.Lazy(func(template string, language string) (any, error) {
+	es := data.Lazy(func(params ...data.Parameter) (any, error) {
 		return "Hola!", nil // get Spanish content - eg from database
-	}).ETagUsing(func(template, language string) (string, error) {
+	}).ETagUsing(func(params ...data.Parameter) (string, error) {
 		// allows us to obtain the etag lazily, should we need to
 		return "hash2", nil
 	})
@@ -59,13 +59,13 @@ func Example() {
 		// The first offer is for JSON - this is often the most widely used because it also supports
 		// Ajax requests.
 
-		err := acceptable.RenderBestMatch(res, req, 200, "home.html", offer.JSON("  ").
-			With(en, "en").With(fr, "fr").With(es, "es"), offer.XML("xml", "  ").
-			With(en, "en").With(fr, "fr").With(es, "es"), offer.CSV().
-			With(en, "en").With(fr, "fr").With(es, "es"), offer.Of(offer.TXTProcessor(), contenttype.TextPlain).
-			With(en, "en").With(fr, "fr").With(es, "es"), templates.TextHtmlOffer("example/templates/en", ".html", nil).
-			With(en, "en").With(fr, "fr").With(es, "es"), templates.ApplicationXhtmlOffer("example/templates/en", ".html", nil).
-			With(en, "en").With(fr, "fr").With(es, "es"))
+		err := acceptable.RenderBestMatch(res, req, 200, "home.html",
+			offer.JSON("  ").With(en, "en").With(fr, "fr").With(es, "es"),
+			offer.XML("xml", "  ").With(en, "en").With(fr, "fr").With(es, "es"),
+			offer.CSV().With(en, "en").With(fr, "fr").With(es, "es"),
+			offer.Of(offer.TXTProcessor(), contenttype.TextPlain).With(en, "en").With(fr, "fr").With(es, "es"),
+			templates.TextHtmlOffer("examples/templates/en", ".html", nil).With(en, "en").With(fr, "fr").With(es, "es"),
+			templates.ApplicationXhtmlOffer("examples/templates/en", ".html", nil).With(en, "en").With(fr, "fr").With(es, "es"))
 
 		if err != nil {
 			log.Fatal(err) // replace with suitable error handling

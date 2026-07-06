@@ -1,60 +1,56 @@
 package templates
 
 import (
-	"html/template"
+	tmplpkg "html/template"
 	"io"
 	"net/http"
 	"time"
 
-	datapkg "github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
 	"github.com/rickb777/acceptable/offer"
 )
 
-const DefaultPage = "_index.html"
+// DefaultPage is the template name when a blank string is supplied.
+// Alter this during startup if required.
+var DefaultPage = "_index.html"
 
-func productionProcessor(root *template.Template) offer.Processor {
-	return func(w io.Writer, req *http.Request, data datapkg.Data, template, language string) (err error) {
+func productionProcessor(root *tmplpkg.Template) offer.Processor {
+	return func(w io.Writer, req *http.Request, data dpkg.Data, params ...dpkg.Parameter) (err error) {
 		p := internal.EnsureNewline(w)
 
-		d, _, err := data.Content(template, language)
+		d, _, err := data.Content(params...)
 		if err != nil {
 			return err
 		}
 
-		if template == "" {
-			template = DefaultPage
-		}
-		return root.ExecuteTemplate(p, template, d)
+		return root.ExecuteTemplate(p, findTemplateName(params), d)
 	}
 }
 
 //-------------------------------------------------------------------------------------------------
 
-func debugProcessor(root *template.Template, rootDir, suffix string, files map[string]time.Time, funcMap template.FuncMap) offer.Processor {
-	return func(w io.Writer, req *http.Request, data datapkg.Data, template, language string) (err error) {
-		path := rootDir + "/" + template
+func debugProcessor(root *tmplpkg.Template, rootDir, suffix string, files map[string]time.Time, funcMap tmplpkg.FuncMap) offer.Processor {
+	return func(w io.Writer, req *http.Request, data dpkg.Data, params ...dpkg.Parameter) (err error) {
+		tmpl := findTemplateName(params)
+		path := rootDir + "/" + tmpl
 		if _, exists := files[path]; !exists {
 			files = findTemplates(rootDir, suffix)
 		}
 
-		d, _, err := data.Content(template, language)
+		d, _, err := data.Content(params...)
 		if err != nil {
 			return err
-		}
-
-		if template == "" {
-			template = DefaultPage
 		}
 
 		p := internal.EnsureNewline(w)
 		root = getCurrentTemplateTree(root, rootDir, suffix, files, funcMap)
 
-		return root.ExecuteTemplate(p, template, d)
+		return root.ExecuteTemplate(p, tmpl, d)
 	}
 }
 
-func getCurrentTemplateTree(root *template.Template, rootDir, suffix string, files map[string]time.Time, funcMap template.FuncMap) *template.Template {
+func getCurrentTemplateTree(root *tmplpkg.Template, rootDir, suffix string, files map[string]time.Time, funcMap tmplpkg.FuncMap) *tmplpkg.Template {
 	changed := checkForChanges(files)
 	if changed {
 		root = parseTemplates(rootDir, files, funcMap)
@@ -78,4 +74,16 @@ func checkForChanges(files map[string]time.Time) bool {
 	}
 
 	return changed
+}
+
+func findTemplateName(params []dpkg.Parameter) string {
+	for _, param := range params {
+		if tn, ok := param.(dpkg.TemplateName); ok {
+			if tn == "" {
+				return DefaultPage
+			}
+			return string(tn)
+		}
+	}
+	return DefaultPage
 }

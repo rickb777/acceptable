@@ -43,7 +43,7 @@ var NoMatchAccepted = func(rw http.ResponseWriter, _ *http.Request) {
 //
 // Finally, if statusCode is non-zero it is applied to the response (200-OK otherwise).
 // Then the matched offer's data is rendered using the offer's processor.
-func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, template string, available ...offerpkg.Offer) error {
+func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, template datapkg.TemplateName, available ...offerpkg.Offer) error {
 	if offerpkg.Offers(available).AllEmpty() {
 		rw.WriteHeader(http.StatusNoContent)
 		return nil

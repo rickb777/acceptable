@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	datapkg "github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	. "github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
@@ -27,13 +27,13 @@ func TestJSONShouldWriteResponseBody_lazy_indented(t *testing.T) {
 		ContentType: header.ContentType{MediaType: "application/json"},
 		Language:    "en",
 		Charset:     "utf-8",
-		Data:        datapkg.Lazy(func(string, string) (any, error) { return model, nil }),
+		Data:        dpkg.Lazy(func(...dpkg.Parameter) (any, error) { return model, nil }),
 	}
 
 	p := offer.JSONProcessor("  ")
 
 	w := match.ApplyHeaders(rw)
-	err := p(w, req, match.Data, "template", match.Language)
+	err := p(w, req, match.Data, dpkg.TemplateName("template"), match.Language)
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.String(rw.Header().Get(ContentType)).ToBe(t, "application/json")
@@ -51,7 +51,7 @@ func TestJSONShouldWriteResponseBody_sequence(t *testing.T) {
 		ContentType: header.ContentType{MediaType: "application/json"},
 		Language:    "en",
 		Charset:     "utf-8",
-		Data: datapkg.Sequence(func(string, string) (any, error) {
+		Data: dpkg.Sequence(func(...dpkg.Parameter) (any, error) {
 			if len(model) == 0 {
 				return nil, nil
 			}
@@ -64,7 +64,7 @@ func TestJSONShouldWriteResponseBody_sequence(t *testing.T) {
 	p := offer.JSONProcessor("  ")
 
 	w := match.ApplyHeaders(rw)
-	err := p(w, req, match.Data, "template", match.Language)
+	err := p(w, req, match.Data, dpkg.TemplateName("template"), match.Language)
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.String(rw.Header().Get(ContentType)).ToBe(t, "application/json")
@@ -90,14 +90,14 @@ func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 			ContentType: header.ContentType{MediaType: "application/json"},
 			Language:    "cn",
 			Charset:     enc,
-			Data:        datapkg.Of(model),
+			Data:        dpkg.Of(model),
 		}
 
 		p := offer.JSONProcessor("")
 		rw := httptest.NewRecorder()
 		w := match.ApplyHeaders(rw)
 
-		err := p(w, req, match.Data, "template", "cn")
+		err := p(w, req, match.Data, dpkg.TemplateName("template"), dpkg.Language("cn"))
 
 		expect.Error(err).Not().ToHaveOccurred(t)
 		expect.String(rw.Header().Get(ContentType)).ToBe(t, "application/json")
@@ -116,7 +116,7 @@ func TestJSONShouldReturnError(t *testing.T) {
 
 	p := offer.JSONProcessor()
 
-	err := p(w, req, datapkg.Of(model), "template", "en")
+	err := p(w, req, dpkg.Of(model), dpkg.TemplateName("template"), dpkg.Language("en"))
 
 	expect.Error(err).ToHaveOccurred(t)
 	expect.Error(err).ToContain(t, "error calling MarshalJSON for type")
