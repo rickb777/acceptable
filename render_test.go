@@ -15,8 +15,8 @@ import (
 
 func Test_should_return_no_content_if_no_offers_have_data(t *testing.T) {
 	// Given ...
-	a := offer.Of(offer.TXTProcessor(0), "text/test")
-	b := offer.Of(offer.TXTProcessor(0), "text/plain")
+	a := offer.Text("test")
+	b := offer.TextPlain()
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
@@ -33,8 +33,8 @@ func Test_should_return_no_content_if_no_offers_have_data(t *testing.T) {
 
 func Test_should_use_default_processor_if_no_accept_header(t *testing.T) {
 	// Given ...
-	a := offer.Of(offer.TXTProcessor(0), "text/test").With(nil, "en")
-	b := offer.Of(offer.TXTProcessor(0), "text/plain").With("foo", "en")
+	a := offer.Text("test").With(nil, "en")
+	b := offer.TextPlain().With("foo", "en")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
@@ -53,7 +53,7 @@ func Test_should_use_default_processor_if_no_accept_header(t *testing.T) {
 
 func Test_should_use_catch_all_if_no_matching_accept_header(t *testing.T) {
 	// Given ...
-	a := offer.Of(offer.TXTProcessor(0), "text/csv").With("foo", "*")
+	a := offer.Text("csv").With("foo", "*")
 	b := offer.Of(offer.TXTProcessor(0), "").With("bar", "*")
 
 	req, _ := http.NewRequest("GET", "/", nil)
@@ -156,8 +156,8 @@ func Test_should_return_204_if_there_are_no_offers_for_ajax(t *testing.T) {
 
 func Test_should_return_406_with_fallback_offer(t *testing.T) {
 	// Given ...
-	a := offer.Of(offer.TXTProcessor(0), "text/foo").With(nil, "en-GB")
-	b := offer.Of(offer.TXTProcessor(0), "text/bar").With(`bad stuff`, "en").CanHandle406As(400)
+	a := offer.Text("foo").With(nil, "en-GB")
+	b := offer.Text("bar").With(`bad stuff`, "en").CanHandle406As(400)
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	// this header means "anything but text/test"
@@ -225,11 +225,11 @@ func Test_should_return_200_even_when_language_is_explicitly_excluded(t *testing
 func Test_should_negotiate_using_media_and_language(t *testing.T) {
 	// Given ...
 	// should be skipped because of media mismatch
-	a := offer.Of(offer.TXTProcessor(0), "text/html").With(nil, "en")
+	a := offer.Text("html").With(nil, "en")
 	// should be skipped because of language mismatch
-	b := offer.Of(offer.TXTProcessor(0), "text/test").With(nil, "de")
+	b := offer.Text("test").With(nil, "de")
 	// should match
-	c := offer.Of(offer.TXTProcessor(0), "text/test").With(nil, "en")
+	c := offer.Text("test").With(nil, "en")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	req.Header.Add(Accept, "text/test, text/*")
@@ -273,7 +273,7 @@ func Test_should_render_iso8859_html_using_templates(t *testing.T) {
 
 func Test_should_match_utf8_charset_when_acceptable(t *testing.T) {
 	// Given ...
-	a := offer.Of(offer.TXTProcessor(0), "text/html").With("foo", "en")
+	a := offer.Text("html").With("foo", "en")
 
 	// all these cases contain utf-8 and another
 	cases := []string{

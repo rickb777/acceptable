@@ -5,17 +5,24 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
-	"github.com/rickb777/acceptable/contenttype"
 	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/internal"
 )
 
+// Text returns an Offer for text/subtype content using TXTProcessor.
+// The response will use gzip compression (see [GZIPLevel]) when the client requests it.
+func Text(subtype string) Offer {
+	if strings.ContainsRune(subtype, '/') {
+		panic(fmt.Sprintf("subtype %q must not contain '/'", subtype))
+	}
+	return Of(TXTProcessor(GZIPLevel), "text/"+subtype)
+}
+
 // TextPlain returns an Offer for text/plain content using TXTProcessor.
 // The response will use gzip compression (see [GZIPLevel]) when the client requests it.
-func TextPlain() Offer { return textPlainOffer }
-
-var textPlainOffer = Of(TXTProcessor(GZIPLevel), contenttype.TextPlain)
+func TextPlain() Offer { return Text("plain") }
 
 // TXTProcessor creates an output processor that serialises strings in a form suitable for text/* responses (especially
 // text/plain and text/html). It is also useful for JSON, XML etc that is already encoded.
