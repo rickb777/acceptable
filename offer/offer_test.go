@@ -2,6 +2,7 @@ package offer
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	dpkg "github.com/rickb777/acceptable/data"
@@ -45,7 +46,7 @@ func Test_offer_construction(t *testing.T) {
 		expect.Map(base.data).I(s).ToBeEmpty(t)
 
 		expect.String(c.o.String()).I(s).ToBe(t, s[3:])
-		expect.Slice(c.o.Langs).I(s).ToBe(t, dpkg.SplitLangs(c.el, ",")...)
+		expect.Slice(c.o.Langs).I(s).ToBe(t, strings.Split(c.el, ",")...)
 		expect.Map(c.o.data).I(s).ToHaveLength(t, c.nd)
 
 		for l, d := range c.o.data {
@@ -153,7 +154,7 @@ func TestBuildMatch(t *testing.T) {
 		m := c.o.BuildMatch(c.accepted, "en", i+400)
 		m.Render = nil // comparing functions would always fail
 		if m.Data != nil {
-			expect.Value(m.Data.Content()).ToBe(t, c.data)
+			expect.Value(m.Data.Content(dpkg.Chosen{})).ToBe(t, c.data)
 		}
 		m.Data = nil // because functions cannot be compared
 		expect.Value(*m).I(c.o).ToBe(t, c.m)

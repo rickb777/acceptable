@@ -12,7 +12,7 @@ import (
 )
 
 // Processor is a function that renders content according to the matched result.
-type Processor func(w io.Writer, req *http.Request, data dpkg.Data, params ...dpkg.Parameter) error
+type Processor func(w io.Writer, req *http.Request, data dpkg.Data, params dpkg.Chosen) error
 
 // Offer holds information about one particular resource representation that can potentially
 // provide an acceptable response.
@@ -26,10 +26,10 @@ type Offer struct {
 	processor Processor
 
 	// Langs lists the language(s) provided by this offer.
-	Langs dpkg.Languages
+	Langs []string
 
 	// data has optional responses, keyed by language, to be rendered if this offer is selected.
-	data map[dpkg.Language]dpkg.Data
+	data map[string]dpkg.Data
 
 	// Handle406As enables this offer to be a handler for any 406-not-acceptable case that arises.
 	// Normally, this field will be left zero. However, if non-zero, the offer can be rendered
@@ -53,8 +53,8 @@ func Of(processor Processor, contentType string) Offer {
 	return Offer{
 		ContentType: header.ParseContentType(contentType).WithDefault(),
 		processor:   processor,
-		Langs:       []dpkg.Language{"*"},
-		data:        make(map[dpkg.Language]dpkg.Data),
+		Langs:       []string{"*"},
+		data:        make(map[string]dpkg.Data),
 	}
 }
 
@@ -63,8 +63,8 @@ func (o Offer) clone() Offer {
 	c := Offer{
 		ContentType: o.ContentType,
 		processor:   o.processor,
-		Langs:       make([]dpkg.Language, len(o.Langs)),
-		data:        make(map[dpkg.Language]dpkg.Data),
+		Langs:       make([]string, len(o.Langs)),
+		data:        make(map[string]dpkg.Data),
 	}
 
 	for i, s := range o.Langs {
@@ -94,7 +94,7 @@ func (o Offer) clone() Offer {
 // must not be "*" (or blank). Duplicates are not allowed.
 //
 // Language matching is described further in IETF BCP 47.
-func (o Offer) With(data any, language dpkg.Language, otherLanguages ...dpkg.Language) Offer {
+func (o Offer) With(data any, language string, otherLanguages ...string) Offer {
 	o.checkForBlanks(language, otherLanguages)
 
 	if data == nil {
@@ -114,9 +114,12 @@ func (o Offer) With(data any, language dpkg.Language, otherLanguages ...dpkg.Lan
 	c.checkForDuplicates(language, otherLanguages)
 
 	var value dpkg.Data
-	if s, ok := data.(dpkg.Data); ok {
-		value = s
-	} else {
+	switch d := data.(type) {
+	case dpkg.Data:
+		value = d
+	case dpkg.Supplier:
+		value = dpkg.Lazy(d)
+	default:
 		value = dpkg.Of(data)
 	}
 
@@ -131,7 +134,7 @@ func (o Offer) With(data any, language dpkg.Language, otherLanguages ...dpkg.Lan
 }
 
 // checkForBlanks such that 'With' parameters must be reasonable
-func (o Offer) checkForBlanks(language dpkg.Language, otherLanguages []dpkg.Language) {
+func (o Offer) checkForBlanks(language string, otherLanguages []string) {
 	if language == "" {
 		panic("language must not be blank")
 	}
@@ -150,7 +153,7 @@ func (o Offer) checkForBlanks(language dpkg.Language, otherLanguages []dpkg.Lang
 
 // 'With' languages cannot duplicate earlier ones because that would break the
 // invariant that o.Langs is in the order they were added
-func (o Offer) checkForDuplicates(language dpkg.Language, otherLanguages []dpkg.Language) {
+func (o Offer) checkForDuplicates(language string, otherLanguages []string) {
 	if _, existsAlready := o.data[language]; existsAlready {
 		panic(fmt.Sprintf("language %s is a duplicate", language))
 	}
@@ -187,7 +190,7 @@ func (o Offer) String() string {
 		comma := ""
 		for _, l := range o.Langs {
 			buf.WriteString(comma)
-			buf.WriteString(l.String())
+			buf.WriteString(l)
 			comma = ","
 		}
 	}
@@ -198,7 +201,7 @@ func (o Offer) String() string {
 
 // BuildMatch implements the transition between a selected Offer and the resulting Match.
 // The result is based on the best-matched media type and language.
-func (o Offer) BuildMatch(acceptedCT header.ContentType, lang dpkg.Language, statusCodeOverride ...int) *Match {
+func (o Offer) BuildMatch(acceptedCT header.ContentType, lang string, statusCodeOverride ...int) *Match {
 	resolved := o.resolvedType(acceptedCT)
 
 	m := &Match{
@@ -243,7 +246,7 @@ func (o Offer) resolvedType(acceptedCT header.ContentType) header.ContentType {
 }
 
 // Data gets the data lodged for a given language (or language group).
-func (o Offer) Data(lang dpkg.Language) dpkg.Data {
+func (o Offer) Data(lang string) dpkg.Data {
 	d := emptyToNil(o.data[lang])
 
 	// When the only data matches the wildcard "*", that should be the
@@ -268,11 +271,11 @@ func emptyToNil(d dpkg.Data) dpkg.Data {
 
 type empty struct{}
 
-func (e empty) Meta(_ ...dpkg.Parameter) (*dpkg.Metadata, error) {
+func (e empty) Meta(dpkg.Chosen) (*dpkg.Metadata, error) {
 	panic("not reachable")
 }
 
-func (e empty) Content(_ ...dpkg.Parameter) (any, bool, error) {
+func (e empty) Content(dpkg.Chosen) (any, bool, error) {
 	panic("not reachable")
 }
 

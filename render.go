@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/rickb777/acceptable/contenttype"
-	datapkg "github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/headername"
 	offerpkg "github.com/rickb777/acceptable/offer"
 )
@@ -43,7 +43,7 @@ var NoMatchAccepted = func(rw http.ResponseWriter, _ *http.Request) {
 //
 // Finally, if statusCode is non-zero it is applied to the response (200-OK otherwise).
 // Then the matched offer's data is rendered using the offer's processor.
-func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, template datapkg.TemplateName, available ...offerpkg.Offer) error {
+func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, template string, available ...offerpkg.Offer) error {
 	if offerpkg.Offers(available).AllEmpty() {
 		rw.WriteHeader(http.StatusNoContent)
 		return nil
@@ -62,11 +62,13 @@ func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, 
 
 	w := best.ApplyHeaders(rw)
 
+	chosen := dpkg.Chosen{Template: template, Language: best.Language}
+
 	// StatusCodeOverride is a mechanism for offers to behave as error handlers.
 	// Conditional request handling is disabled in this case.
 	if best.StatusCodeOverride != 0 {
 		rw.WriteHeader(best.StatusCodeOverride)
-		return best.Render(w, req, best.Data, template, best.Language)
+		return best.Render(w, req, best.Data, chosen)
 	}
 
 	if best.Data == nil {
@@ -74,7 +76,7 @@ func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, 
 		return nil
 	}
 
-	sendContent, err := datapkg.ConditionalRequest(rw, req, best.Data, template, best.Language)
+	sendContent, err := dpkg.ConditionalRequest(rw, req, best.Data, chosen)
 	if err != nil {
 		return err
 	}
@@ -87,5 +89,5 @@ func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, 
 		rw.WriteHeader(statusCode)
 	}
 
-	return best.Render(w, req, best.Data, template, best.Language)
+	return best.Render(w, req, best.Data, chosen)
 }

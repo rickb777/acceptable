@@ -16,7 +16,7 @@ func TestCSVShouldWriteResponseBody(t *testing.T) {
 		expected string
 	}{
 		{dpkg.Of("Joe Bloggs"), "Joe Bloggs\n"},
-		{dpkg.Lazy(func(...dpkg.Parameter) (any, error) { return "Joe Bloggs", nil }), "Joe Bloggs\n"},
+		{dpkg.Lazy(func(dpkg.Chosen) (any, error) { return "Joe Bloggs", nil }), "Joe Bloggs\n"},
 		{dpkg.Of([]string{"Red", "Green", "Blue"}), "Red,Green,Blue\n"},
 		{dpkg.Of([][]string{{"Red", "Green", "Blue"}, {"Cyan", "Magenta", "Yellow"}}), "Red,Green,Blue\nCyan,Magenta,Yellow\n"},
 		{dpkg.Of([]int{101, -5, 42}), "101,-5,42\n"},
@@ -38,7 +38,7 @@ func TestCSVShouldWriteResponseBody(t *testing.T) {
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		err := p(w, req, m.stuff)
+		err := p(w, req, m.stuff, dpkg.Chosen{})
 		expect.String(w.Body.String(), err).ToBe(t, m.expected)
 	}
 }
@@ -66,7 +66,7 @@ func TestCSVShouldWriteResponseBodyWithTabs(t *testing.T) {
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		err := p(w, req, m.stuff)
+		err := p(w, req, m.stuff, dpkg.Chosen{})
 		expect.String(w.Body.String(), err).ToBe(t, m.expected)
 	}
 }

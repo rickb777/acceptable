@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/rickb777/acceptable"
-	"github.com/rickb777/acceptable/data"
+	dpkg "github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	. "github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
@@ -18,7 +18,7 @@ func Test_should_return_wildcard_data_for_any_language(t *testing.T) {
 	// Given ...
 	a := offer.Of(offer.TXTProcessor(), "text/test").With(someSliceData, "*")
 
-	for _, lang := range []data.Language{"en", "de"} {
+	for _, lang := range []string{"en", "de"} {
 		req, _ := http.NewRequest("GET", "/", nil)
 		// this header means "anything but text/test"
 		req.Header.Add(Accept, "text/test, */*")
@@ -31,7 +31,7 @@ func Test_should_return_wildcard_data_for_any_language(t *testing.T) {
 		expect.Value(best.Render).I(lang).Not().ToBeNil(t)
 		best.Render = nil // because functions cannot be compared
 
-		expect.Value(best.Data.Content()).I(lang).ToBe(t, someSliceData)
+		expect.Value(best.Data.Content(dpkg.Chosen{})).I(lang).ToBe(t, someSliceData)
 
 		best.Data = nil // because functions cannot be compared
 		expect.Value(best).I(lang).ToBe(t, &offer.Match{
@@ -136,7 +136,7 @@ func Test_should_select_language_of_first_matched_offer_when_no_language_matches
 	best := acceptable.BestRequestMatch(req, a, b, c)
 
 	// Then ...
-	expect.Value(best.Data.Content()).ToBe(t, someMapData)
+	expect.Value(best.Data.Content(dpkg.Chosen{})).ToBe(t, someMapData)
 
 	best.Data = nil // because functions cannot be compared
 	expect.Value(best).ToBe(t, &offer.Match{

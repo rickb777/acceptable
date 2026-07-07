@@ -16,29 +16,35 @@ import (
 var DefaultPage = "_index.html"
 
 func productionProcessor(root *tmplpkg.Template) offer.Processor {
-	return func(w io.Writer, req *http.Request, data dpkg.Data, params ...dpkg.Parameter) (err error) {
+	return func(w io.Writer, req *http.Request, data dpkg.Data, params dpkg.Chosen) (err error) {
 		p := internal.EnsureNewline(w)
 
-		d, _, err := data.Content(params...)
+		d, _, err := data.Content(params)
 		if err != nil {
 			return err
 		}
 
-		return root.ExecuteTemplate(p, findTemplateName(params), d)
+		if params.Template == "" {
+			params.Template = DefaultPage
+		}
+		return root.ExecuteTemplate(p, params.Template, d)
 	}
 }
 
 //-------------------------------------------------------------------------------------------------
 
 func debugProcessor(root *tmplpkg.Template, rootDir, suffix string, files map[string]time.Time, funcMap tmplpkg.FuncMap) offer.Processor {
-	return func(w io.Writer, req *http.Request, data dpkg.Data, params ...dpkg.Parameter) (err error) {
-		tmpl := findTemplateName(params)
-		path := rootDir + "/" + tmpl
+	return func(w io.Writer, req *http.Request, data dpkg.Data, params dpkg.Chosen) (err error) {
+		if params.Template == "" {
+			params.Template = DefaultPage
+		}
+
+		path := rootDir + "/" + params.Template
 		if _, exists := files[path]; !exists {
 			files = findTemplates(rootDir, suffix)
 		}
 
-		d, _, err := data.Content(params...)
+		d, _, err := data.Content(params)
 		if err != nil {
 			return err
 		}
@@ -46,7 +52,7 @@ func debugProcessor(root *tmplpkg.Template, rootDir, suffix string, files map[st
 		p := internal.EnsureNewline(w)
 		root = getCurrentTemplateTree(root, rootDir, suffix, files, funcMap)
 
-		return root.ExecuteTemplate(p, tmpl, d)
+		return root.ExecuteTemplate(p, params.Template, d)
 	}
 }
 
@@ -74,16 +80,4 @@ func checkForChanges(files map[string]time.Time) bool {
 	}
 
 	return changed
-}
-
-func findTemplateName(params []dpkg.Parameter) string {
-	for _, param := range params {
-		if tn, ok := param.(dpkg.TemplateName); ok {
-			if tn == "" {
-				return DefaultPage
-			}
-			return string(tn)
-		}
-	}
-	return DefaultPage
 }

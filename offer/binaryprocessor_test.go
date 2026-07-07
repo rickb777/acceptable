@@ -20,9 +20,9 @@ func TestBinaryShouldWriteResponseBody(t *testing.T) {
 		expected string
 	}{
 		{dpkg.Of([]byte("Joe Bloggs")), "Joe Bloggs"},
-		{dpkg.Lazy(func(...dpkg.Parameter) (any, error) { return []byte("Joe Bloggs"), nil }), "Joe Bloggs"},
+		{dpkg.Lazy(func(dpkg.Chosen) (any, error) { return []byte("Joe Bloggs"), nil }), "Joe Bloggs"},
 		{dpkg.Sequence(
-			func(...dpkg.Parameter) (any, error) {
+			func(dpkg.Chosen) (any, error) {
 				if len(names) == 0 {
 					return nil, nil
 				}
@@ -43,7 +43,7 @@ func TestBinaryShouldWriteResponseBody(t *testing.T) {
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		err := p(w, req, m.stuff)
+		err := p(w, req, m.stuff, dpkg.Chosen{})
 		expect.String(w.Body.String(), err).ToBe(t, m.expected)
 	}
 }
@@ -54,7 +54,7 @@ func TestBinaryShouldNotReturnError(t *testing.T) {
 	req := &http.Request{}
 	p := offer.BinaryProcessor()
 
-	err := p(w, req, nil)
+	err := p(w, req, nil, dpkg.Chosen{})
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 }

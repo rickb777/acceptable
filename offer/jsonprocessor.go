@@ -28,12 +28,12 @@ func JSONProcessor(indent ...string) Processor {
 		in = indent[0]
 	}
 
-	return func(w io.Writer, _ *http.Request, data dpkg.Data, constraint ...dpkg.Parameter) (err error) {
+	return func(w io.Writer, _ *http.Request, data dpkg.Data, params dpkg.Chosen) (err error) {
 		p := internal.EnsureNewline(w)
 
 		enc := NewJSONEncoder(p)
 
-		item, more, err := data.Content(constraint...)
+		item, more, err := data.Content(params)
 		if err != nil {
 			return err
 		}
@@ -63,7 +63,7 @@ func JSONProcessor(indent ...string) Processor {
 			p.Write(comma)
 			p.Write(newline)
 
-			item, stillMore, err = data.Content(constraint...)
+			item, stillMore, err = data.Content(params)
 			if err != nil {
 				return err
 			}

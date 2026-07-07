@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/acceptable/headername"
 	offerpkg "github.com/rickb777/acceptable/offer"
@@ -200,7 +199,7 @@ func (c context) findBestMatch(mrs header.MediaRanges, languages header.Preceden
 						if prefLang.Quality > 0 {
 							Debug("%s successfully matched %s, lang=%s to %s\n", c, acceptedCT, prefLang, offer)
 							if offeredLang == "*" && prefLang.Value != "*" {
-								offeredLang = data.Language(prefLang.Value)
+								offeredLang = prefLang.Value
 							}
 							m := offer.BuildMatch(acceptedCT.ContentType, offeredLang)
 							m.Vary = vary

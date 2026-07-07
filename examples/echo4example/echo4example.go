@@ -56,13 +56,13 @@ func main() {
 // Handler
 func hello(c echo.Context) error {
 	// example lazy data source (although this one just returns a fixed value)
-	lazyEn := data.Lazy(func(params ...data.Parameter) (any, error) {
+	lazyEn := data.Lazy(func(params data.Chosen) (any, error) {
 		return examples.EN, nil
 	}).MaxAge(10 * time.Second).ETag("hash123") // replace "hash123" appropriately
 
 	template := c.Request().URL.String()[1:]
 
-	return echo4.RenderBestMatch(c, 200, data.TemplateName(template),
+	return echo4.RenderBestMatch(c, 200, template,
 		offer.JSON("  ").
 			With(lazyEn, "EN").With(examples.FR, "FR").With(examples.ES, "ES").With(examples.RU, "RU"),
 

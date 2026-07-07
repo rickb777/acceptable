@@ -23,7 +23,7 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 		{dpkg.Of("Joe Bloggs"), "Joe Bloggs\n"},
 		{dpkg.Of("Joe Bloggs\n"), "Joe Bloggs\n"},
 		{dpkg.Of([]byte("Joe Bloggs")), "Joe Bloggs\n"},
-		{dpkg.Lazy(func(...dpkg.Parameter) (any, error) { return "Joe Bloggs", nil }), "Joe Bloggs\n"},
+		{dpkg.Lazy(func(dpkg.Chosen) (any, error) { return "Joe Bloggs", nil }), "Joe Bloggs\n"},
 		{dpkg.Sequence(
 			stringSequence(names1)),
 			"Alice\nBob\nCharles\n",
@@ -41,13 +41,13 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
-		err := p(w, req, m.stuff)
+		err := p(w, req, m.stuff, dpkg.Chosen{})
 		expect.String(w.Body.String(), err).ToBe(t, m.expected)
 	}
 }
 
-func stringSequence(names []string) func(params ...dpkg.Parameter) (any, error) {
-	return func(params ...dpkg.Parameter) (any, error) {
+func stringSequence(names []string) func(params dpkg.Chosen) (any, error) {
+	return func(params dpkg.Chosen) (any, error) {
 		if len(names) == 0 {
 			return nil, nil
 		}
@@ -63,7 +63,7 @@ func TestTXTShouldNotReturnError(t *testing.T) {
 
 	p := offer.TXTProcessor()
 
-	err := p(w, req, nil)
+	err := p(w, req, nil, dpkg.Chosen{})
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 }

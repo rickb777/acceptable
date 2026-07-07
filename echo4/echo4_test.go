@@ -33,7 +33,7 @@ func TestBestRequestMatch_should_match_best_offer(t *testing.T) {
 	match := echo4.BestRequestMatch(ec, oa, ob, oc, od, oe)
 
 	// Then ...
-	expect.Value(match.Data.Content(dpkg.Language("en"))).ToBe(t, "hello")
+	expect.Value(match.Data.Content(dpkg.Chosen{Language: "en"})).ToBe(t, "hello")
 	expect.Map(w.Header()).ToHaveLength(t, 0)
 }
 

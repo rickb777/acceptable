@@ -56,13 +56,13 @@ func main() {
 // Handler
 func hello(rw http.ResponseWriter, req *http.Request) {
 	// example lazy data source (although this one just returns a fixed value)
-	lazyEn := data.Lazy(func(params ...data.Parameter) (any, error) {
+	lazyEn := data.Lazy(func(params data.Chosen) (any, error) {
 		return examples.EN, nil
 	}).MaxAge(10 * time.Second).ETag("hash123") // replace "hash123" appropriately
 
 	template := req.URL.String()[1:]
 
-	acceptable.RenderBestMatch(rw, req, 200, data.TemplateName(template),
+	acceptable.RenderBestMatch(rw, req, 200, template,
 		offer.JSON("  ").
 			With(lazyEn, "en").With(examples.FR, "fr").With(examples.ES, "es").With(examples.RU, "ru"),
 

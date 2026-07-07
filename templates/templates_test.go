@@ -29,7 +29,8 @@ func TestProductionInstance_using_files(t *testing.T) {
 	req := &http.Request{}
 	w1 := httptest.NewRecorder()
 
-	err := render(w1, req, data, dpkg.TemplateName("home.html"), dpkg.Language("en"))
+	params := dpkg.Chosen{Template: "home.html", Language: "en"}
+	err := render(w1, req, data, params)
 	expect.Error(err).Not().ToHaveOccurred(t)
 
 	expect.String(w1.Body.String()).ToBe(t, "<html>\n<body>\n<h1>Home.</h1>\n<h4>A Title</h4>\n\n<h3>1</h3>\n<p>Text 1.</p>\n\n</body>\n</html>\n")
@@ -37,7 +38,8 @@ func TestProductionInstance_using_files(t *testing.T) {
 	// request 2
 	w2 := httptest.NewRecorder()
 
-	err = render(w2, req, data, dpkg.TemplateName("foo/bar.html"), dpkg.Language("en"))
+	params = dpkg.Chosen{Template: "foo/bar.html", Language: "en"}
+	err = render(w2, req, data, params)
 	expect.Error(err).Not().ToHaveOccurred(t)
 
 	expect.String(w2.Body.String()).ToBe(t, "<html>\n<body>\n<h1>Bar.</h1>\n<h4>A Title</h4>\n\n<h3>1</h3>\n<p>Text 1.</p>\n\n</body>\n</html>\n")
@@ -63,7 +65,8 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	//t0 := time.Now()
-	err := render(w, req, data, dpkg.TemplateName("foo/home.html"), dpkg.Language("en"))
+	params := dpkg.Chosen{Template: "foo/home.html", Language: "en"}
+	err := render(w, req, data, params)
 	//d1 := time.Now().Sub(t0)
 	expect.Error(err).Not().ToHaveOccurred(t)
 
@@ -74,7 +77,8 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	rec.opened = nil
 	w = httptest.NewRecorder()
 
-	err = render(w, req, data, dpkg.TemplateName("foo/bar/util.js"), dpkg.Language("en"))
+	params = dpkg.Chosen{Template: "foo/bar/util.js", Language: "en"}
+	err = render(w, req, data, params)
 	expect.Error(err).Not().ToHaveOccurred(t)
 
 	expect.String(w.Body.String()).ToBe(t, "func Hello() {}")
@@ -84,7 +88,8 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	w = httptest.NewRecorder()
 
 	//t2 := time.Now()
-	err = render(w, req, data, dpkg.TemplateName("foo/home.html"), dpkg.Language("en"))
+	params = dpkg.Chosen{Template: "foo/home.html", Language: "en"}
+	err = render(w, req, data, params)
 	//d2 := time.Now().Sub(t2)
 	expect.Error(err).Not().ToHaveOccurred(t)
 
@@ -96,7 +101,8 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	rec.opened = nil
 	w = httptest.NewRecorder()
 
-	err = render(w, req, data, dpkg.TemplateName("foo/bar/baz.html"), dpkg.Language("en"))
+	params = dpkg.Chosen{Template: "foo/bar/baz.html", Language: "en"}
+	err = render(w, req, data, params)
 	expect.Error(err).Not().ToHaveOccurred(t)
 
 	expect.String(w.Body.String()).ToBe(t, "<html>Hello-Baz</html>")
@@ -107,7 +113,8 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	w = httptest.NewRecorder()
 	afero.WriteFile(rec.fs, "synthetic/foo/bar/baz.html", []byte("<html>{{.Title}}-Updated</html>"), 0644)
 
-	err = render(w, req, data, dpkg.TemplateName("foo/bar/baz.html"), dpkg.Language("en"))
+	params = dpkg.Chosen{Template: "foo/bar/baz.html", Language: "en"}
+	err = render(w, req, data, params)
 	expect.Error(err).Not().ToHaveOccurred(t)
 
 	expect.String(w.Body.String()).ToBe(t, "<html>Hello-Updated</html>")
@@ -118,7 +125,8 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	w = httptest.NewRecorder()
 	afero.WriteFile(rec.fs, "synthetic/foo/bar/new.html", []byte("<html>{{.Title}}-New</html>"), 0644)
 
-	err = render(w, req, data, dpkg.TemplateName("foo/bar/new.html"), dpkg.Language("en"))
+	params = dpkg.Chosen{Template: "foo/bar/new.html", Language: "en"}
+	err = render(w, req, data, params)
 	expect.Error(err).Not().ToHaveOccurred(t)
 
 	expect.String(w.Body.String()).ToBe(t, "<html>Hello-New</html>")
@@ -129,7 +137,8 @@ func TestDebugInstance_using_fakes(t *testing.T) {
 	w = httptest.NewRecorder()
 	rec.fs.Remove("synthetic/foo/bar/baz.html")
 
-	err = render(w, req, data, dpkg.TemplateName("foo/bar/new.html"), dpkg.Language("en"))
+	params = dpkg.Chosen{Template: "foo/bar/new.html", Language: "en"}
+	err = render(w, req, data, params)
 	expect.Error(err).Not().ToHaveOccurred(t)
 
 	expect.String(w.Body.String()).ToBe(t, "<html>Hello-New</html>")

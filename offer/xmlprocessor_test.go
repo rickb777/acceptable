@@ -26,13 +26,13 @@ func TestXMLShouldWriteLazyResponseBody(t *testing.T) {
 		ContentType: header.ContentType{MediaType: "application/json"},
 		Language:    "en",
 		Charset:     "utf-8",
-		Data:        dpkg.Lazy(func(...dpkg.Parameter) (any, error) { return model, nil }),
+		Data:        dpkg.Lazy(func(dpkg.Chosen) (any, error) { return model, nil }),
 	}
 
 	p := offer.XMLProcessor("xml")
 
 	w := match.ApplyHeaders(rw)
-	err := p(w, req, match.Data, dpkg.TemplateName("template"), match.Language)
+	err := p(w, req, match.Data, dpkg.Chosen{Template: "template", Language: match.Language})
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.String(rw.Header().Get(headername.ContentType)).ToBe(t, "application/json")
@@ -60,7 +60,7 @@ func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
 		ContentType: header.ContentType{MediaType: "application/json"},
 		Language:    "en",
 		Charset:     "utf-8",
-		Data: dpkg.Sequence(func(...dpkg.Parameter) (any, error) {
+		Data: dpkg.Sequence(func(dpkg.Chosen) (any, error) {
 			if len(model) == 0 {
 				return nil, nil
 			}
@@ -73,7 +73,7 @@ func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
 	p := offer.XMLProcessor("xml", "  ")
 
 	w := match.ApplyHeaders(rw)
-	err := p(w, req, match.Data, dpkg.TemplateName("template"), match.Language)
+	err := p(w, req, match.Data, dpkg.Chosen{Template: "template", Language: match.Language})
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.String(rw.Header().Get(headername.ContentType)).ToBe(t, "application/json")
@@ -110,7 +110,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 		rw := httptest.NewRecorder()
 
 		w := match.ApplyHeaders(rw)
-		err := p(w, req, match.Data, dpkg.TemplateName("template"), match.Language)
+		err := p(w, req, match.Data, dpkg.Chosen{Template: "template", Language: match.Language})
 
 		expect.Error(err).Not().ToHaveOccurred(t)
 		expect.String(rw.Header().Get(headername.ContentType)).I(enc).ToBe(t, "application/json")
@@ -142,7 +142,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 		rw := httptest.NewRecorder()
 
 		w := match.ApplyHeaders(rw)
-		err := p(w, req, match.Data, dpkg.TemplateName("template"), match.Language)
+		err := p(w, req, match.Data, dpkg.Chosen{Template: "template", Language: match.Language})
 
 		expect.Error(err).Not().ToHaveOccurred(t)
 		expect.String(rw.Header().Get(headername.ContentType)).I(enc).ToBe(t, "application/json")
@@ -164,7 +164,7 @@ func TestXMLShouldReturnError(t *testing.T) {
 
 	p := offer.XMLProcessor("xml", "  ")
 
-	err := p(w, req, dpkg.Of(model), dpkg.TemplateName("template"), dpkg.Language("en"))
+	err := p(w, req, dpkg.Of(model), dpkg.Chosen{Template: "template", Language: "en"})
 
 	expect.Error(err).ToHaveOccurred(t)
 	expect.String(err.Error()).ToContain(t, "oops")

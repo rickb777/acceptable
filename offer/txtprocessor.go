@@ -35,14 +35,14 @@ var textPlainOffer = Of(TXTProcessor(), contenttype.TextPlain)
 // Because it handles io.Reader and io.WriterTo, TXTProcessor can be used to stream large responses (without any
 // further encoding).
 func TXTProcessor() Processor {
-	return func(w io.Writer, _ *http.Request, data dpkg.Data, constraint ...dpkg.Parameter) (err error) {
+	return func(w io.Writer, _ *http.Request, data dpkg.Data, params dpkg.Chosen) (err error) {
 		p := internal.EnsureNewline(w)
 
 		more := data != nil
 
 		for more {
 			var d any
-			d, more, err = data.Content(constraint...)
+			d, more, err = data.Content(params)
 			if err != nil {
 				return err
 			}

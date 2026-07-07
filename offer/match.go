@@ -16,7 +16,7 @@ import (
 // Match holds the best-matched offer after content negotiation and is used for response rendering.
 type Match struct {
 	header.ContentType
-	Language           dpkg.Language
+	Language           string
 	Charset            string
 	Vary               []string
 	Data               dpkg.Data
@@ -56,7 +56,7 @@ func (m Match) ApplyHeaders(rw http.ResponseWriter) io.Writer {
 	}
 
 	if m.IsTextual() && m.Language != "" && m.Language != "*" {
-		rw.Header().Set(headername.ContentLanguage, m.Language.String())
+		rw.Header().Set(headername.ContentLanguage, m.Language)
 	}
 
 	if len(m.Vary) > 0 {
