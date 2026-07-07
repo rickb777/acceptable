@@ -10,11 +10,11 @@ import (
 	dpkg "github.com/rickb777/acceptable/data"
 )
 
-// ImageJPEGPNG is an Offer for image/jpeg content using BinaryProcessor.
-func ImageJPEG() Offer { return Of(BinaryProcessor(), contenttype.ImageJPEG) }
+// ImageJPEG is an Offer for image/jpeg content using BinaryProcessor.
+func ImageJPEG() Offer { return Of(BinaryProcessor(0), contenttype.ImageJPEG) }
 
 // ImagePNG is an Offer for image/png content using BinaryProcessor.
-func ImagePNG() Offer { return Of(BinaryProcessor(), contenttype.ImagePNG) }
+func ImagePNG() Offer { return Of(BinaryProcessor(0), contenttype.ImagePNG) }
 
 // BinaryProcessor creates an output processor that outputs binary data in a form suitable for image/* and similar responses.
 // Model values should be one of the following:
@@ -26,7 +26,13 @@ func ImagePNG() Offer { return Of(BinaryProcessor(), contenttype.ImagePNG) }
 //
 // Because it handles io.Reader and io.WriterTo, BinaryProcessor can be used to stream large responses (without any
 // further encoding).
-func BinaryProcessor() Processor {
+//
+// GZIP compression-on-demand is enabled when gzipLevel is non-zero.
+func BinaryProcessor(gzipLevel int) Processor {
+	return GZIPProcessor(gzipLevel, binaryProcessor())
+}
+
+func binaryProcessor() Processor {
 	return func(w io.Writer, _ *http.Request, data dpkg.Data, chosen dpkg.Chosen) (err error) {
 		more := data != nil
 

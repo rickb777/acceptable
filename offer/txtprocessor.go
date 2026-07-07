@@ -12,9 +12,10 @@ import (
 )
 
 // TextPlain returns an Offer for text/plain content using TXTProcessor.
+// The response will use gzip compression (see [GZIPLevel]) when the client requests it.
 func TextPlain() Offer { return textPlainOffer }
 
-var textPlainOffer = Of(TXTProcessor(), contenttype.TextPlain)
+var textPlainOffer = Of(TXTProcessor(GZIPLevel), contenttype.TextPlain)
 
 // TXTProcessor creates an output processor that serialises strings in a form suitable for text/* responses (especially
 // text/plain and text/html). It is also useful for JSON, XML etc that is already encoded.
@@ -34,7 +35,11 @@ var textPlainOffer = Of(TXTProcessor(), contenttype.TextPlain)
 //
 // Because it handles io.Reader and io.WriterTo, TXTProcessor can be used to stream large responses (without any
 // further encoding).
-func TXTProcessor() Processor {
+func TXTProcessor(gzipLevel int) Processor {
+	return GZIPProcessor(gzipLevel, txtProcessor())
+}
+
+func txtProcessor() Processor {
 	return func(w io.Writer, _ *http.Request, data dpkg.Data, chosen dpkg.Chosen) (err error) {
 		p := internal.EnsureNewline(w)
 

@@ -29,7 +29,7 @@ func TestXMLShouldWriteLazyResponseBody(t *testing.T) {
 		Data:        dpkg.Lazy(func(dpkg.Chosen) (any, error) { return model, nil }),
 	}
 
-	p := offer.XMLProcessor("xml")
+	p := offer.XMLProcessor(0, "xml")
 
 	w := match.ApplyHeaders(rw)
 	err := p(w, req, match.Data, dpkg.Chosen{Template: "template", Language: match.Language})
@@ -70,7 +70,7 @@ func TestXMLShouldWriteSequenceResponseBody(t *testing.T) {
 		}),
 	}
 
-	p := offer.XMLProcessor("xml", "  ")
+	p := offer.XMLProcessor(0, "xml", "  ")
 
 	w := match.ApplyHeaders(rw)
 	err := p(w, req, match.Data, dpkg.Chosen{Template: "template", Language: match.Language})
@@ -106,7 +106,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16be(t *testing.T) {
 			Data:        dpkg.Of(model),
 		}
 
-		p := offer.XMLProcessor("xml", "  ")
+		p := offer.XMLProcessor(0, "xml", "  ")
 		rw := httptest.NewRecorder()
 
 		w := match.ApplyHeaders(rw)
@@ -138,7 +138,7 @@ func TestXMlShouldWriteResponseBodyWithIndentation_utf_16le(t *testing.T) {
 			Data:        dpkg.Of(model),
 		}
 
-		p := offer.XMLProcessor("xml", "  ")
+		p := offer.XMLProcessor(0, "xml", "  ")
 		rw := httptest.NewRecorder()
 
 		w := match.ApplyHeaders(rw)
@@ -162,7 +162,7 @@ func TestXMLShouldReturnError(t *testing.T) {
 
 	model := &ErrXMLUser{Msg: "oops"}
 
-	p := offer.XMLProcessor("xml", "  ")
+	p := offer.XMLProcessor(0, "xml", "  ")
 
 	err := p(w, req, dpkg.Of(model), dpkg.Chosen{Template: "template", Language: "en"})
 

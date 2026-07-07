@@ -11,8 +11,9 @@ import (
 )
 
 // JSON constructs a JSON Offer easily.
+// The response will use gzip compression (see [GZIPLevel]) when the client requests it.
 func JSON(indent ...string) Offer {
-	return Of(JSONProcessor(indent...), contenttype.ApplicationJSON)
+	return Of(JSONProcessor(GZIPLevel, indent...), contenttype.ApplicationJSON)
 }
 
 // JSONProcessor creates a new processor for JSON with a specified indentation. This converts
@@ -22,7 +23,11 @@ func JSON(indent ...string) Offer {
 // and ending with "]", including commas where necessary.
 //
 // The optional indent argument is a string usually of zero or more space characters.
-func JSONProcessor(indent ...string) Processor {
+func JSONProcessor(gzipLevel int, indent ...string) Processor {
+	return GZIPProcessor(gzipLevel, jsonProcessor(indent...))
+}
+
+func jsonProcessor(indent ...string) Processor {
 	in := ""
 	if len(indent) > 0 {
 		in = indent[0]

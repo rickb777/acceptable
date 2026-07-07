@@ -12,8 +12,9 @@ import (
 )
 
 // CSV constructs a CSV Offer easily.
+// The response will use gzip compression (see [GZIPLevel]) when the client requests it.
 func CSV(comma ...rune) Offer {
-	return Of(CSVProcessor(comma...), contenttype.TextCSV)
+	return Of(CSVProcessor(GZIPLevel, comma...), contenttype.TextCSV)
 }
 
 // CSVProcessor creates an output processor that serialises a dataModel in CSV form. With no arguments, the default
@@ -37,8 +38,11 @@ func CSV(comma ...rune) Offer {
 // * struct for which all the fields are exported and of simple types (as above), written as a single row
 //
 // * []struct for some struct in which all the fields are exported and of simple types (as above), written as many rows
-func CSVProcessor(comma ...rune) Processor {
+func CSVProcessor(gzipLevel int, comma ...rune) Processor {
+	return GZIPProcessor(gzipLevel, csvProcessor(comma...))
+}
 
+func csvProcessor(comma ...rune) Processor {
 	in := ','
 	if len(comma) > 0 {
 		in = comma[0]

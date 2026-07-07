@@ -17,11 +17,11 @@ import (
 
 func TestBestRequestMatch_should_match_best_offer(t *testing.T) {
 	// Given ...
-	oa := offer.Of(offer.TXTProcessor(), TextPlain).With("foo", "en")
-	ob := offer.Of(offer.CSVProcessor(), TextCSV).With("bar", "en")
-	oc := offer.Of(offer.JSONProcessor(), ApplicationJSON).With("hello", "en")
-	od := offer.Of(offer.XMLProcessor("x"), ApplicationXML).With("zzz", "en")
-	oe := offer.Of(offer.BinaryProcessor(), ApplicationBinary).With("10101", "en")
+	oa := offer.Of(offer.TXTProcessor(0), TextPlain).With("foo", "en")
+	ob := offer.Of(offer.CSVProcessor(0), TextCSV).With("bar", "en")
+	oc := offer.Of(offer.JSONProcessor(0), ApplicationJSON).With("hello", "en")
+	od := offer.Of(offer.XMLProcessor(0, "x"), ApplicationXML).With("zzz", "en")
+	oe := offer.Of(offer.BinaryProcessor(0), ApplicationBinary).With("10101", "en")
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -39,11 +39,11 @@ func TestBestRequestMatch_should_match_best_offer(t *testing.T) {
 
 func TestRenderBestMatch_should_use_default_processor_if_no_accept_header(t *testing.T) {
 	// Given ...
-	oa := offer.Of(offer.TXTProcessor(), "text/test").With("hello world", "*")
-	ob := offer.Of(offer.TXTProcessor(), TextPlain).With("hello world", "*")
-	oc := offer.Of(offer.CSVProcessor(), TextCSV).With("hello,world", "*")
-	od := offer.Of(offer.XMLProcessor("x"), ApplicationXML)
-	oe := offer.Of(offer.BinaryProcessor(), ApplicationBinary)
+	oa := offer.Of(offer.TXTProcessor(0), "text/test").With("hello world", "*")
+	ob := offer.Of(offer.TXTProcessor(0), TextPlain).With("hello world", "*")
+	oc := offer.Of(offer.CSVProcessor(0), TextCSV).With("hello,world", "*")
+	od := offer.Of(offer.XMLProcessor(0, "x"), ApplicationXML)
+	oe := offer.Of(offer.BinaryProcessor(0), ApplicationBinary)
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)

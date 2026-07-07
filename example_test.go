@@ -8,7 +8,6 @@ import (
 	"sort"
 
 	"github.com/rickb777/acceptable"
-	"github.com/rickb777/acceptable/contenttype"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/acceptable/offer"
@@ -65,7 +64,7 @@ func Example() {
 			offer.JSON("  ").With(en, "en").With(fr, "fr").With(es, "es"),
 			offer.XML("xml", "  ").With(en, "en").With(fr, "fr").With(es, "es"),
 			offer.CSV().With(en, "en").With(fr, "fr").With(es, "es"),
-			offer.Of(offer.TXTProcessor(), contenttype.TextPlain).With(en, "en").With(fr, "fr").With(es, "es"),
+			offer.TextPlain().With(en, "en").With(fr, "fr").With(es, "es"),
 			templates.TextHtmlOffer("examples/templates/en", ".html", nil).With(en, "en").With(fr, "fr").With(es, "es"),
 			templates.ApplicationXhtmlOffer("examples/templates/en", ".html", nil).With(en, "en").With(fr, "fr").With(es, "es"))
 

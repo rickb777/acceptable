@@ -30,7 +30,7 @@ func TestJSONShouldWriteResponseBody_lazy_indented(t *testing.T) {
 		Data:        dpkg.Lazy(func(dpkg.Chosen) (any, error) { return model, nil }),
 	}
 
-	p := offer.JSONProcessor("  ")
+	p := offer.JSONProcessor(0, "  ")
 
 	w := match.ApplyHeaders(rw)
 	err := p(w, req, match.Data, dpkg.Chosen{Template: "template", Language: match.Language})
@@ -61,7 +61,7 @@ func TestJSONShouldWriteResponseBody_sequence(t *testing.T) {
 		}),
 	}
 
-	p := offer.JSONProcessor("  ")
+	p := offer.JSONProcessor(0, "  ")
 
 	w := match.ApplyHeaders(rw)
 	err := p(w, req, match.Data, dpkg.Chosen{Template: "template", Language: match.Language})
@@ -93,7 +93,7 @@ func TestJSONShouldWriteResponseBodyIndented_utf16le(t *testing.T) {
 			Data:        dpkg.Of(model),
 		}
 
-		p := offer.JSONProcessor("")
+		p := offer.JSONProcessor(0, "")
 		rw := httptest.NewRecorder()
 		w := match.ApplyHeaders(rw)
 
@@ -114,7 +114,7 @@ func TestJSONShouldReturnError(t *testing.T) {
 
 	model := &User{"Joe Bloggs"}
 
-	p := offer.JSONProcessor()
+	p := offer.JSONProcessor(0)
 
 	err := p(w, req, dpkg.Of(model), dpkg.Chosen{Template: "template", Language: "en"})
 

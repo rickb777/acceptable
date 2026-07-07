@@ -34,7 +34,7 @@ func TestCSVShouldWriteResponseBody(t *testing.T) {
 	}
 
 	req := &http.Request{}
-	p := offer.CSVProcessor()
+	p := offer.CSVProcessor(0)
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
@@ -62,7 +62,7 @@ func TestCSVShouldWriteResponseBodyWithTabs(t *testing.T) {
 	}
 
 	req := &http.Request{}
-	p := offer.CSVProcessor('\t')
+	p := offer.CSVProcessor(0, '\t')
 
 	for _, m := range models {
 		w := httptest.NewRecorder()

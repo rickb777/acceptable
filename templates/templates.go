@@ -20,6 +20,13 @@ var Fs = afero.NewOsFs()
 // (false) for production.
 var ReloadOnTheFly = false
 
+// GZIPLevel sets the compression strength when gzip is applied to a response entity.
+// This is in the range 1 to 9 inclusive (see gzip.NewWriterLevel). High values should
+// be avoided because the cpu cost is high but the benefit may not be sufficient.
+//
+// This controls template responses only.
+var GZIPLevel = offer.MidCompression
+
 // Templates finds all the templates in the directory dir and its subdirectories
 // that have names ending with the given suffix (usually ".html").
 //
@@ -28,7 +35,13 @@ var ReloadOnTheFly = false
 // The function map (see [template.FuncMap]) can be nil if not required.
 //
 // A processor is returned that handles requests using the templates available.
+//
+// The response will use gzip compression (see [GZIPLevel]) when the client requests it.
 func Templates(dir, suffix string, funcMap template.FuncMap) offer.Processor {
+	return offer.GZIPProcessor(GZIPLevel, doTemplates(dir, suffix, funcMap))
+}
+
+func doTemplates(dir, suffix string, funcMap template.FuncMap) offer.Processor {
 	if funcMap == nil {
 		funcMap = template.FuncMap{}
 	}

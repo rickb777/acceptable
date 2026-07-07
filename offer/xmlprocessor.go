@@ -12,8 +12,9 @@ import (
 )
 
 // XML constructs an XML Offer easily.
+// The response will use gzip compression (see [GZIPLevel]) when the client requests it.
 func XML(root string, indent ...string) Offer {
-	return Of(XMLProcessor(root, indent...), contenttype.ApplicationXML)
+	return Of(XMLProcessor(GZIPLevel, root, indent...), contenttype.ApplicationXML)
 }
 
 // XMLProcessor creates a new processor for XML with root element and optional indentation. This
@@ -23,7 +24,11 @@ func XML(root string, indent ...string) Offer {
 // can be a name such as "root" or an XML element such as "<html lang='en'>".
 //
 // The optional indent argument is a string usually of zero or more space characters.
-func XMLProcessor(root string, indent ...string) Processor {
+func XMLProcessor(gzipLevel int, root string, indent ...string) Processor {
+	return GZIPProcessor(gzipLevel, xmlProcessor(root, indent...))
+}
+
+func xmlProcessor(root string, indent ...string) Processor {
 	if root == "" {
 		root = "<xml>"
 	}

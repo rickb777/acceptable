@@ -7,7 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rickb777/acceptable"
-	"github.com/rickb777/acceptable/contenttype"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/echo4"
 	"github.com/rickb777/acceptable/examples"
@@ -69,7 +68,7 @@ func hello(c echo.Context) error {
 		offer.XML("xml", "  ").
 			With(examples.EN, "EN").With(examples.FR, "FR").With(examples.ES, "ES").With(examples.RU, "RU"),
 
-		offer.Of(offer.TXTProcessor(), contenttype.TextPlain).
+		offer.TextPlain().
 			With(examples.EN, "EN").With(examples.FR, "FR").With(examples.ES, "ES").With(examples.RU, "RU"),
 
 		templates.TextHtmlOffer("examples/templates/EN", ".html", nil).

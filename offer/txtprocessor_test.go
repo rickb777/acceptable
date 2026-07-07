@@ -37,7 +37,7 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 		{dpkg.Of(nil), ""},
 	}
 
-	p := offer.TXTProcessor()
+	p := offer.TXTProcessor(0)
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
@@ -61,7 +61,7 @@ func TestTXTShouldNotReturnError(t *testing.T) {
 	req := &http.Request{}
 	w := httptest.NewRecorder()
 
-	p := offer.TXTProcessor()
+	p := offer.TXTProcessor(0)
 
 	err := p(w, req, nil, dpkg.Chosen{})
 

@@ -16,7 +16,7 @@ import (
 
 func Test_should_return_wildcard_data_for_any_language(t *testing.T) {
 	// Given ...
-	a := offer.Of(offer.TXTProcessor(), "text/test").With(someSliceData, "*")
+	a := offer.Of(offer.TXTProcessor(0), "text/test").With(someSliceData, "*")
 
 	for _, lang := range []string{"en", "de"} {
 		req, _ := http.NewRequest("GET", "/", nil)

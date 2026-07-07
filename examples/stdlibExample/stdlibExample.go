@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/rickb777/acceptable"
-	"github.com/rickb777/acceptable/contenttype"
 	"github.com/rickb777/acceptable/data"
 	"github.com/rickb777/acceptable/examples"
 	"github.com/rickb777/acceptable/offer"
@@ -86,7 +85,7 @@ func hello(rw http.ResponseWriter, req *http.Request) {
 		offer.XML("xml", "  ").
 			With(examples.EN, "en").With(examples.FR, "fr").With(examples.ES, "es").With(examples.RU, "ru"),
 
-		offer.Of(offer.TXTProcessor(), contenttype.TextPlain).
+		offer.TextPlain().
 			With(examples.EN, "en").With(examples.FR, "fr").With(examples.ES, "es").With(examples.RU, "ru"),
 
 		templates.TextHtmlOffer("examples/templates/en", ".html", nil).

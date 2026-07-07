@@ -91,7 +91,7 @@ func TestOffersAllEmpty(t *testing.T) {
 }
 
 func TestBuildMatch(t *testing.T) {
-	txt := TXTProcessor()
+	txt := TXTProcessor(0)
 	cases := []struct {
 		o        Offer
 		accepted header.ContentType

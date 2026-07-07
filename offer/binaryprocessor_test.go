@@ -39,7 +39,7 @@ func TestBinaryShouldWriteResponseBody(t *testing.T) {
 	}
 
 	req := &http.Request{}
-	p := offer.BinaryProcessor()
+	p := offer.BinaryProcessor(0)
 
 	for _, m := range models {
 		w := httptest.NewRecorder()
@@ -52,7 +52,7 @@ func TestBinaryShouldNotReturnError(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	req := &http.Request{}
-	p := offer.BinaryProcessor()
+	p := offer.BinaryProcessor(0)
 
 	err := p(w, req, nil, dpkg.Chosen{})
 

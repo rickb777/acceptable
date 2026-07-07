@@ -28,7 +28,7 @@ func TestApplyHeaders(t *testing.T) {
 				Charset:     "windows-1252",
 				Data:        dpkg.Of("data"),
 				Vary:        []string{Accept, AcceptLanguage},
-				Render:      offer.TXTProcessor(),
+				Render:      offer.TXTProcessor(0),
 			},
 			hdrs: map[string]string{
 				ContentType:     "text/test;charset=windows-1252",
