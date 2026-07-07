@@ -15,14 +15,14 @@ type Chosen struct {
 }
 
 // A Supplier supplies data.
-type Supplier func(params Chosen) (any, error)
+type Supplier func(chosen Chosen) (any, error)
 
 // Data provides a source for response content. It is optimised for lazy evaluation, avoiding
 // wasted processing as much as possible.
 type Data interface {
 	// Meta returns the metadata that will be used to set response headers automatically.
 	// The headers are ETag and Last-Modified.
-	Meta(params Chosen) (meta *Metadata, err error)
+	Meta(chosen Chosen) (meta *Metadata, err error)
 
 	// Content returns the data as a value that can be processed by encoders such as "encoding/json"
 	// The returned values are
@@ -31,7 +31,7 @@ type Data interface {
 	//   - an error if one occurs.
 	// For chunked data, this method will be called repeatedly until the boolean yields false
 	// or an error arises.
-	Content(params Chosen) (any, bool, error)
+	Content(chosen Chosen) (any, bool, error)
 
 	// Headers returns response headers relating to the data (optional)
 	Headers() map[string]string
@@ -80,53 +80,53 @@ type Value struct {
 	supplier     Supplier
 	chunked      bool
 	next         any // used for sequence behaviour
-	etagFn       func(params Chosen) (string, error)
-	lastModFn    func(params Chosen) (time.Time, error)
+	etagFn       func(chosen Chosen) (string, error)
+	lastModFn    func(chosen Chosen) (time.Time, error)
 	etag         string
 	lastModified time.Time
 	hdrs         map[string]string
 }
 
-func (v *Value) Meta(params Chosen) (meta *Metadata, err error) {
+func (v *Value) Meta(chosen Chosen) (meta *Metadata, err error) {
 	meta = &Metadata{
 		Hash:         v.etag,
 		LastModified: v.lastModified,
 	}
 
 	if v.etagFn != nil {
-		meta.Hash, err = v.etagFn(params)
+		meta.Hash, err = v.etagFn(chosen)
 		if err != nil {
 			return meta, err
 		}
 	}
 
 	if v.lastModFn != nil {
-		meta.LastModified, err = v.lastModFn(params)
+		meta.LastModified, err = v.lastModFn(chosen)
 	}
 
 	return meta, err
 }
 
-func (v *Value) Content(params Chosen) (result any, more bool, err error) {
+func (v *Value) Content(chosen Chosen) (result any, more bool, err error) {
 	if v.chunked {
-		return v.chunkedContent(params)
+		return v.chunkedContent(chosen)
 	}
 
-	r, err := v.supplier(params)
+	r, err := v.supplier(chosen)
 	return r, false, err
 }
 
-func (v *Value) chunkedContent(params Chosen) (result any, more bool, err error) {
+func (v *Value) chunkedContent(chosen Chosen) (result any, more bool, err error) {
 	if v.next != nil {
 		result = v.next
-		v.next, err = v.supplier(params)
+		v.next, err = v.supplier(chosen)
 		return result, v.next != nil, err
 	}
 
-	result, err = v.supplier(params)
+	result, err = v.supplier(chosen)
 	if result != nil {
 		// lookahead
-		v.next, err = v.supplier(params)
+		v.next, err = v.supplier(chosen)
 	}
 
 	return result, result != nil && v.next != nil, err
@@ -169,14 +169,14 @@ func (v Value) LastModified(at time.Time) *Value {
 
 // ETagUsing lazily sets the entity tag for the content. This allows for conditional requests,
 // possibly avoiding some network traffic.
-func (v Value) ETagUsing(fn func(params Chosen) (string, error)) *Value {
+func (v Value) ETagUsing(fn func(chosen Chosen) (string, error)) *Value {
 	v.etagFn = fn
 	return &v
 }
 
 // LastModifiedUsing lazily sets the time at which the content was last modified. This allows
 // for conditional requests, possibly avoiding network traffic, although ETag takes precedence.
-func (v Value) LastModifiedUsing(fn func(params Chosen) (time.Time, error)) *Value {
+func (v Value) LastModifiedUsing(fn func(chosen Chosen) (time.Time, error)) *Value {
 	v.lastModFn = fn
 	return &v
 }
@@ -204,8 +204,8 @@ func (v Value) NoCache() *Value {
 // response processor does not need to do anything further.
 //
 // Data d must not be nil.
-func ConditionalRequest(rw http.ResponseWriter, req *http.Request, d Data, params Chosen) (sendContent bool, err error) {
-	meta, err := d.Meta(params)
+func ConditionalRequest(rw http.ResponseWriter, req *http.Request, d Data, chosen Chosen) (sendContent bool, err error) {
+	meta, err := d.Meta(chosen)
 	if err != nil {
 		return false, err
 	}

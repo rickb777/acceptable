@@ -31,3 +31,6 @@ curl -i -H 'Accept: application/xhtml+xml' -H 'Accept-Language: ru' http://local
 echo
 
 # curl -i -H 'Accept: application/xhtml+xml' -H 'Accept-Language: ru' http://localhost:8080/home.html
+
+curl -i -X POST http://localhost:8080/stop
+

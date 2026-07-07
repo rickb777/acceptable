@@ -16,35 +16,35 @@ import (
 var DefaultPage = "_index.html"
 
 func productionProcessor(root *tmplpkg.Template) offer.Processor {
-	return func(w io.Writer, req *http.Request, data dpkg.Data, params dpkg.Chosen) (err error) {
+	return func(w io.Writer, req *http.Request, data dpkg.Data, chosen dpkg.Chosen) (err error) {
 		p := internal.EnsureNewline(w)
 
-		d, _, err := data.Content(params)
+		d, _, err := data.Content(chosen)
 		if err != nil {
 			return err
 		}
 
-		if params.Template == "" {
-			params.Template = DefaultPage
+		if chosen.Template == "" {
+			chosen.Template = DefaultPage
 		}
-		return root.ExecuteTemplate(p, params.Template, d)
+		return root.ExecuteTemplate(p, chosen.Template, d)
 	}
 }
 
 //-------------------------------------------------------------------------------------------------
 
 func debugProcessor(root *tmplpkg.Template, rootDir, suffix string, files map[string]time.Time, funcMap tmplpkg.FuncMap) offer.Processor {
-	return func(w io.Writer, req *http.Request, data dpkg.Data, params dpkg.Chosen) (err error) {
-		if params.Template == "" {
-			params.Template = DefaultPage
+	return func(w io.Writer, req *http.Request, data dpkg.Data, chosen dpkg.Chosen) (err error) {
+		if chosen.Template == "" {
+			chosen.Template = DefaultPage
 		}
 
-		path := rootDir + "/" + params.Template
+		path := rootDir + "/" + chosen.Template
 		if _, exists := files[path]; !exists {
 			files = findTemplates(rootDir, suffix)
 		}
 
-		d, _, err := data.Content(params)
+		d, _, err := data.Content(chosen)
 		if err != nil {
 			return err
 		}
@@ -52,7 +52,7 @@ func debugProcessor(root *tmplpkg.Template, rootDir, suffix string, files map[st
 		p := internal.EnsureNewline(w)
 		root = getCurrentTemplateTree(root, rootDir, suffix, files, funcMap)
 
-		return root.ExecuteTemplate(p, params.Template, d)
+		return root.ExecuteTemplate(p, chosen.Template, d)
 	}
 }
 

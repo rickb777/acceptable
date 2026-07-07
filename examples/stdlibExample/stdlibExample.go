@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -39,30 +40,41 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// Routes
-	mux.HandleFunc("GET /{path...}", hello)
-
 	svr := http.Server{
 		Addr:    ":8080",
 		Handler: mux,
 	}
 
+	// The main route
+	mux.HandleFunc("GET /{path...}", hello)
+
+	// a useful way to stop the demo automatically
+	mux.HandleFunc("POST /stop",
+		func(rw http.ResponseWriter, req *http.Request) {
+			rw.WriteHeader(http.StatusNoContent)
+			if f, ok := rw.(http.Flusher); ok {
+				f.Flush()
+			}
+			time.Sleep(time.Millisecond)
+			svr.Close()
+		})
+
 	err := svr.ListenAndServe()
 	if err != nil {
-		panic(err)
+		log.Println(err.Error())
 	}
 }
 
-// Handler
 func hello(rw http.ResponseWriter, req *http.Request) {
 	// example lazy data source (although this one just returns a fixed value)
-	lazyEn := data.Lazy(func(params data.Chosen) (any, error) {
+	lazyEn := data.Lazy(func(chosen data.Chosen) (any, error) {
 		return examples.EN, nil
 	}).MaxAge(10 * time.Second).ETag("hash123") // replace "hash123" appropriately
 
 	template := req.URL.String()[1:]
 
-	acceptable.RenderBestMatch(rw, req, 200, template,
+	c := acceptable.RespondWith{Template: template}
+	err := c.RenderBestMatch(rw, req,
 		offer.JSON("  ").
 			With(lazyEn, "en").With(examples.FR, "fr").With(examples.ES, "es").With(examples.RU, "ru"),
 
@@ -78,4 +90,7 @@ func hello(rw http.ResponseWriter, req *http.Request) {
 		templates.ApplicationXhtmlOffer("examples/templates/en", ".html", nil).
 			With(examples.EN, "en").With(examples.FR, "fr").With(examples.ES, "es").With(examples.RU, "ru"),
 	)
+	if err != nil {
+		log.Println(err.Error())
+	}
 }

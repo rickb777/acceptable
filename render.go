@@ -17,7 +17,21 @@ var NoMatchAccepted = func(rw http.ResponseWriter, _ *http.Request) {
 	rw.Header().Set(headername.ContentType, contenttype.TextPlain+";"+contenttype.CharsetUTF8)
 	rw.WriteHeader(http.StatusNotAcceptable)
 	defaultNotAcceptableMessage := http.StatusText(http.StatusNotAcceptable) + "\n"
-	rw.Write([]byte(defaultNotAcceptableMessage))
+	_, _ = rw.Write([]byte(defaultNotAcceptableMessage))
+}
+
+// RespondWith configures the response status code and/or template name, as required.
+type RespondWith struct {
+	// StatusCode is used for the response, if non-zero (0 implies 200-OK)
+	StatusCode int
+	// Template name is only required when using template renderers
+	Template string
+}
+
+// RenderBestMatch calls [RespondWith.RenderBestMatch] using default status code (200-OK)
+// and undefined template name.
+func RenderBestMatch(rw http.ResponseWriter, req *http.Request, available ...offerpkg.Offer) error {
+	return RespondWith{}.RenderBestMatch(rw, req, available...)
 }
 
 // RenderBestMatch uses BestRequestMatch to find the best matching offer for the request,
@@ -31,7 +45,7 @@ var NoMatchAccepted = func(rw http.ResponseWriter, _ *http.Request) {
 //
 // If no match is found, a fallback match is sought. If a fallback offer is matched, its
 // Handle406As status code will be used, and its data is rendered using its processor; no
-// further processing follows. Otherwise NoMatchAccepted is called and processing ends.
+// further processing follows. Otherwise, NoMatchAccepted is called and processing ends.
 //
 // If a match is found, the following happens.
 //
@@ -43,7 +57,7 @@ var NoMatchAccepted = func(rw http.ResponseWriter, _ *http.Request) {
 //
 // Finally, if statusCode is non-zero it is applied to the response (200-OK otherwise).
 // Then the matched offer's data is rendered using the offer's processor.
-func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, template string, available ...offerpkg.Offer) error {
+func (ctx RespondWith) RenderBestMatch(rw http.ResponseWriter, req *http.Request, available ...offerpkg.Offer) error {
 	if offerpkg.Offers(available).AllEmpty() {
 		rw.WriteHeader(http.StatusNoContent)
 		return nil
@@ -62,7 +76,7 @@ func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, 
 
 	w := best.ApplyHeaders(rw)
 
-	chosen := dpkg.Chosen{Template: template, Language: best.Language}
+	chosen := dpkg.Chosen{Template: ctx.Template, Language: best.Language}
 
 	// StatusCodeOverride is a mechanism for offers to behave as error handlers.
 	// Conditional request handling is disabled in this case.
@@ -85,8 +99,8 @@ func RenderBestMatch(rw http.ResponseWriter, req *http.Request, statusCode int, 
 		return nil // status will be 304
 	}
 
-	if statusCode > 0 {
-		rw.WriteHeader(statusCode)
+	if ctx.StatusCode > 0 {
+		rw.WriteHeader(ctx.StatusCode)
 	}
 
 	return best.Render(w, req, best.Data, chosen)

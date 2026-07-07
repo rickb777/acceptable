@@ -44,7 +44,7 @@ func CSVProcessor(comma ...rune) Processor {
 		in = comma[0]
 	}
 
-	return func(w io.Writer, _ *http.Request, data dpkg.Data, params dpkg.Chosen) (err error) {
+	return func(w io.Writer, _ *http.Request, data dpkg.Data, chosen dpkg.Chosen) (err error) {
 		writer := csv.NewWriter(w)
 		writer.Comma = in
 
@@ -52,7 +52,7 @@ func CSVProcessor(comma ...rune) Processor {
 
 		for more {
 			var d any
-			d, more, err = data.Content(params)
+			d, more, err = data.Content(chosen)
 			if err != nil {
 				return err
 			}

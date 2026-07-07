@@ -56,7 +56,7 @@ func main() {
 // Handler
 func hello(c echo.Context) error {
 	// example lazy data source (although this one just returns a fixed value)
-	lazyEn := data.Lazy(func(params data.Chosen) (any, error) {
+	lazyEn := data.Lazy(func(chosen data.Chosen) (any, error) {
 		return examples.EN, nil
 	}).MaxAge(10 * time.Second).ETag("hash123") // replace "hash123" appropriately
 

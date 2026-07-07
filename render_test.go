@@ -22,7 +22,7 @@ func Test_should_return_no_content_if_no_offers_have_data(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	err := acceptable.RenderBestMatch(w, req, 0, "", a, b)
+	err := acceptable.RenderBestMatch(w, req, a, b)
 
 	// Then ...
 	expect.Error(err).Not().ToHaveOccurred(t)
@@ -40,7 +40,7 @@ func Test_should_use_default_processor_if_no_accept_header(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	err := acceptable.RenderBestMatch(w, req, 0, "", a, b)
+	err := acceptable.RenderBestMatch(w, req, a, b)
 
 	// Then ...
 	expect.Error(err).Not().ToHaveOccurred(t)
@@ -61,7 +61,7 @@ func Test_should_use_catch_all_if_no_matching_accept_header(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	err := acceptable.RenderBestMatch(w, req, 201, "", a, b)
+	err := acceptable.RespondWith{StatusCode: 201}.RenderBestMatch(w, req, a, b)
 
 	// Then ...
 	expect.Error(err).Not().ToHaveOccurred(t)
@@ -83,7 +83,7 @@ func Test_should_return_406_if_no_matching_accept_header(t *testing.T) {
 		a := offer.Of(offer.JSONProcessor(), c).With("foo", "en")
 
 		// When ...
-		err := acceptable.RenderBestMatch(w, req, 0, "", a)
+		err := acceptable.RenderBestMatch(w, req, a)
 
 		// Then ...
 		expect.Error(err).Not().ToHaveOccurred(t)
@@ -98,7 +98,7 @@ func Test_should_return_204_if_there_are_no_offers(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	err := acceptable.RenderBestMatch(w, req, 0, "")
+	err := acceptable.RenderBestMatch(w, req)
 
 	// Then ...
 	expect.Error(err).Not().ToHaveOccurred(t)
@@ -114,7 +114,7 @@ func Test_should_give_JSON_response_for_ajax_requests(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	err := acceptable.RenderBestMatch(w, req, 0, "", a)
+	err := acceptable.RenderBestMatch(w, req, a)
 
 	// Then ...
 	expect.Error(err).Not().ToHaveOccurred(t)
@@ -132,7 +132,7 @@ func Test_should_give_406_for_unmatched_ajax_requests(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	err := acceptable.RenderBestMatch(w, req, 0, "", a)
+	err := acceptable.RenderBestMatch(w, req, a)
 
 	// Then ...
 	expect.Error(err).Not().ToHaveOccurred(t)
@@ -147,7 +147,7 @@ func Test_should_return_204_if_there_are_no_offers_for_ajax(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	err := acceptable.RenderBestMatch(w, req, 0, "")
+	err := acceptable.RenderBestMatch(w, req)
 
 	// Then ...
 	expect.Error(err).Not().ToHaveOccurred(t)
@@ -166,7 +166,7 @@ func Test_should_return_406_with_fallback_offer(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	err := acceptable.RenderBestMatch(w, req, 0, "", a, b)
+	err := acceptable.RenderBestMatch(w, req, a, b)
 
 	// Then ...
 	expect.Error(err).Not().ToHaveOccurred(t)
@@ -190,7 +190,7 @@ func Test_should_return_406_when_media_range_is_explicitly_excluded(t *testing.T
 	w := httptest.NewRecorder()
 
 	// When ...
-	err := acceptable.RenderBestMatch(w, req, 0, "", a, b)
+	err := acceptable.RenderBestMatch(w, req, a, b)
 
 	// Then ...
 	expect.Error(err).Not().ToHaveOccurred(t)
@@ -212,7 +212,7 @@ func Test_should_return_200_even_when_language_is_explicitly_excluded(t *testing
 	w := httptest.NewRecorder()
 
 	// When ...
-	err := acceptable.RenderBestMatch(w, req, 0, "", a)
+	err := acceptable.RenderBestMatch(w, req, a)
 
 	// Then ...
 	expect.Error(err).Not().ToHaveOccurred(t)
@@ -237,7 +237,7 @@ func Test_should_negotiate_using_media_and_language(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	err := acceptable.RenderBestMatch(w, req, 0, "", a, b, c)
+	err := acceptable.RenderBestMatch(w, req, a, b, c)
 
 	// Then ...
 	expect.Error(err).Not().ToHaveOccurred(t)
@@ -260,7 +260,7 @@ func Test_should_render_iso8859_html_using_templates(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	err := acceptable.RenderBestMatch(w, req, 0, "home.html", a)
+	err := acceptable.RespondWith{Template: "home.html"}.RenderBestMatch(w, req, a)
 
 	// Then ...
 	expect.Error(err).Not().ToHaveOccurred(t)
@@ -291,7 +291,7 @@ func Test_should_match_utf8_charset_when_acceptable(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		err := acceptable.RenderBestMatch(w, req, 0, "", a)
+		err := acceptable.RenderBestMatch(w, req, a)
 
 		// Then ...
 		expect.Error(err).Not().ToHaveOccurred(t)

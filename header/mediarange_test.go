@@ -28,7 +28,7 @@ func TestPrecedenceValues_String(t *testing.T) {
 }
 
 func TestOffer_String(t *testing.T) {
-	p := func(_ io.Writer, _ *http.Request, _ dpkg.Data, params dpkg.Chosen) error {
+	p := func(_ io.Writer, _ *http.Request, _ dpkg.Data, chosen dpkg.Chosen) error {
 		return nil
 	}
 	o := offer.Of(p, "text/html").With(nil, "en")

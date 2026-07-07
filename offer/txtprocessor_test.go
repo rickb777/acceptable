@@ -46,8 +46,8 @@ func TestTXTShouldWriteResponseBody(t *testing.T) {
 	}
 }
 
-func stringSequence(names []string) func(params dpkg.Chosen) (any, error) {
-	return func(params dpkg.Chosen) (any, error) {
+func stringSequence(names []string) func(chosen dpkg.Chosen) (any, error) {
+	return func(chosen dpkg.Chosen) (any, error) {
 		if len(names) == 0 {
 			return nil, nil
 		}

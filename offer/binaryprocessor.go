@@ -27,12 +27,12 @@ func ImagePNG() Offer { return Of(BinaryProcessor(), contenttype.ImagePNG) }
 // Because it handles io.Reader and io.WriterTo, BinaryProcessor can be used to stream large responses (without any
 // further encoding).
 func BinaryProcessor() Processor {
-	return func(w io.Writer, _ *http.Request, data dpkg.Data, params dpkg.Chosen) (err error) {
+	return func(w io.Writer, _ *http.Request, data dpkg.Data, chosen dpkg.Chosen) (err error) {
 		more := data != nil
 
 		for more {
 			var d any
-			d, more, err = data.Content(params)
+			d, more, err = data.Content(chosen)
 			if err != nil {
 				return err
 			}

@@ -12,7 +12,7 @@ import (
 )
 
 // Processor is a function that renders content according to the matched result.
-type Processor func(w io.Writer, req *http.Request, data dpkg.Data, params dpkg.Chosen) error
+type Processor func(w io.Writer, req *http.Request, data dpkg.Data, chosen dpkg.Chosen) error
 
 // Offer holds information about one particular resource representation that can potentially
 // provide an acceptable response.

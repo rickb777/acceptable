@@ -22,11 +22,11 @@ func TestLazyValue_should_pass_template_and_language(t *testing.T) {
 		expectedTemplate := fmt.Sprintf("p%d.html", i)
 		expectedLanguage := fmt.Sprintf("en-x%d", i)
 
-		d := Lazy(func(params Chosen) (any, error) {
+		d := Lazy(func(chosen Chosen) (any, error) {
 			// Then ...
 			count++
-			expect.String(params.Template).ToEqual(t, expectedTemplate)
-			expect.String(params.Language).ToEqual(t, expectedLanguage)
+			expect.String(chosen.Template).ToEqual(t, expectedTemplate)
+			expect.String(chosen.Language).ToEqual(t, expectedLanguage)
 			return "foo", nil
 		})
 
@@ -34,9 +34,9 @@ func TestLazyValue_should_pass_template_and_language(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		params := Chosen{Template: expectedTemplate, Language: expectedLanguage}
-		send, e1 := ConditionalRequest(w, req, d, params)
-		c, more, e2 := d.Content(params)
+		chosen := Chosen{Template: expectedTemplate, Language: expectedLanguage}
+		send, e1 := ConditionalRequest(w, req, d, chosen)
+		c, more, e2 := d.Content(chosen)
 
 		// Then ...
 		expect.Error(e1).Not().ToHaveOccurred(t)
@@ -51,7 +51,7 @@ func TestLazyValue_should_pass_template_and_language(t *testing.T) {
 
 func TestLazyValue_attaching_eager_metadata(t *testing.T) {
 	// Given ...
-	d := Lazy(func(params Chosen) (any, error) {
+	d := Lazy(func(chosen Chosen) (any, error) {
 		return "foo", nil
 	}).
 		ETag("abcdef").
@@ -61,9 +61,9 @@ func TestLazyValue_attaching_eager_metadata(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	params := Chosen{Template: "home.html", Language: "en"}
-	send, e1 := ConditionalRequest(w, req, d, params)
-	_, _, e2 := d.Content(params)
+	chosen := Chosen{Template: "home.html", Language: "en"}
+	send, e1 := ConditionalRequest(w, req, d, chosen)
+	_, _, e2 := d.Content(chosen)
 
 	// Then ...
 	expect.Error(e1).Not().ToHaveOccurred(t)
@@ -77,13 +77,13 @@ func TestLazyValue_attaching_eager_metadata(t *testing.T) {
 
 func TestLazyValue_attaching_lazy_metadata(t *testing.T) {
 	// Given ...
-	d := Lazy(func(params Chosen) (any, error) {
+	d := Lazy(func(chosen Chosen) (any, error) {
 		return "foo", nil
 	}).
-		ETagUsing(func(params Chosen) (string, error) {
+		ETagUsing(func(chosen Chosen) (string, error) {
 			return "abcdef", nil
 		}).
-		LastModifiedUsing(func(params Chosen) (time.Time, error) {
+		LastModifiedUsing(func(chosen Chosen) (time.Time, error) {
 			return t1, nil
 		})
 
@@ -91,9 +91,9 @@ func TestLazyValue_attaching_lazy_metadata(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	params := Chosen{Template: "home.html", Language: "en"}
-	send, e1 := ConditionalRequest(w, req, d, params)
-	_, _, e2 := d.Content(params)
+	chosen := Chosen{Template: "home.html", Language: "en"}
+	send, e1 := ConditionalRequest(w, req, d, chosen)
+	_, _, e2 := d.Content(chosen)
 
 	// Then ...
 	expect.Error(e1).Not().ToHaveOccurred(t)
@@ -108,7 +108,7 @@ func TestLazyValue_attaching_lazy_metadata(t *testing.T) {
 func TestLazyValue_returning_error(t *testing.T) {
 	for i := 1; i <= 2; i++ {
 		// Given ...
-		d := Lazy(func(params Chosen) (any, error) {
+		d := Lazy(func(chosen Chosen) (any, error) {
 			return nil, errors.New("expected error")
 		})
 
@@ -116,9 +116,9 @@ func TestLazyValue_returning_error(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		params := Chosen{Template: "home.html", Language: "en"}
-		_, e1 := ConditionalRequest(w, req, d, params)
-		_, _, e2 := d.Content(params)
+		chosen := Chosen{Template: "home.html", Language: "en"}
+		_, e1 := ConditionalRequest(w, req, d, chosen)
+		_, _, e2 := d.Content(chosen)
 
 		// Then ...
 		expect.Error(e1).Not().ToHaveOccurred(t)
@@ -141,9 +141,9 @@ func TestValue_future_expiry(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	params := Chosen{Template: "home.html", Language: "en"}
-	send, e1 := ConditionalRequest(w, req, d, params)
-	_, _, e2 := d.Content(params)
+	chosen := Chosen{Template: "home.html", Language: "en"}
+	send, e1 := ConditionalRequest(w, req, d, chosen)
+	_, _, e2 := d.Content(chosen)
 
 	// Then ...
 	expect.Error(e1).Not().ToHaveOccurred(t)
@@ -165,9 +165,9 @@ func TestValue_no_cache_and_additional_headers(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// When ...
-	params := Chosen{Template: "home.html", Language: "en"}
-	send, e1 := ConditionalRequest(w, req, d, params)
-	_, _, e2 := d.Content(params)
+	chosen := Chosen{Template: "home.html", Language: "en"}
+	send, e1 := ConditionalRequest(w, req, d, chosen)
+	_, _, e2 := d.Content(chosen)
 
 	// Then ...
 	expect.Error(e1).Not().ToHaveOccurred(t)
@@ -193,9 +193,9 @@ func TestValue_if_none_match_not_modified_get_request(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		params := Chosen{Template: "home.html", Language: "en"}
-		send, e1 := ConditionalRequest(w, req, d, params)
-		_, _, e2 := d.Content(params)
+		chosen := Chosen{Template: "home.html", Language: "en"}
+		send, e1 := ConditionalRequest(w, req, d, chosen)
+		_, _, e2 := d.Content(chosen)
 
 		// Then ...
 		expect.Error(e1).Not().ToHaveOccurred(t)
@@ -223,9 +223,9 @@ func TestValue_if_modified_since_not_modified_get_request(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		params := Chosen{Template: "home.html", Language: "en"}
-		send, e1 := ConditionalRequest(w, req, d, params)
-		_, _, e2 := d.Content(params)
+		chosen := Chosen{Template: "home.html", Language: "en"}
+		send, e1 := ConditionalRequest(w, req, d, chosen)
+		_, _, e2 := d.Content(chosen)
 
 		// Then ...
 		expect.Error(e1).Not().ToHaveOccurred(t)
@@ -252,9 +252,9 @@ func TestValue_not_modified_put_request(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// When ...
-		params := Chosen{Template: "home.html", Language: "en"}
-		send, e1 := ConditionalRequest(w, req, d, params)
-		_, _, e2 := d.Content(params)
+		chosen := Chosen{Template: "home.html", Language: "en"}
+		send, e1 := ConditionalRequest(w, req, d, chosen)
+		_, _, e2 := d.Content(chosen)
 
 		// Then ...
 		expect.Error(e1).Not().ToHaveOccurred(t)

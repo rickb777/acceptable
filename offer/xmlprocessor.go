@@ -39,12 +39,12 @@ func XMLProcessor(root string, indent ...string) Processor {
 		in = indent[0]
 	}
 
-	return func(w io.Writer, _ *http.Request, data dpkg.Data, params dpkg.Chosen) (err error) {
+	return func(w io.Writer, _ *http.Request, data dpkg.Data, chosen dpkg.Chosen) (err error) {
 		p := internal.EnsureNewline(w)
 
 		enc := xml.NewEncoder(p)
 
-		d, more, err := data.Content(params)
+		d, more, err := data.Content(chosen)
 		if err != nil {
 			return err
 		}
@@ -72,7 +72,7 @@ func XMLProcessor(root string, indent ...string) Processor {
 		for stillMore {
 			p.Write(newline)
 
-			d, stillMore, err = data.Content(params)
+			d, stillMore, err = data.Content(chosen)
 			if err != nil {
 				return err
 			}

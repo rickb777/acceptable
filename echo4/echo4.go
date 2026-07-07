@@ -10,7 +10,10 @@ import (
 // and then renders the response.
 // If statusCode is 0, the default (200-status OK) will be used.
 func RenderBestMatch(c echo.Context, statusCode int, template string, available ...offer.Offer) error {
-	return acceptable.RenderBestMatch(c.Response(), c.Request(), statusCode, template, available...)
+	return acceptable.RespondWith{
+		StatusCode: statusCode,
+		Template:   template,
+	}.RenderBestMatch(c.Response(), c.Request(), available...)
 }
 
 // BestRequestMatch finds the content type and language that best matches the accepted media

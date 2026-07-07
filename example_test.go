@@ -26,9 +26,9 @@ func Example() {
 	fr := data.Of("Bonjour!").ETag("hash1") // get French content and some metadata
 
 	// 3. this uses a lazy evaluation function, wrapped in a data.Data
-	es := data.Lazy(func(params data.Chosen) (any, error) {
+	es := data.Lazy(func(chosen data.Chosen) (any, error) {
 		return "Hola!", nil // get Spanish content - eg from database
-	}).ETagUsing(func(params data.Chosen) (string, error) {
+	}).ETagUsing(func(chosen data.Chosen) (string, error) {
 		// allows us to obtain the etag lazily, should we need to
 		return "hash2", nil
 	})
@@ -50,6 +50,8 @@ func Example() {
 
 	requests := []*http.Request{req1, req2, req3}
 
+	context := acceptable.RespondWith{StatusCode: 200, Template: "home.html"}
+
 	for _, req := range requests {
 		res := httptest.NewRecorder() // replace with the server's http.ResponseWriter
 
@@ -59,7 +61,7 @@ func Example() {
 		// The first offer is for JSON - this is often the most widely used because it also supports
 		// Ajax requests.
 
-		err := acceptable.RenderBestMatch(res, req, 200, "home.html",
+		err := context.RenderBestMatch(res, req,
 			offer.JSON("  ").With(en, "en").With(fr, "fr").With(es, "es"),
 			offer.XML("xml", "  ").With(en, "en").With(fr, "fr").With(es, "es"),
 			offer.CSV().With(en, "en").With(fr, "fr").With(es, "es"),
