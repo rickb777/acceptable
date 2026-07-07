@@ -78,6 +78,12 @@ func (o Offer) clone() Offer {
 	return c
 }
 
+// WithFunc attaches response data to an offer.
+// This is like Offer.With, albeit the data supplier is a function.
+func (o Offer) WithFunc(supplier dpkg.Supplier, language string, otherLanguages ...string) Offer {
+	return o.With(dpkg.Lazy(supplier), language, otherLanguages...)
+}
+
 // With attaches response data to an offer.
 // The returned offer is a clone of the original offer, which is unchanged. This
 // allows base offers to be derived from.
@@ -117,8 +123,6 @@ func (o Offer) With(data any, language string, otherLanguages ...string) Offer {
 	switch d := data.(type) {
 	case dpkg.Data:
 		value = d
-	case dpkg.Supplier:
-		value = dpkg.Lazy(d)
 	default:
 		value = dpkg.Of(data)
 	}

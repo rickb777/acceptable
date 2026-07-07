@@ -71,12 +71,17 @@ func hello(rw http.ResponseWriter, req *http.Request) {
 		return examples.EN, nil
 	}).MaxAge(10 * time.Second).ETag("hash123") // replace "hash123" appropriately
 
+	// a different example lazy data source
+	lazyFr := func(chosen data.Chosen) (any, error) {
+		return examples.FR, nil
+	}
+
 	template := req.URL.String()[1:]
 
 	c := acceptable.RespondWith{Template: template}
 	err := c.RenderBestMatch(rw, req,
 		offer.JSON("  ").
-			With(lazyEn, "en").With(examples.FR, "fr").With(examples.ES, "es").With(examples.RU, "ru"),
+			With(lazyEn, "en").WithFunc(lazyFr, "fr").With(examples.ES, "es").With(examples.RU, "ru"),
 
 		offer.XML("xml", "  ").
 			With(examples.EN, "en").With(examples.FR, "fr").With(examples.ES, "es").With(examples.RU, "ru"),
