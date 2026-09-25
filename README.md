@@ -18,4 +18,4 @@ Please see the documentation for more info.
 
 ## Status
 
-This API is well-tested and known to work but it may yet require breaking API changes. Use at your own risk.
+The API is now stable for v1.
