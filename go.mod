@@ -7,7 +7,7 @@ require (
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/spf13/afero v1.15.0
 	golang.org/x/crypto v0.57.0 // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0
 )
